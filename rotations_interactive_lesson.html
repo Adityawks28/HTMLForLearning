@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rotations — Interactive Lesson (ECE276A · L3)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+:root{
+  --bg:#0A0D13; --panel:#10151F; --panel2:#0D121B; --raise:#161D2A;
+  --line:#222B3A; --line2:#2c374a;
+  --ink:#E4E9F1; --muted:#909CB2; --faint:#5d6a80;
+  --x:#FF5D5D; --y:#46D17C; --z:#5398FF;
+  --amber:#FFB454; --amber-dim:rgba(255,180,84,.10);
+  --maxw:920px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:17px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+/* subtle engineering grid + scanline atmosphere */
+body::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(transparent 0 31px, rgba(255,255,255,.014) 32px),
+    linear-gradient(90deg, transparent 0 31px, rgba(255,255,255,.014) 32px);
+  background-size:32px 32px;
+  mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 90%);
+}
+.wrap{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding:0 22px}
+
+/* ---------- nav ---------- */
+nav{
+  position:sticky; top:0; z-index:50; backdrop-filter:blur(9px);
+  background:linear-gradient(180deg, rgba(10,13,19,.94), rgba(10,13,19,.78));
+  border-bottom:1px solid var(--line);
+}
+.navrow{max-width:var(--maxw); margin:0 auto; padding:10px 22px; display:flex; align-items:center; gap:16px}
+.brand{font-family:"Space Grotesk"; font-weight:700; letter-spacing:.02em; font-size:15px; white-space:nowrap}
+.brand b{color:var(--amber)}
+.navlinks{display:flex; gap:2px; overflow-x:auto; scrollbar-width:none; margin-left:auto}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks a{
+  color:var(--muted); text-decoration:none; font-size:12.5px; font-family:"IBM Plex Mono";
+  padding:5px 9px; border-radius:6px; white-space:nowrap; letter-spacing:.02em;
+}
+.navlinks a:hover{color:var(--ink); background:var(--raise)}
+.navlinks a.on{color:var(--amber); background:var(--amber-dim)}
+
+/* ---------- hero ---------- */
+header.hero{padding:62px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono"; font-size:13px; letter-spacing:.22em; text-transform:uppercase; color:var(--amber); margin:0 0 14px}
+h1.title{
+  font-family:"Space Grotesk"; font-weight:700; font-size:clamp(46px,11vw,104px);
+  line-height:.92; letter-spacing:-.02em; margin:0;
+}
+h1.title .so{display:block; font-size:clamp(15px,3.4vw,22px); font-family:"IBM Plex Mono"; color:var(--faint); letter-spacing:.04em; margin-top:18px; font-weight:400}
+.lede{max-width:62ch; color:var(--muted); margin:22px 0 0; font-size:18px}
+.herogrid{display:grid; grid-template-columns:1.3fr .9fr; gap:30px; align-items:center}
+@media(max-width:720px){.herogrid{grid-template-columns:1fr}}
+.triad-card{
+  border:1px solid var(--line); border-radius:16px; background:
+   radial-gradient(120% 120% at 70% 10%, rgba(83,152,255,.10), transparent 60%),
+   var(--panel2);
+  padding:18px; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+}
+.triad-card .cap{position:absolute; bottom:12px; left:14px; font-family:"IBM Plex Mono"; font-size:11px; color:var(--faint); letter-spacing:.08em}
+.spin{transform-origin:center; animation:spin 26s linear infinite}
+@media(prefers-reduced-motion:reduce){.spin{animation:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- sections ---------- */
+section{padding:46px 0; border-bottom:1px solid var(--line)}
+.kicker{display:flex; align-items:baseline; gap:12px; margin:0 0 6px}
+.kicker .num{font-family:"IBM Plex Mono"; color:var(--amber); font-size:13px; letter-spacing:.12em}
+h2{font-family:"Space Grotesk"; font-weight:700; font-size:clamp(26px,5vw,38px); letter-spacing:-.01em; margin:0 0 18px; line-height:1.08}
+h3{font-family:"Space Grotesk"; font-weight:600; font-size:21px; margin:34px 0 10px; color:var(--ink)}
+h4{font-family:"IBM Plex Sans"; font-weight:600; font-size:15px; letter-spacing:.02em; margin:22px 0 6px; color:var(--amber)}
+p{margin:12px 0}
+ul{margin:12px 0; padding-left:22px} li{margin:7px 0}
+a.link{color:var(--z); text-decoration:none; border-bottom:1px dotted var(--z)}
+strong{color:#fff; font-weight:600}
+.axx{color:var(--x); font-weight:600} .ayy{color:var(--y); font-weight:600} .azz{color:var(--z); font-weight:600}
+code{font-family:"IBM Plex Mono"; font-size:.9em; background:var(--raise); padding:1px 6px; border-radius:5px; color:#cfe0ff}
+
+/* katex base color */
+.katex{color:var(--ink); font-size:1.04em}
+.katex-display{margin:18px 0; overflow-x:auto; overflow-y:hidden; padding:4px 0}
+
+/* callouts */
+.card{border:1px solid var(--line); background:var(--panel); border-radius:12px; padding:16px 18px; margin:18px 0}
+.key{border-left:3px solid var(--amber); background:linear-gradient(90deg,var(--amber-dim),transparent 60%)}
+.key .lab{font-family:"IBM Plex Mono"; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--amber); margin-bottom:6px}
+.note{border-left:3px solid var(--z)}
+.warn{border-left:3px solid var(--x)}
+
+/* ---------- explorer widgets ---------- */
+.lab{border:1px solid var(--line); border-radius:16px; background:var(--panel2); overflow:hidden; margin:22px 0}
+.lab-head{display:flex; align-items:center; gap:10px; padding:11px 16px; border-bottom:1px solid var(--line); background:var(--panel)}
+.lab-head .dot{width:9px; height:9px; border-radius:50%; background:var(--amber); box-shadow:0 0 10px var(--amber)}
+.lab-head .t{font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.08em; color:var(--muted)}
+.lab-head .t b{color:var(--ink)}
+.lab-body{display:grid; grid-template-columns:1fr 320px; gap:0}
+@media(max-width:760px){.lab-body{grid-template-columns:1fr}}
+.canvas-host{position:relative; min-height:320px; background:
+  radial-gradient(120% 120% at 60% 0%, rgba(83,152,255,.06), transparent 55%);}
+.canvas-host canvas{display:block; width:100%; height:100%}
+.canvas-host .hint{position:absolute; left:12px; bottom:10px; font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--faint); letter-spacing:.06em}
+.fallback{padding:30px; color:var(--muted); font-size:14px; text-align:center}
+.panelside{border-left:1px solid var(--line); padding:16px; background:var(--panel)}
+@media(max-width:760px){.panelside{border-left:none; border-top:1px solid var(--line)}}
+
+.ctrl{margin:0 0 13px}
+.ctrl .row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px}
+.ctrl label{font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:.04em}
+.ctrl .val{font-family:"IBM Plex Mono"; font-size:12px; color:var(--amber)}
+input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:4px; background:var(--line2); outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:15px; height:15px; border-radius:50%; background:var(--ink); border:2px solid var(--bg); cursor:pointer}
+input[type=range]::-moz-range-thumb{width:15px; height:15px; border-radius:50%; background:var(--ink); border:2px solid var(--bg); cursor:pointer}
+input.sx::-webkit-slider-thumb{background:var(--x)} input.sx::-moz-range-thumb{background:var(--x)}
+input.sy::-webkit-slider-thumb{background:var(--y)} input.sy::-moz-range-thumb{background:var(--y)}
+input.sz::-webkit-slider-thumb{background:var(--z)} input.sz::-moz-range-thumb{background:var(--z)}
+input.sa::-webkit-slider-thumb{background:var(--amber)} input.sa::-moz-range-thumb{background:var(--amber)}
+
+.btnrow{display:flex; flex-wrap:wrap; gap:7px; margin:10px 0 4px}
+button.btn{font-family:"IBM Plex Mono"; font-size:11.5px; letter-spacing:.04em; color:var(--muted); background:var(--raise); border:1px solid var(--line2); padding:6px 10px; border-radius:7px; cursor:pointer}
+button.btn:hover{color:var(--ink); border-color:var(--amber)}
+button.btn:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visible{outline:2px solid var(--amber); outline-offset:2px}
+
+/* numeric matrix */
+.matwrap{margin-top:14px}
+.matwrap .cap{font-family:"IBM Plex Mono"; font-size:11px; color:var(--faint); letter-spacing:.06em; margin-bottom:6px}
+.mat{display:inline-grid; grid-template-columns:repeat(3,1fr); gap:3px 8px; font-family:"IBM Plex Mono"; font-size:13px; padding:8px 12px; border:1px solid var(--line2); border-radius:8px; background:var(--panel2)}
+.mat span{text-align:right; min-width:52px; font-variant-numeric:tabular-nums}
+.mat .cx{color:var(--x)} .mat .cy{color:var(--y)} .mat .cz{color:var(--z)}
+.readout{font-family:"IBM Plex Mono"; font-size:12.5px; color:var(--muted); margin-top:12px; line-height:1.9}
+.readout b{color:var(--ink)} .readout .hi{color:var(--amber)}
+.statusbad{color:var(--x)} .statusgood{color:var(--y)}
+
+/* ---------- practice ---------- */
+.prob{border:1px solid var(--line); border-radius:12px; margin:16px 0; background:var(--panel); overflow:hidden}
+.prob>.q{padding:16px 18px}
+.prob .pno{font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:.1em; color:var(--amber); text-transform:uppercase}
+details.sol{border-top:1px solid var(--line)}
+details.sol>summary{cursor:pointer; list-style:none; padding:11px 18px; font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.06em; color:var(--z); background:var(--panel2)}
+details.sol>summary::-webkit-details-marker{display:none}
+details.sol>summary::before{content:"▸ "; color:var(--amber)}
+details.sol[open]>summary::before{content:"▾ "}
+details.sol .body{padding:6px 18px 18px}
+.tag{display:inline-block; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:.06em; color:var(--faint); border:1px solid var(--line2); padding:2px 7px; border-radius:20px; margin-left:8px}
+
+footer{padding:40px 0 70px; color:var(--faint); font-size:13px; font-family:"IBM Plex Mono"}
+.legend{display:flex; gap:18px; flex-wrap:wrap; font-family:"IBM Plex Mono"; font-size:12px; color:var(--muted); margin:6px 0 0}
+.legend .li{display:flex; align-items:center; gap:7px}
+.legend .sw{width:13px; height:13px; border-radius:3px}
+hr.soft{border:none; border-top:1px solid var(--line); margin:26px 0}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="navrow">
+    <span class="brand">ECE276A · <b>Rotations</b></span>
+    <div class="navlinks" id="navlinks">
+      <a href="#frames">frames</a>
+      <a href="#groups">SE(3)</a>
+      <a href="#so3">SO(3)</a>
+      <a href="#lie">Lie groups</a>
+      <a href="#rot2d">2D</a>
+      <a href="#euler">Euler</a>
+      <a href="#gimbal">gimbal</a>
+      <a href="#hat">hat map</a>
+      <a href="#axisangle">axis-angle</a>
+      <a href="#quat">quaternions</a>
+      <a href="#pose">poses</a>
+      <a href="#summary">summary</a>
+      <a href="#practice">practice</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="herogrid">
+    <div>
+      <p class="eyebrow">Lecture 3 · Sensing &amp; Estimation in Robotics</p>
+      <h1 class="title">Rotations<span class="so">SO(3) · SE(3) · the orientation of everything that moves</span></h1>
+      <p class="lede">A rigid body in 3D can spin in infinitely many ways, yet every one of those orientations is a single point in a 3‑dimensional space. This lesson builds that space four different ways — matrices, Euler angles, axis‑angle, and quaternions — and lets you grab the axes and turn them yourself.</p>
+      <div class="legend">
+        <span class="li"><span class="sw" style="background:var(--x)"></span> X axis</span>
+        <span class="li"><span class="sw" style="background:var(--y)"></span> Y axis</span>
+        <span class="li"><span class="sw" style="background:var(--z)"></span> Z axis</span>
+        <span class="li"><span class="sw" style="background:var(--amber)"></span> rotation axis / result</span>
+      </div>
+    </div>
+    <div class="triad-card">
+      <svg viewBox="-110 -110 220 220" width="100%" height="100%" aria-label="3D coordinate triad">
+        <g class="spin">
+          <ellipse cx="0" cy="0" rx="92" ry="34" fill="none" stroke-width="1" style="stroke:var(--line2)"/>
+          <!-- isometric-ish triad -->
+          <line x1="0" y1="0" x2="78" y2="40" stroke="var(--x)" stroke-width="3"/>
+          <polygon points="78,40 66,40 74,30" fill="var(--x)"/>
+          <line x1="0" y1="0" x2="-78" y2="40" stroke="var(--y)" stroke-width="3"/>
+          <polygon points="-78,40 -66,40 -74,30" fill="var(--y)"/>
+          <line x1="0" y1="0" x2="0" y2="-86" stroke="var(--z)" stroke-width="3"/>
+          <polygon points="0,-86 -6,-74 6,-74" fill="var(--z)"/>
+          <circle cx="0" cy="0" r="4" fill="var(--amber)"/>
+        </g>
+      </svg>
+      <span class="cap">right-handed frame · X×Y = Z</span>
+    </div>
+  </div>
+</header>
+
+<!-- =================== FRAMES =================== -->
+<section id="frames">
+  <div class="kicker"><span class="num">01</span></div>
+  <h2>Rigid body motion &amp; reference frames</h2>
+  <p>Picture a drone flying through a room. The room is the fixed <strong>world frame</strong> \(\{W\}\). Bolted to the drone is a <strong>body frame</strong> \(\{B\}\): an origin point \(\mathbf p(t)\in\mathbb R^3\) and three axes \(\mathbf r_1(t),\mathbf r_2(t),\mathbf r_3(t)\) that travel and turn with the drone.</p>
+
+  <p>A physical point \(\mathbf s\) painted on the drone never moves <em>relative to the body</em>, so its body coordinates \(\mathbf s_B\) are constant. But seen from the room, its world coordinates \(\mathbf s_W(t)\) change every instant. The whole subject is just: <strong>how do we convert between \(\mathbf s_B\) and \(\mathbf s_W\)?</strong></p>
+
+  <div class="card key">
+    <div class="lab">Degrees of freedom</div>
+    A free rigid body has <strong>6 DOF</strong>: 3 for <span class="azz">translation</span> (where the body is, \(\mathbf p\in\mathbb R^3\)) and 3 for <strong>rotation</strong> (how it is oriented, \(R\in SO(3)\)). The full pose lives in \(SE(3)\). Position space \(\mathbb R^3\) is familiar; the orientation space \(SO(3)\) is the interesting one, and it is what most of this lesson is about.
+  </div>
+
+  <p>Below, drag to orbit the camera. The faint triad is the world frame \(\{W\}\); the bold triad and probe are the body frame \(\{B\}\), here fixed at a tilt. The amber dot is a point \(\mathbf s\) rigidly attached to the body — notice it is described by <em>constant</em> body coordinates but <em>tilted</em> world coordinates.</p>
+</section>
+
+<!-- =================== GROUPS =================== -->
+<section id="groups">
+  <div class="kicker"><span class="num">02</span></div>
+  <h2>What “rigid” means: the group SE(3)</h2>
+  <p>Rigid motion is exactly the set of maps \(g:\mathbb R^3\to\mathbb R^3\) that don’t distort the body. Formally these form the <strong>Special Euclidean Group</strong> \(SE(3)\), defined by two preservation laws (writing \(g_*(\mathbf x):=g(\mathbf x)-g(\mathbf 0)\) to strip off translation):</p>
+
+  <div class="card">
+    <p style="margin-top:0"><strong>1 · Lengths are preserved</strong> (no stretching or shrinking):</p>
+    $$\lVert g_*(\mathbf u)-g_*(\mathbf v)\rVert=\lVert \mathbf u-\mathbf v\rVert,\qquad \forall \mathbf u,\mathbf v\in\mathbb R^3$$
+    <p><strong>2 · Cross products are preserved</strong> (no mirror‑flips — a right hand stays a right hand):</p>
+    $$g_*(\mathbf u)\times g_*(\mathbf v)=g_*(\mathbf u\times\mathbf v)$$
+  </div>
+
+  <p>The Euclidean group \(E(3)\) asks only for law 1, which still permits reflections. Insisting on law 2 as well rules reflections out — that is the “Special” in Special Euclidean. Two consequences follow for free:</p>
+  <ul>
+    <li><strong>Angles are preserved.</strong> Using \(\mathbf u^\top\mathbf v=\tfrac14\big(\lVert\mathbf u+\mathbf v\rVert^2-\lVert\mathbf u-\mathbf v\rVert^2\big)\), length‑preservation forces \(\mathbf u^\top\mathbf v=g_*(\mathbf u)^\top g_*(\mathbf v)\).</li>
+    <li><strong>Volumes are preserved.</strong> The parallelepiped triple product is unchanged: \(g_*(\mathbf u)^\top\!\big(g_*(\mathbf v)\times g_*(\mathbf w)\big)=\mathbf u^\top(\mathbf v\times\mathbf w)\).</li>
+  </ul>
+  <p>Strip translation away and you are left with pure rotation. That is where we go next.</p>
+</section>
+
+<!-- =================== SO3 =================== -->
+<section id="so3">
+  <div class="kicker"><span class="num">03</span></div>
+  <h2>The rotation matrix and SO(3)</h2>
+  <p>Pure rotation sends the world basis \(\mathbf e_1,\mathbf e_2,\mathbf e_3\) to the body axes \(\mathbf r_1=g(\mathbf e_1),\,\mathbf r_2=g(\mathbf e_2),\,\mathbf r_3=g(\mathbf e_3)\), each written in world coordinates. Stack them as columns:</p>
+  $$\,_{\{W\}}R_{\{B\}}=\big[\;\mathbf r_1\;\;\mathbf r_2\;\;\mathbf r_3\;\big]\in\mathbb R^{3\times3}$$
+
+  <div class="card key">
+    <div class="lab">The one equation to remember</div>
+    The columns of \(R\) <em>are</em> the body axes expressed in the world. So converting a point is just a weighted sum of those axes:
+    $$\mathbf s_W=[\mathbf s_B]_1\,\mathbf r_1+[\mathbf s_B]_2\,\mathbf r_2+[\mathbf s_B]_3\,\mathbf r_3 \;=\; R\,\mathbf s_B$$
+    Rotation is a <strong>linear</strong> map: \(g(\mathbf s)=R\mathbf s\). Column 1 is colored <span class="axx">red</span> because it is the image of \(\mathbf e_1\) (the X axis), column 2 <span class="ayy">green</span> (Y), column 3 <span class="azz">blue</span> (Z) — a convention used in every matrix readout below.
+  </div>
+
+  <h3>Why these matrices are special</h3>
+  <p>Because \(\mathbf r_1,\mathbf r_2,\mathbf r_3\) are <strong>orthonormal</strong> (\(\mathbf r_i^\top\mathbf r_j=1\) if \(i=j\), else \(0\)), the matrix satisfies \(R^\top R=I\), so its inverse is simply its transpose:</p>
+  $$R^{-1}=R^\top\qquad\Longrightarrow\qquad \mathbf s_B=R^\top\mathbf s_W$$
+  <p>This is the <strong>orthogonal group</strong> \(O(3)=\{R:R^\top R=I\}\). It guarantees distances survive:</p>
+  $$\lVert R(\mathbf x-\mathbf y)\rVert^2=(\mathbf x-\mathbf y)^\top R^\top R(\mathbf x-\mathbf y)=\lVert\mathbf x-\mathbf y\rVert^2$$
+  <p>But \(O(3)\) still contains reflections (which have \(\det R=-1\)). Demanding \(\det R=+1\) keeps cross products intact and removes mirror‑flips, giving the <strong>Special Orthogonal Group</strong>:</p>
+  $$SO(3):=\{\,R\in\mathbb R^{3\times3}\mid R^\top R=I,\ \det R=1\,\}$$
+
+  <div class="card note">A handy mental check: a matrix is a rotation iff its columns are mutually perpendicular unit vectors <em>and</em> \(\mathbf r_1\times\mathbf r_2=\mathbf r_3\) (right‑handed). The first part is \(R^\top R=I\); the second is \(\det R=+1\).</div>
+</section>
+
+<!-- =================== LIE GROUPS PRIMER =================== -->
+<section id="lie">
+  <div class="kicker"><span class="num">04</span></div>
+  <h2>A gentle primer: groups, manifolds &amp; Lie groups</h2>
+  <p>You have now met two collections of transformations — \(SO(3)\) and \(SE(3)\) — that the lecture keeps calling “groups.” Before going further it is worth slowing down and saying exactly what that word means, because the entire structure of this subject (and the \(\exp\)/\(\log\) machinery coming up) is just this one idea applied over and over. No prior exposure assumed.</p>
+
+  <h3>1 · What is a group?</h3>
+  <p>A <strong>group</strong> is a set of objects together with one way of combining two of them, satisfying four rules. For us the “objects” are rotations and the “combining” is <em>do one, then the other</em> (which for matrices is just multiplication). The four rules:</p>
+  <ul>
+    <li><strong>Closure</strong> — combine two rotations and you get another rotation. (\(R_1R_2\in SO(3)\); never something outside the set.)</li>
+    <li><strong>Associativity</strong> — \((R_1R_2)R_3=R_1(R_2R_3)\); grouping doesn’t matter.</li>
+    <li><strong>Identity</strong> — there is a “do nothing” element. For rotations it is \(I\) (the orientation you start in).</li>
+    <li><strong>Inverse</strong> — every rotation can be undone by another rotation. Here the inverse is \(R^\top\), which is why \(R^\top R=I\) mattered so much.</li>
+  </ul>
+  <div class="card note">Notice what is <em>not</em> required: a group operation need not commute. \(R_1R_2\ne R_2R_1\) in general — turning right then up is not the same as up then right. Groups where order does not matter (like adding numbers) are special; \(SO(3)\) is <strong>non‑commutative</strong>, and almost every subtlety later traces back to that.</div>
+
+  <h3>2 · What is a manifold?</h3>
+  <p>A <strong>manifold</strong> is a set that, although it may be curved, looks like ordinary flat space \(\mathbb R^n\) if you zoom in close to any point. The surface of the Earth is the standard picture: globally a sphere, but the patch of ground around you looks like a flat plane, so you can use ordinary \(x\)/\(y\) coordinates <em>locally</em>.</p>
+  <p>The space of orientations is exactly like this. A rotation matrix has 9 entries, but the six constraints \(R^\top R=I\) chain them together, leaving only <strong>3 free directions</strong>. So \(SO(3)\) is a smooth, curved, 3‑dimensional surface sitting inside 9‑dimensional matrix space — you cannot wander off it without breaking orthonormality. (The unit quaternions make this picture literal: they are the 3‑sphere \(S^3\) living in 4D.)</p>
+
+  <h3>3 · A Lie group is both at once</h3>
+  <div class="card key">
+    <div class="lab">The definition</div>
+    A <strong>Lie group</strong> is a set that is simultaneously a <em>group</em> (you can compose and invert its elements) <strong>and</strong> a smooth <em>manifold</em> (you can do calculus on it — take derivatives, follow velocities), with the group operations themselves being smooth. \(SO(3)\) and \(SE(3)\) are the two Lie groups this whole lecture lives inside.
+  </div>
+  <p>That dual nature is precisely why orientations are tricky and why they are tractable. The <em>group</em> side lets you chain motions; the <em>manifold</em> side lets you talk about angular velocity, take gradients, and run estimators — but only if you respect the curvature.</p>
+
+  <h3>4 · The Lie algebra = the tangent space at the identity</h3>
+  <p>Stand at the identity \(I\) and ask: <em>which directions can I move and still stay (to first order) on the surface of rotations?</em> Write \(R(t)=\exp(t\,A)\) for a small motion starting at \(I\); differentiating \(R^\top R=I\) at \(t=0\) gives</p>
+  $$A+A^\top=0,\qquad\text{i.e. }A\text{ is skew-symmetric.}$$
+  <p>So the allowed “velocity directions” at the identity are exactly the skew‑symmetric matrices. That flat 3‑dimensional vector space is the <strong>Lie algebra</strong> \(so(3)\) — and it is the very space the hat map \(\hat\cdot:\mathbb R^3\to so(3)\) (next section) lands in. An angular velocity is a tangent vector; \(\hat{\boldsymbol\omega}\) is its matrix form.</p>
+  <div class="card note">Lowercase \(so(3)\) (the flat algebra of skew matrices, \(\cong\mathbb R^3\)) versus uppercase \(SO(3)\) (the curved group of rotations) is the same naming pattern you will see everywhere: capital group, lowercase tangent algebra.</div>
+
+  <h3>5 · exp and log are the bridge between the two</h3>
+  <p>Because the algebra is flat \(\mathbb R^3\) and the group is curved, we constantly need to travel between them — and that round trip is exactly the <strong>matrix exponential and logarithm</strong> you will derive in the axis–angle section:</p>
+  $$\exp:so(3)\to SO(3)\qquad\text{(flat → curved)},\qquad\log:SO(3)\to so(3)\qquad\text{(curved → flat)}.$$
+  <p>The recipe behind nearly every modern orientation algorithm is: drop a rotation down to the flat algebra with \(\log\) (now it is just a 3‑vector you can add, average, or differentiate like any vector), do ordinary linear‑algebra there, then \(\exp\) the result back up onto the curved group. Rodrigues’ formula is the closed form of \(\exp\); the trace/skew formula is the closed form of \(\log\). Keep this map in mind — the rest of the lesson is filling in its details.</p>
+</section>
+
+<!-- =================== 2D =================== -->
+<section id="rot2d">
+  <div class="kicker"><span class="num">05</span></div>
+  <h2>Warm‑up: 2D rotations</h2>
+  <p>In the plane, one number — the angle \(\theta\) — says everything. A counter‑clockwise turn (\(\theta&gt;0\)) by \(\theta\) is</p>
+  $$\mathbf s_W=R(\theta)\,\mathbf s_B=\begin{bmatrix}\cos\theta&-\sin\theta\\[2pt]\sin\theta&\cos\theta\end{bmatrix}\mathbf s_B$$
+  <p>There is a second, equivalent picture: treat the point as a complex number \([\mathbf s_B]_1+i[\mathbf s_B]_2\) and multiply by a <strong>unit‑norm complex number</strong> \(e^{i\theta}\):</p>
+  $$e^{i\theta}\big([\mathbf s_B]_1+i[\mathbf s_B]_2\big)=\big([\mathbf s_B]_1\cos\theta-[\mathbf s_B]_2\sin\theta\big)+i\big([\mathbf s_B]_1\sin\theta+[\mathbf s_B]_2\cos\theta\big)$$
+  <p>Hold on to both pictures. In 3D, the <strong>matrix/angle</strong> idea generalizes to Euler angles and axis‑angle, while the <strong>unit complex number</strong> idea generalizes to unit quaternions.</p>
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>2D rotation</b> · drag the angle, watch the point and the matrix</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="host2d" style="min-height:300px"><canvas id="cv2d"></canvas><span class="hint">point in blue → image in amber</span></div>
+      <div class="panelside">
+        <div class="ctrl">
+          <div class="row"><label>angle θ</label><span class="val" id="v2d">45°</span></div>
+          <input type="range" class="sa" id="s2d" min="-180" max="180" value="45" step="1">
+        </div>
+        <div class="btnrow">
+          <button class="btn" data-a2d="0">0°</button>
+          <button class="btn" data-a2d="90">90°</button>
+          <button class="btn" data-a2d="180">180°</button>
+          <button class="btn" data-a2d="-90">−90°</button>
+        </div>
+        <div class="matwrap"><div class="cap">R(θ)</div><div class="mat" id="m2d"></div></div>
+        <div class="readout" id="r2d"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== EULER =================== -->
+<section id="euler">
+  <div class="kicker"><span class="num">06</span></div>
+  <h2>Euler angles &amp; the roll–pitch–yaw convention</h2>
+  <p>The first 3D recipe stacks three 2D‑style turns about the principal axes. The three building blocks are:</p>
+  $$R_x(\phi)=\begin{bmatrix}1&0&0\\0&\cos\phi&-\sin\phi\\0&\sin\phi&\cos\phi\end{bmatrix},\;\;
+   R_y(\theta)=\begin{bmatrix}\cos\theta&0&\sin\theta\\0&1&0\\-\sin\theta&0&\cos\theta\end{bmatrix},\;\;
+   R_z(\psi)=\begin{bmatrix}\cos\psi&-\sin\psi&0\\\sin\psi&\cos\psi&0\\0&0&1\end{bmatrix}$$
+  <p>Notice \(R_y\) has its minus sign in the opposite corner — that is not a typo, it keeps the frame right‑handed.</p>
+
+  <h3>24 conventions, one we’ll use</h3>
+  <p>You must specify two things before three angles mean anything:</p>
+  <ul>
+    <li><strong>Extrinsic (s, static)</strong> — turn about the fixed world axes — vs <strong>intrinsic (r, rotating)</strong> — turn about the axes that move with the body.</li>
+    <li>The <strong>axis order</strong> (xyz, zyx, zxz, …). Three‑distinct‑axis orders are called <em>Tait–Bryan</em>; orders that repeat the first axis (zxz) are <em>Euler proper</em>.</li>
+  </ul>
+  <p>Two choices × two families × six orders \(=\) <strong>24</strong> conventions. A clean identity ties extrinsic and intrinsic together: doing it extrinsically in one order equals doing it intrinsically in the reverse order, e.g. <code>sxyz = rzyx</code>.</p>
+
+  <div class="card key">
+    <div class="lab">Roll · Pitch · Yaw (aerospace)</div>
+    <span class="axx">Roll \(\phi\)</span> about X, <span class="ayy">pitch \(\theta\)</span> about Y, <span class="azz">yaw \(\psi\)</span> about Z. The <strong>intrinsic z‑y‑x</strong> and <strong>extrinsic x‑y‑z</strong> readings give the very same body‑to‑world matrix:
+    $$R=R_z(\psi)\,R_y(\theta)\,R_x(\phi)$$
+    Read right to left: first roll, then pitch, then yaw.
+  </div>
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>Orientation explorer</b> · roll / pitch / yaw → R = Rz(ψ)·Ry(θ)·Rx(φ)</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="hostE"><canvas id="cvE"></canvas><span class="hint">drag to orbit · scroll to zoom</span></div>
+      <div class="panelside">
+        <div class="ctrl"><div class="row"><label class="axx">roll φ (X)</label><span class="val" id="vR">0°</span></div><input type="range" class="sx" id="sR" min="-180" max="180" value="20" step="1"></div>
+        <div class="ctrl"><div class="row"><label class="ayy">pitch θ (Y)</label><span class="val" id="vP">0°</span></div><input type="range" class="sy" id="sP" min="-180" max="180" value="15" step="1"></div>
+        <div class="ctrl"><div class="row"><label class="azz">yaw ψ (Z)</label><span class="val" id="vY">0°</span></div><input type="range" class="sz" id="sY" min="-180" max="180" value="30" step="1"></div>
+        <div class="btnrow">
+          <button class="btn" id="eReset">reset</button>
+          <button class="btn" id="eGimbal">set gimbal lock (θ=90°)</button>
+        </div>
+        <div class="matwrap"><div class="cap">R = Rz·Ry·Rx (columns = body axes)</div><div class="mat" id="mE"></div></div>
+        <div class="readout" id="rE"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== GIMBAL =================== -->
+<section id="gimbal">
+  <div class="kicker"><span class="num">07</span></div>
+  <h2>Gimbal lock: where angles break</h2>
+  <p>Euler angles are loved for being only three numbers — but in 3D the map from angles to orientation is <strong>not one‑to‑one</strong>, and it fails at certain configurations. The classic failure is <strong>gimbal lock</strong>.</p>
+  <p>Set the pitch to \(\theta=90^\circ\) in the explorer above (press <em>“set gimbal lock”</em>). Now wiggle <span class="axx">roll</span> and <span class="azz">yaw</span>: they spin the body about the <em>same</em> world axis. Two of your three control knobs have collapsed onto one degree of freedom — you have lost the ability to tilt in the third direction, and the angles are no longer uniquely recoverable. Concretely, for any offset \(\delta\):</p>
+  $$R=R_z(\psi)\,R_y(\tfrac{\pi}{2})\,R_x(\phi+\delta)\quad\text{gives the same }R\text{ for a compensating change in }\psi.$$
+  <div class="card warn">This singularity is why spacecraft, IMUs, and game engines avoid storing orientation as Euler angles internally. The cures are the next two parametrizations — <strong>axis‑angle</strong> and <strong>quaternions</strong> — which have no such breakdown.</div>
+</section>
+
+<!-- =================== HAT MAP =================== -->
+<section id="hat">
+  <div class="kicker"><span class="num">08</span></div>
+  <h2>The cross product as a matrix: the hat map</h2>
+  <p>To build axis‑angle rotations we need to write the cross product as a matrix multiply. The <strong>hat map</strong> \(\hat\cdot:\mathbb R^3\to so(3)\) turns a vector into the skew‑symmetric matrix that reproduces \(\mathbf x\times\mathbf y\):</p>
+  $$\mathbf x\times\mathbf y=\begin{bmatrix}x_2y_3-x_3y_2\\x_3y_1-x_1y_3\\x_1y_2-x_2y_1\end{bmatrix}
+   =\underbrace{\begin{bmatrix}0&-x_3&x_2\\x_3&0&-x_1\\-x_2&x_1&0\end{bmatrix}}_{\hat{\mathbf x}}\;\mathbf y,
+   \qquad \hat{\mathbf x}^\top=-\hat{\mathbf x}$$
+  <p>The space \(\mathbb R^3\) and the skew‑symmetric matrices \(so(3)\) are <strong>isomorphic</strong>: the hat map is a perfect one‑to‑one correspondence. Its inverse, the <strong>vee map</strong> \(^\vee:so(3)\to\mathbb R^3\), reads the vector back out: \(\mathbf x=\hat{\mathbf x}^\vee\). And these skew matrices are not a random set — they are exactly the Lie algebra \(so(3)\), the tangent space at the identity from the previous section.</p>
+  <div class="card note"><strong>Lemma.</strong> A matrix \(M\in\mathbb R^{3\times3}\) is skew‑symmetric \(\big(M^\top=-M\big)\) <em>if and only if</em> \(M=\hat{\mathbf x}\) for some \(\mathbf x\in\mathbb R^3\). So “skew‑symmetric \(3\times3\) matrix” and “3‑vector” carry exactly the same information — three numbers either way.</div>
+
+  <h4>Properties you’ll actually use</h4>
+  <ul>
+    <li><strong>Cross product / antisymmetry:</strong> \(\hat{\mathbf x}\mathbf y=\mathbf x\times\mathbf y=-\mathbf y\times\mathbf x=-\hat{\mathbf y}\mathbf x\), and \(\hat{\mathbf x}^\top=-\hat{\mathbf x}\).</li>
+    <li><strong>Product of two hats:</strong> \(\hat{\mathbf x}\hat{\mathbf y}=\mathbf y\mathbf x^\top-(\mathbf x^\top\mathbf y)\,I\).</li>
+    <li><strong>Vector triple product:</strong> \(\mathbf x\times(\mathbf y\times\mathbf z)=\hat{\mathbf x}\hat{\mathbf y}\mathbf z=\mathbf y(\mathbf x^\top\mathbf z)-(\mathbf x^\top\mathbf y)\mathbf z\).</li>
+    <li><strong>Jacobi identity</strong> (the rule that makes \(so(3)\) a Lie algebra): \(\hat{\mathbf x}\hat{\mathbf y}\mathbf z+\hat{\mathbf y}\hat{\mathbf z}\mathbf x+\hat{\mathbf z}\hat{\mathbf x}\mathbf y=\mathbf 0\).</li>
+    <li><strong>The key power identity</strong> \(\;\hat{\mathbf x}^{\,2k+1}=(-\mathbf x^\top\mathbf x)^k\,\hat{\mathbf x}\). For a <em>unit</em> axis this is just \(\hat{\boldsymbol\eta}^3=-\hat{\boldsymbol\eta}\): all odd powers cycle back to \(\hat{\boldsymbol\eta}\), all even powers to \(\hat{\boldsymbol\eta}^2\). This is what collapses the matrix exponential into a closed form.</li>
+    <li><strong>Lie bracket / commutator:</strong> \((\hat{\mathbf x}\mathbf y)^\wedge=\hat{\mathbf x}\hat{\mathbf y}-\hat{\mathbf y}\hat{\mathbf x}=\mathbf y\mathbf x^\top-\mathbf x\mathbf y^\top\) — the failure of two hats to commute is itself a hat.</li>
+    <li><strong>With a general matrix \(A\):</strong> \(\hat{\mathbf x}A+A^\top\hat{\mathbf x}=\big((\operatorname{tr}(A)I-A)\mathbf x\big)^\wedge\), and \(\operatorname{tr}(\hat{\mathbf x}A)=\tfrac12\operatorname{tr}\!\big(\hat{\mathbf x}(A-A^\top)\big)=-\mathbf x^\top(A-A^\top)^\vee\).</li>
+    <li><strong>Conjugation:</strong> \((A\mathbf x)^\wedge=\det(A)\,A^{-\top}\hat{\mathbf x}A^{-1}\); in particular for \(R\in SO(3)\), \((R\mathbf x)^\wedge=R\,\hat{\mathbf x}\,R^\top\). (Rotating the axis = conjugating its hat.)</li>
+  </ul>
+</section>
+
+<!-- =================== AXIS-ANGLE =================== -->
+<section id="axisangle">
+  <div class="kicker"><span class="num">09</span></div>
+  <h2>Axis–angle, the matrix exponential &amp; Rodrigues</h2>
+  <p>Let a point spin about a fixed unit axis \(\boldsymbol\eta\) at constant unit speed. Its velocity is always perpendicular to the axis:</p>
+  $$\dot{\mathbf s}(t)=\boldsymbol\eta\times\mathbf s(t)=\hat{\boldsymbol\eta}\,\mathbf s(t)$$
+  <p>That is a linear constant‑coefficient ODE, and its solution is the matrix exponential:</p>
+  $$\mathbf s(t)=\exp(t\,\hat{\boldsymbol\eta})\,\mathbf s(0)$$
+  <p>Since the speed is unity, elapsed time equals swept angle \(\theta\), and because \(\mathbf s\) only rotates, \(\mathbf s(t)=R(t)\mathbf s(0)\). Matching the two:</p>
+  $$\boxed{\,R(\theta)=\exp(\theta\,\hat{\boldsymbol\eta})\,}$$
+
+  <h3>The exponential map so(3) → SO(3)</h3>
+  <p>Fold axis and angle into one <strong>rotation vector</strong> \(\boldsymbol\theta:=\theta\,\boldsymbol\eta\in\mathbb R^3\) (direction = axis, length = angle). Then</p>
+  $$R=\exp(\hat{\boldsymbol\theta})=\sum_{n=0}^\infty\frac1{n!}\hat{\boldsymbol\theta}^{\,n}=I+\hat{\boldsymbol\theta}+\tfrac1{2!}\hat{\boldsymbol\theta}^2+\tfrac1{3!}\hat{\boldsymbol\theta}^3+\cdots$$
+  <p>Two facts to keep straight:</p>
+  <ul>
+    <li><strong>Surjective but not injective.</strong> Every rotation is reachable, but many vectors give the same one: \(\boldsymbol\theta\) and \((\lVert\boldsymbol\theta\rVert+2\pi k)\tfrac{\boldsymbol\theta}{\lVert\boldsymbol\theta\rVert}\) all map to the same \(R\).</li>
+    <li><strong>Order matters.</strong> \(e^{\hat{\boldsymbol\theta}_1}e^{\hat{\boldsymbol\theta}_2}\ne e^{\hat{\boldsymbol\theta}_2}e^{\hat{\boldsymbol\theta}_1}\) unless \(\hat{\boldsymbol\theta}_1\hat{\boldsymbol\theta}_2=\hat{\boldsymbol\theta}_2\hat{\boldsymbol\theta}_1\). Rotations don’t commute.</li>
+  </ul>
+
+  <div class="card key">
+    <div class="lab">Rodrigues’ formula — the closed form</div>
+    Using \(\hat{\boldsymbol\theta}^{\,2n+1}=(-\boldsymbol\theta^\top\boldsymbol\theta)^n\hat{\boldsymbol\theta}\), the infinite series collapses into a \(\sin\) part and a \(1-\cos\) part:
+    $$R=\exp(\hat{\boldsymbol\theta})=I+\left(\frac{\sin\lVert\boldsymbol\theta\rVert}{\lVert\boldsymbol\theta\rVert}\right)\hat{\boldsymbol\theta}+\left(\frac{1-\cos\lVert\boldsymbol\theta\rVert}{\lVert\boldsymbol\theta\rVert^2}\right)\hat{\boldsymbol\theta}^2$$
+    With a unit axis \(\boldsymbol\eta\) and angle \(\theta\) this reads \(R=I+\sin\theta\,\hat{\boldsymbol\eta}+(1-\cos\theta)\,\hat{\boldsymbol\eta}^2\). No singularities, no series — just one matrix.
+  </div>
+
+  <p><strong>Where the \(\sin\) and \(1-\cos\) come from.</strong> Split the exponential series into its odd and even powers of \(\hat{\boldsymbol\theta}\). The power identity \(\hat{\boldsymbol\theta}^{\,2n+1}=(-\boldsymbol\theta^\top\boldsymbol\theta)^n\hat{\boldsymbol\theta}=(-\lVert\boldsymbol\theta\rVert^2)^n\hat{\boldsymbol\theta}\) means every odd power is a scalar times \(\hat{\boldsymbol\theta}\), and every even power a scalar times \(\hat{\boldsymbol\theta}^2\):</p>
+  $$\exp(\hat{\boldsymbol\theta})=I+\Bigg(\underbrace{\sum_{n=0}^\infty\frac{(-1)^n\lVert\boldsymbol\theta\rVert^{2n}}{(2n+1)!}}_{=\,\sin\lVert\boldsymbol\theta\rVert/\lVert\boldsymbol\theta\rVert}\Bigg)\hat{\boldsymbol\theta}+\Bigg(\underbrace{\sum_{n=0}^\infty\frac{(-1)^n\lVert\boldsymbol\theta\rVert^{2n}}{(2n+2)!}}_{=\,(1-\cos\lVert\boldsymbol\theta\rVert)/\lVert\boldsymbol\theta\rVert^2}\Bigg)\hat{\boldsymbol\theta}^2$$
+  <p>The two bracketed sums are just the Taylor series of \(\sin\) and \(1-\cos\) in disguise — which is the whole trick.</p>
+
+  <h3>The logarithm map SO(3) → so(3)</h3>
+  <p>Going backwards, every \(R\) has a (non‑unique) rotation vector. The angle comes from the trace; the axis from the skew part:</p>
+  $$\theta=\lVert\boldsymbol\theta\rVert=\arccos\!\Big(\frac{\operatorname{tr}(R)-1}{2}\Big),\qquad
+   \boldsymbol\eta=\frac{1}{2\sin\theta}\begin{bmatrix}R_{32}-R_{23}\\R_{13}-R_{31}\\R_{21}-R_{12}\end{bmatrix}$$
+  $$\hat{\boldsymbol\theta}=\log(R)=\frac{\theta}{2\sin\theta}\,(R-R^\top)$$
+  <ul>
+    <li>If \(R=I\): \(\theta=0\) and the axis is undefined (no rotation, no axis).</li>
+    <li>If \(\operatorname{tr}(R)=-1\): \(\theta=\pi\), \(\sin\theta=0\), so the formula above divides by zero. Use instead, for any \(i\) with \(R_{ii}\) largest, \(\boldsymbol\eta=\tfrac{1}{\sqrt{2(1+R_{ii})}}(I+R)\mathbf e_i\).</li>
+  </ul>
+  <p>Intuition: <code>exp</code> integrates an angular velocity \(\hat{\boldsymbol\theta}\) for one second to get \(R\); <code>log</code> differentiates \(R\) back to that \(\hat{\boldsymbol\theta}\).</p>
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>Axis–angle explorer</b> · pick an axis &amp; angle → Rodrigues → and back via log</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="hostA"><canvas id="cvA"></canvas><span class="hint">amber line = rotation axis η</span></div>
+      <div class="panelside">
+        <div class="ctrl"><div class="row"><label>axis x</label><span class="val" id="vAx">0.00</span></div><input type="range" class="sx" id="sAx" min="-100" max="100" value="0" step="1"></div>
+        <div class="ctrl"><div class="row"><label>axis y</label><span class="val" id="vAy">0.00</span></div><input type="range" class="sy" id="sAy" min="-100" max="100" value="0" step="1"></div>
+        <div class="ctrl"><div class="row"><label>axis z</label><span class="val" id="vAz">1.00</span></div><input type="range" class="sz" id="sAz" min="-100" max="100" value="100" step="1"></div>
+        <div class="ctrl"><div class="row"><label>angle θ</label><span class="val" id="vAa">90°</span></div><input type="range" class="sa" id="sAa" min="0" max="360" value="90" step="1"></div>
+        <div class="btnrow">
+          <button class="btn" data-axa="x">X</button>
+          <button class="btn" data-axa="y">Y</button>
+          <button class="btn" data-axa="z">Z</button>
+          <button class="btn" data-axa="d">(1,1,1)</button>
+        </div>
+        <div class="matwrap"><div class="cap">R = exp(θ·η̂)  (Rodrigues)</div><div class="mat" id="mA"></div></div>
+        <div class="readout" id="rA"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== QUATERNIONS =================== -->
+<section id="quat">
+  <div class="kicker"><span class="num">10</span></div>
+  <h2>Quaternions</h2>
+  <p>Quaternions \(\mathbb H\) extend complex numbers with two more imaginary units:</p>
+  $$q=q_s+q_1 i+q_2 j+q_3 k=[\,q_s,\,\mathbf q_v\,],\qquad i^2=j^2=k^2=ijk=-1,\quad ij=-ji=k$$
+  <p>Just as a unit complex number rotated in 2D, a <strong>unit quaternion</strong> rotates in 3D:</p>
+  $$\mathbb H_*:=\{q\in\mathbb H\mid q_s^2+\mathbf q_v^\top\mathbf q_v=1\}$$
+  <p>The trick is to embed the 3D space \(SO(3)\) inside the 4D unit sphere of \(\mathbb H\). The matching rotation matrix is</p>
+  $$R(q)=E(q)\,G(q)^\top,\qquad E(q)=[-\mathbf q_v,\ q_s I+\hat{\mathbf q}_v],\quad G(q)=[-\mathbf q_v,\ q_s I-\hat{\mathbf q}_v]$$
+
+  <div class="card key">
+    <div class="lab">Axis–angle, the easy way</div>
+    A turn by \(\theta\) about unit axis \(\boldsymbol\eta\) is the quaternion
+    $$q=\Big[\cos\tfrac{\theta}{2},\ \sin\tfrac{\theta}{2}\,\boldsymbol\eta\Big].$$
+    The <strong>half angle</strong> is the whole story behind the “double cover”: \(q\) and \(-q\) name the <em>same</em> rotation, so \(R(q)=R(-q)\). Recovering it: \(\theta=2\arccos(q_s)\), and \(\boldsymbol\eta=\mathbf q_v/\sin(\theta/2)\) when \(\theta\ne0\).
+  </div>
+
+  <h3>Operations</h3>
+  <ul>
+    <li><strong>Multiplication</strong> (this <em>is</em> composition of rotations): \(q\circ p=\big[q_sp_s-\mathbf q_v^\top\mathbf p_v,\ q_s\mathbf p_v+p_s\mathbf q_v+\mathbf q_v\times\mathbf p_v\big]\). Like rotations, it does not commute.</li>
+    <li><strong>Conjugate</strong> \(\bar q=[q_s,-\mathbf q_v]\); <strong>norm</strong> \(\lVert q\rVert=\sqrt{q_s^2+\mathbf q_v^\top\mathbf q_v}\); <strong>inverse</strong> \(q^{-1}=\bar q/\lVert q\rVert^2\). For a unit quaternion the inverse is just the conjugate.</li>
+    <li><strong>Rotating a vector</strong> \(\mathbf x\): promote it to \([0,\mathbf x]\) and sandwich — \(q\circ[0,\mathbf x]\circ q^{-1}=[0,R(q)\mathbf x]\).</li>
+    <li><strong>Kinematics</strong>: with body angular velocity \(\boldsymbol\omega\), \(\dot q=\tfrac12\,q\circ[0,\boldsymbol\omega]=\tfrac12\,G(q)^\top\boldsymbol\omega\) — a clean way to integrate orientation over time.</li>
+    <li><strong>Exp &amp; Log</strong> (the quaternion analogues of the matrix \(\exp\)/\(\log\)): \(\exp(q)=e^{q_s}\big[\cos\lVert\mathbf q_v\rVert,\ \tfrac{\mathbf q_v}{\lVert\mathbf q_v\rVert}\sin\lVert\mathbf q_v\rVert\big]\) and \(\log(q)=\big[\ln\lVert q\rVert,\ \tfrac{\mathbf q_v}{\lVert\mathbf q_v\rVert}\arccos\tfrac{q_s}{\lVert q\rVert}\big]\). These let you move between a rotation vector \(\boldsymbol\theta\in\mathbb R^3\) and a unit quaternion: \(q=\exp\big([0,\tfrac{\boldsymbol\theta}{2}]\big)\) and \([0,\boldsymbol\theta]=2\log(q)\).</li>
+  </ul>
+
+  <h4>Multiplication as a matrix — and where \(R(q)=E(q)G(q)^\top\) comes from</h4>
+  <p>Because \(q\circ p\) is linear in each argument, you can write it as a \(4\times4\) matrix times a 4‑vector — left‑ or right‑multiplying, your choice:</p>
+  $$q\circ p=[q]_L\,p=[p]_R\,q,\qquad [q]_L=\big[\,q\ \ \ G(q)^\top\,\big],\quad [q]_R=\big[\,q\ \ \ E(q)^\top\,\big]$$
+  $$E(q)=[-\mathbf q_v,\ q_sI+\hat{\mathbf q}_v],\qquad G(q)=[-\mathbf q_v,\ q_sI-\hat{\mathbf q}_v]$$
+  <p>Now apply the sandwich \(q\circ[0,\mathbf x]\circ q^{-1}\) as two matrix multiplies, \([\bar q]_R[q]_L\). The scalar row separates out and the \(3\times3\) block acting on \(\mathbf x\) is precisely \(E(q)G(q)^\top\) — which is exactly the rotation matrix \(R(q)\) quoted above. So “rotate by a quaternion” and “multiply by \(R(q)\)” are the same operation, just written in 4D versus 3D.</p>
+
+  <h4>Worked example (from lecture)</h4>
+  <p>Let \(\mathbf x=\mathbf e_2\) in frame \(\{A\}\). Frame \(\{B\}\) is \(\{A\}\) rotated by \(\theta=\pi/3\) about X. The rotation \(\{B\}\!\to\!\{A\}\) is \(^Aq_B=[\cos\tfrac{\pi}{6},\sin\tfrac{\pi}{6}\mathbf e_1]=\tfrac12[\sqrt3,\mathbf e_1]\). To get the coordinates of \(\mathbf x\) in \(\{B\}\) we use the inverse \(^Bq_A=\,^A\bar q_B=\tfrac12[\sqrt3,-\mathbf e_1]\):</p>
+  $$^Bq_A\circ[0,\mathbf e_2]\circ{}^Bq_A^{-1}=\tfrac12\big[0,\ \mathbf e_2-\sqrt3\,\mathbf e_3\big]$$
+  <p>So in \(\{B\}\), \(\mathbf x=\tfrac12\mathbf e_2-\tfrac{\sqrt3}{2}\mathbf e_3\) — exactly \(R_x(-\tfrac{\pi}{3})\mathbf e_2\), as it must be.</p>
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>Quaternion explorer</b> · axis &amp; angle → q → rotate a vector</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="hostQ"><canvas id="cvQ"></canvas><span class="hint">gray = input x · amber = rotated x′</span></div>
+      <div class="panelside">
+        <div class="ctrl"><div class="row"><label>axis x</label><span class="val" id="vQx">0.00</span></div><input type="range" class="sx" id="sQx" min="-100" max="100" value="0" step="1"></div>
+        <div class="ctrl"><div class="row"><label>axis y</label><span class="val" id="vQy">0.00</span></div><input type="range" class="sy" id="sQy" min="-100" max="100" value="0" step="1"></div>
+        <div class="ctrl"><div class="row"><label>axis z</label><span class="val" id="vQz">1.00</span></div><input type="range" class="sz" id="sQz" min="-100" max="100" value="100" step="1"></div>
+        <div class="ctrl"><div class="row"><label>angle θ</label><span class="val" id="vQa">90°</span></div><input type="range" class="sa" id="sQa" min="0" max="360" value="90" step="1"></div>
+        <div class="btnrow">
+          <button class="btn" data-qv="x">x = e₁</button>
+          <button class="btn" data-qv="y">x = e₂</button>
+          <button class="btn" data-qv="z">x = e₃</button>
+        </div>
+        <div class="readout" id="rQ"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== POSES =================== -->
+<section id="pose">
+  <div class="kicker"><span class="num">11</span></div>
+  <h2>Poses: putting rotation and translation together</h2>
+  <p>Add the position back. To send a body point to the world you <strong>rotate first, then translate</strong>:</p>
+  $$\mathbf s_W=R\,\mathbf s_B+\mathbf p$$
+  <p>This is affine, not linear — annoying to compose. The fix is <strong>homogeneous coordinates</strong>: append a 1, and the whole rigid transform becomes a single \(4\times4\) matrix multiply:</p>
+  $$\begin{bmatrix}\mathbf s_W\\1\end{bmatrix}=\underbrace{\begin{bmatrix}R&\mathbf p\\\mathbf 0^\top&1\end{bmatrix}}_{T}\begin{bmatrix}\mathbf s_B\\1\end{bmatrix}$$
+  <p>More generally a homogeneous point carries a <strong>scale factor</strong> \(\lambda\): \(\;\mathbf s:=\lambda\big[\begin{smallmatrix}\mathbf s\\1\end{smallmatrix}\big]\propto\big[\begin{smallmatrix}\mathbf s\\1\end{smallmatrix}\big]\in\mathbb R^4\), and any nonzero \(\lambda\) names the same 3D point (so \([2,4,2,2]\) and \([1,2,1,1]\) are the same place). Letting \(\lambda\to0\) gives a 4th coordinate of \(0\), e.g. \([1,2,1,0]^\top\) — a <strong>point at infinity</strong>, i.e. a pure direction infinitely far away. That single extra coordinate is what lets one \(4\times4\) matrix handle finite points, directions, and translation uniformly.</p>
+  <p>These \(T\) form the <strong>Special Euclidean Group</strong>:</p>
+  $$SE(3):=\left\{T=\begin{bmatrix}R&\mathbf p\\\mathbf 0^\top&1\end{bmatrix}\ \middle|\ R\in SO(3),\ \mathbf p\in\mathbb R^3\right\}$$
+
+  <div class="card key">
+    <div class="lab">Inverse of a pose — don’t just transpose</div>
+    $$T^{-1}=\begin{bmatrix}R&\mathbf p\\\mathbf 0^\top&1\end{bmatrix}^{-1}=\begin{bmatrix}R^\top&-R^\top\mathbf p\\\mathbf 0^\top&1\end{bmatrix}$$
+    The rotation block transposes, but the translation becomes \(-R^\top\mathbf p\) — you must un‑rotate the offset. Forgetting the \(R^\top\) on \(\mathbf p\) is the most common bug in robotics code.
+  </div>
+
+  <h3>Composing transformations</h3>
+  <p>Subscripts chain like dominoes — the inner frame of one meets the outer frame of the next:</p>
+  $$_{\{1\}}T_{\{2\}}=\,_{\{1\}}T_{\{W\}}\;_{\{W\}}T_{\{2\}}=\big(_{\{W\}}T_{\{1\}}\big)^{-1}{}_{\{W\}}T_{\{2\}}$$
+  <p>Reading the relative pose of frame \(\{2\}\) as seen from frame \(\{1\}\), given both world poses \(T_1,T_2\): \(\;{}^1T_2=T_1^{-1}T_2\). This single line is how you turn two absolute robot poses into the motion between them.</p>
+</section>
+
+<!-- =================== SUMMARY =================== -->
+<section id="summary">
+  <div class="kicker"><span class="num">12</span></div>
+  <h2>The four representations at a glance</h2>
+  <div class="card">
+    <h4 style="margin-top:0">Rotation matrix \(R\in SO(3)\)</h4>
+    \(R^\top R=I\) (distances), \(\det R=1\) (no reflection). Transform \(\mathbf s_W=R\mathbf s_B\); inverse \(R^{-1}=R^\top\); compose \(_WR_B={}_WR_A\,{}_AR_B\). <em>9 numbers, 6 constraints — direct but redundant.</em>
+    <hr class="soft">
+    <h4>Euler angles \((\phi,\theta,\psi)\)</h4>
+    \(R=R_z(\psi)R_y(\theta)R_x(\phi)\). <em>3 numbers, minimal &amp; intuitive — but suffers gimbal lock.</em>
+    <hr class="soft">
+    <h4>Axis–angle \(\boldsymbol\theta=\theta\boldsymbol\eta\in\mathbb R^3\)</h4>
+    \(R=\exp(\hat{\boldsymbol\theta})=I+\frac{\sin\lVert\boldsymbol\theta\rVert}{\lVert\boldsymbol\theta\rVert}\hat{\boldsymbol\theta}+\frac{1-\cos\lVert\boldsymbol\theta\rVert}{\lVert\boldsymbol\theta\rVert^2}\hat{\boldsymbol\theta}^2\). <em>3 numbers, no gimbal lock, great for tangent‑space/optimization.</em>
+    <hr class="soft">
+    <h4>Unit quaternion \(q=[q_s,\mathbf q_v]\in\mathbb H_*\)</h4>
+    \(R=E(q)G(q)^\top\), \(q=[\cos\tfrac\theta2,\sin\tfrac\theta2\boldsymbol\eta]\). <em>4 numbers, 1 constraint — no singularities, cheap to compose &amp; renormalize, double covers SO(3).</em>
+  </div>
+
+  <div class="card">
+    <div class="lab">SO(3) vs SE(3) cheat sheet</div>
+    <table style="width:100%; border-collapse:collapse; font-size:14.5px; margin-top:6px">
+      <tr style="color:var(--amber); font-family:'IBM Plex Mono'; font-size:12px; text-align:left">
+        <th style="padding:6px 8px"></th><th style="padding:6px 8px">Rotation SO(3)</th><th style="padding:6px 8px">Pose SE(3)</th></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">transform</td><td style="padding:8px">\(\mathbf s_W=R\mathbf s_B\)</td><td style="padding:8px">\(\mathbf s_W=R\mathbf s_B+\mathbf p\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">inverse</td><td style="padding:8px">\(R^{-1}=R^\top\)</td><td style="padding:8px">\(\begin{bmatrix}R^\top&-R^\top\mathbf p\\\mathbf 0^\top&1\end{bmatrix}\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">compose</td><td style="padding:8px">\(_WR_B={}_WR_A\,{}_AR_B\)</td><td style="padding:8px">\(_WT_B={}_WT_A\,{}_AT_B\)</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- =================== PRACTICE =================== -->
+<section id="practice">
+  <div class="kicker"><span class="num">13</span></div>
+  <h2>Practice problems &amp; full solutions</h2>
+  <p>Try each one with pen and paper first, then expand the solution. They are ordered to march through the whole lecture.</p>
+
+  <!-- P1 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 1</span><span class="tag">SO(3)</span>
+      <p>Is \(R=\begin{bmatrix}0&-1&0\\1&0&0\\0&0&1\end{bmatrix}\) a valid rotation? If so, give its inverse and say what rotation it represents.</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Orthogonality.</strong> Compute \(R^\top R\). The columns are \((0,1,0),(-1,0,0),(0,0,1)\): mutually perpendicular unit vectors, so \(R^\top R=I\). ✓</p>
+      <p><strong>Step 2 — Determinant.</strong> Expand along the third row: \(\det R=1\cdot\det\begin{bmatrix}0&-1\\1&0\end{bmatrix}=1\cdot(0-(-1))=1\). ✓ Both conditions hold, so \(R\in SO(3)\).</p>
+      <p><strong>Step 3 — Inverse.</strong> For any rotation \(R^{-1}=R^\top=\begin{bmatrix}0&1&0\\-1&0&0\\0&0&1\end{bmatrix}\).</p>
+      <p><strong>Step 4 — Interpret.</strong> Compare to \(R_z(\psi)=\begin{bmatrix}\cos\psi&-\sin\psi&0\\\sin\psi&\cos\psi&0\\0&0&1\end{bmatrix}\). Matching gives \(\cos\psi=0,\sin\psi=1\Rightarrow\psi=90^\circ\). It is a <strong>+90° rotation about the Z axis</strong>.</p>
+    </div></details>
+  </div>
+
+  <!-- P2 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 2</span><span class="tag">Euler / RPY</span>
+      <p>Build the body‑to‑world matrix for yaw \(\psi=90^\circ\), pitch \(\theta=90^\circ\), roll \(\phi=0\), using \(R=R_z(\psi)R_y(\theta)R_x(\phi)\).</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Each factor.</strong> \(R_x(0)=I\). With \(\cos90^\circ=0,\sin90^\circ=1\):</p>
+      $$R_y(90^\circ)=\begin{bmatrix}0&0&1\\0&1&0\\-1&0&0\end{bmatrix},\qquad R_z(90^\circ)=\begin{bmatrix}0&-1&0\\1&0&0\\0&0&1\end{bmatrix}$$
+      <p><strong>Step 2 — Multiply</strong> \(R=R_z(90^\circ)R_y(90^\circ)\) (the \(R_x\) factor is \(I\)). Row by row:</p>
+      <ul>
+        <li>Row 1: \((0,-1,0)\cdot\) columns of \(R_y\) → \((0,-1,0)\).</li>
+        <li>Row 2: \((1,0,0)\cdot\) columns → \((0,0,1)\).</li>
+        <li>Row 3: \((0,0,1)\cdot\) columns → \((-1,0,0)\).</li>
+      </ul>
+      $$R=\begin{bmatrix}0&-1&0\\0&0&1\\-1&0&0\end{bmatrix}$$
+      <p><strong>Step 3 — Sanity check.</strong> Columns are orthonormal and \(\det R=+1\), so the result is a valid rotation. (Verify with the explorer in §5 by setting those sliders.)</p>
+    </div></details>
+  </div>
+
+  <!-- P3 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 3</span><span class="tag">2D</span>
+      <p>(a) Rotate \((1,0)\) by \(90^\circ\). (b) Rotate \((\sqrt3,1)\) by \(30^\circ\).</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>(a)</strong> \(R(90^\circ)=\begin{bmatrix}0&-1\\1&0\end{bmatrix}\Rightarrow R\begin{bmatrix}1\\0\end{bmatrix}=\begin{bmatrix}0\\1\end{bmatrix}\). The X‑unit vector swings to the Y axis — exactly a quarter turn CCW.</p>
+      <p><strong>(b)</strong> \(\cos30^\circ=\tfrac{\sqrt3}{2},\ \sin30^\circ=\tfrac12\).</p>
+      $$\begin{bmatrix}\tfrac{\sqrt3}{2}&-\tfrac12\\[2pt]\tfrac12&\tfrac{\sqrt3}{2}\end{bmatrix}\begin{bmatrix}\sqrt3\\1\end{bmatrix}=\begin{bmatrix}\tfrac{\sqrt3}{2}\sqrt3-\tfrac12\cdot1\\[2pt]\tfrac12\sqrt3+\tfrac{\sqrt3}{2}\cdot1\end{bmatrix}=\begin{bmatrix}\tfrac32-\tfrac12\\[2pt]\sqrt3\end{bmatrix}=\begin{bmatrix}1\\ \sqrt3\end{bmatrix}$$
+      <p><strong>Check:</strong> the input \((\sqrt3,1)\) has angle \(30^\circ\) and length \(2\); the output \((1,\sqrt3)\) has angle \(60^\circ\) and the same length \(2\). Rotation preserves length and adds \(30^\circ\). ✓</p>
+    </div></details>
+  </div>
+
+  <!-- P4 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 4</span><span class="tag">hat map</span>
+      <p>For \(\mathbf x=(1,2,3),\ \mathbf y=(0,1,-1)\): write \(\hat{\mathbf x}\), then compute \(\mathbf x\times\mathbf y\) both directly and as \(\hat{\mathbf x}\mathbf y\).</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Hat matrix.</strong></p>
+      $$\hat{\mathbf x}=\begin{bmatrix}0&-x_3&x_2\\x_3&0&-x_1\\-x_2&x_1&0\end{bmatrix}=\begin{bmatrix}0&-3&2\\3&0&-1\\-2&1&0\end{bmatrix}$$
+      <p><strong>Step 2 — Direct cross product.</strong> \(\mathbf x\times\mathbf y=(x_2y_3-x_3y_2,\ x_3y_1-x_1y_3,\ x_1y_2-x_2y_1)\)
+      \(=(2(-1)-3(1),\ 3(0)-1(-1),\ 1(1)-2(0))=(-5,\ 1,\ 1)\).</p>
+      <p><strong>Step 3 — As a matrix product.</strong></p>
+      $$\hat{\mathbf x}\mathbf y=\begin{bmatrix}0&-3&2\\3&0&-1\\-2&1&0\end{bmatrix}\begin{bmatrix}0\\1\\-1\end{bmatrix}=\begin{bmatrix}0-3-2\\0-0+1\\0+1+0\end{bmatrix}=\begin{bmatrix}-5\\1\\1\end{bmatrix}$$
+      <p>Identical — the hat map really does encode the cross product. ✓</p>
+    </div></details>
+  </div>
+
+  <!-- P5 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 5</span><span class="tag">Rodrigues</span>
+      <p>Use Rodrigues’ formula \(R=I+\sin\theta\,\hat{\boldsymbol\eta}+(1-\cos\theta)\hat{\boldsymbol\eta}^2\) for the rotation of \(\theta=120^\circ\) about the axis \(\boldsymbol\eta=\tfrac{1}{\sqrt3}(1,1,1)\). Identify the result.</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Pieces.</strong> \(\cos120^\circ=-\tfrac12,\ \sin120^\circ=\tfrac{\sqrt3}{2}\), so \(1-\cos\theta=\tfrac32\).</p>
+      $$\hat{\boldsymbol\eta}=\tfrac1{\sqrt3}\begin{bmatrix}0&-1&1\\1&0&-1\\-1&1&0\end{bmatrix},\qquad \boldsymbol\eta\boldsymbol\eta^\top=\tfrac13\begin{bmatrix}1&1&1\\1&1&1\\1&1&1\end{bmatrix}$$
+      <p><strong>Step 2 — Use \(\hat{\boldsymbol\eta}^2=\boldsymbol\eta\boldsymbol\eta^\top-I\)</strong> (since \(\boldsymbol\eta\) is a unit vector). The three terms become:</p>
+      <ul>
+        <li>\(\sin\theta\,\hat{\boldsymbol\eta}=\tfrac{\sqrt3}{2}\cdot\tfrac1{\sqrt3}\,[\dots]=\tfrac12\begin{bmatrix}0&-1&1\\1&0&-1\\-1&1&0\end{bmatrix}\)</li>
+        <li>\((1-\cos\theta)\hat{\boldsymbol\eta}^2=\tfrac32(\boldsymbol\eta\boldsymbol\eta^\top-I)=\tfrac12\begin{bmatrix}1&1&1\\1&1&1\\1&1&1\end{bmatrix}-\tfrac32 I\)</li>
+      </ul>
+      <p><strong>Step 3 — Add \(I\) and combine.</strong> Entry \((1,1)\): \(1+0+\tfrac12-\tfrac32=0\). Entry \((1,3)\): \(0+\tfrac12+\tfrac12=1\). Continuing every entry:</p>
+      $$R=\begin{bmatrix}0&0&1\\1&0&0\\0&1&0\end{bmatrix}$$
+      <p><strong>Step 4 — Identify.</strong> \(R\mathbf e_1=\mathbf e_2,\ R\mathbf e_2=\mathbf e_3,\ R\mathbf e_3=\mathbf e_1\): a 120° turn about the body diagonal <strong>cyclically permutes the axes</strong> X→Y→Z→X. Elegant, and a great test case for any rotation code.</p>
+    </div></details>
+  </div>
+
+  <!-- P6 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 6</span><span class="tag">log map</span>
+      <p>Recover the axis and angle of \(R=\begin{bmatrix}0&-1&0\\1&0&0\\0&0&1\end{bmatrix}\) from Problem 1 using the logarithm map.</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Angle from trace.</strong> \(\operatorname{tr}(R)=0+0+1=1\). Then
+      \(\theta=\arccos\!\big(\tfrac{\operatorname{tr}R-1}{2}\big)=\arccos(0)=\tfrac{\pi}{2}=90^\circ\).</p>
+      <p><strong>Step 2 — Axis from the skew part.</strong> \(\sin\theta=1\), so</p>
+      $$\boldsymbol\eta=\frac{1}{2\sin\theta}\begin{bmatrix}R_{32}-R_{23}\\R_{13}-R_{31}\\R_{21}-R_{12}\end{bmatrix}=\frac12\begin{bmatrix}0-0\\0-0\\1-(-1)\end{bmatrix}=\begin{bmatrix}0\\0\\1\end{bmatrix}$$
+      <p><strong>Step 3 — Conclusion.</strong> A \(90^\circ\) rotation about \(+Z\) — consistent with Problem 1, and with rotation vector \(\boldsymbol\theta=\tfrac{\pi}{2}(0,0,1)\). Note this is the inverse operation of Problem 5’s Rodrigues step.</p>
+    </div></details>
+  </div>
+
+  <!-- P7 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 7</span><span class="tag">quaternion</span>
+      <p>Form the unit quaternion for a \(90^\circ\) rotation about \(Z\), then rotate \(\mathbf x=(1,0,0)\) with the sandwich product.</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Build q.</strong> Half angle \(=45^\circ\): \(q=[\cos45^\circ,\ \sin45^\circ(0,0,1)]=\big[\tfrac{\sqrt2}{2},\,0,\,0,\,\tfrac{\sqrt2}{2}\big]\). Check \(\lVert q\rVert^2=\tfrac12+\tfrac12=1\). ✓ Unit inverse \(q^{-1}=\bar q=[\tfrac{\sqrt2}{2},0,0,-\tfrac{\sqrt2}{2}]\).</p>
+      <p><strong>Step 2 — Promote x</strong> to the pure quaternion \([0,(1,0,0)]\).</p>
+      <p><strong>Step 3 — First product</strong> \(p=q\circ[0,\mathbf x]\), using \([q_sp_s-\mathbf q_v^\top\mathbf p_v,\ q_s\mathbf p_v+p_s\mathbf q_v+\mathbf q_v\times\mathbf p_v]\) with \(p_s=0,\mathbf p_v=(1,0,0)\):</p>
+      <ul>
+        <li>scalar: \(\tfrac{\sqrt2}{2}\cdot0-(0,0,\tfrac{\sqrt2}{2})\cdot(1,0,0)=0\).</li>
+        <li>vector: \(\tfrac{\sqrt2}{2}(1,0,0)+0+(0,0,\tfrac{\sqrt2}{2})\times(1,0,0)=(\tfrac{\sqrt2}{2},0,0)+(0,\tfrac{\sqrt2}{2},0)\).</li>
+      </ul>
+      <p>So \(p=\big[0,\ (\tfrac{\sqrt2}{2},\tfrac{\sqrt2}{2},0)\big]\).</p>
+      <p><strong>Step 4 — Second product</strong> \(p\circ q^{-1}\):</p>
+      <ul>
+        <li>scalar: \(0\cdot\tfrac{\sqrt2}{2}-(\tfrac{\sqrt2}{2},\tfrac{\sqrt2}{2},0)\cdot(0,0,-\tfrac{\sqrt2}{2})=0\).</li>
+        <li>vector: \(0\cdot(0,0,-\tfrac{\sqrt2}{2})+\tfrac{\sqrt2}{2}(\tfrac{\sqrt2}{2},\tfrac{\sqrt2}{2},0)+(\tfrac{\sqrt2}{2},\tfrac{\sqrt2}{2},0)\times(0,0,-\tfrac{\sqrt2}{2})\).</li>
+      </ul>
+      <p>Middle term \(=(\tfrac12,\tfrac12,0)\); cross term \(=(\tfrac{\sqrt2}{2}\!\cdot\!-\tfrac{\sqrt2}{2}\!\cdot\!\text{...})\) works out to \((-\tfrac12,\tfrac12,0)\). Summing: \((0,1,0)\).</p>
+      <p><strong>Result:</strong> \([0,(0,1,0)]\Rightarrow \mathbf x'=(0,1,0)=\mathbf e_2\). A \(90^\circ\) turn about Z carries \(\mathbf e_1\) to \(\mathbf e_2\) — matching \(R_z(90^\circ)\) from Problem 1. ✓</p>
+    </div></details>
+  </div>
+
+  <!-- P8 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 8</span><span class="tag">SE(3)</span>
+      <p>Let \(T_1\) have \(R_1=R_z(90^\circ)\), \(\mathbf p_1=(1,0,0)\); let \(T_2\) have \(R_2=I\), \(\mathbf p_2=(0,2,0)\). Find \(T_1^{-1}\) and the relative pose \(^1T_2=T_1^{-1}T_2\).</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — \(R_1\) and its transpose.</strong> \(R_1=\begin{bmatrix}0&-1&0\\1&0&0\\0&0&1\end{bmatrix}\), so \(R_1^\top=\begin{bmatrix}0&1&0\\-1&0&0\\0&0&1\end{bmatrix}\).</p>
+      <p><strong>Step 2 — Inverse pose.</strong> \(-R_1^\top\mathbf p_1=-R_1^\top(1,0,0)=-(0,-1,0)=(0,1,0)\). Hence</p>
+      $$T_1^{-1}=\begin{bmatrix}0&1&0&0\\-1&0&0&1\\0&0&1&0\\0&0&0&1\end{bmatrix}$$
+      <p><strong>Step 3 — Compose.</strong> Using \(^1T_2=T_1^{-1}T_2=\begin{bmatrix}R_1^\top R_2 & R_1^\top(\mathbf p_2-\mathbf p_1)\\\mathbf 0^\top&1\end{bmatrix}\). Rotation \(R_1^\top R_2=R_1^\top\). Translation: \(\mathbf p_2-\mathbf p_1=(-1,2,0)\), and \(R_1^\top(-1,2,0)=(2,1,0)\).</p>
+      $$^1T_2=\begin{bmatrix}0&1&0&2\\-1&0&0&1\\0&0&1&0\\0&0&0&1\end{bmatrix}$$
+      <p><strong>Interpretation:</strong> from frame \(\{1\}\)’s point of view, frame \(\{2\}\) sits at offset \((2,1,0)\) and is rotated by \(-90^\circ\) about Z — the un‑rotation of frame \(\{1\}\)’s own orientation.</p>
+    </div></details>
+  </div>
+
+  <!-- P9 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 9</span><span class="tag">concept</span>
+      <p>In roll–pitch–yaw, explain in one sentence each: (a) why \(\theta=90^\circ\) causes gimbal lock, and (b) why a unit quaternion never does.</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>(a)</strong> At \(\theta=90^\circ\) the pitch rotation aligns the roll axis (transformed X) with the yaw axis (world Z), so the roll and yaw turns act about the same line — three knobs control only two independent directions, and \((\phi,\psi)\) can no longer be recovered uniquely (only their sum/relationship is fixed).</p>
+      <p><strong>(b)</strong> A unit quaternion parametrizes orientation as a point on the smooth 3‑sphere \(\mathbb H_*\) with a single norm constraint and no coordinate chart that pinches, so its map to \(SO(3)\) is everywhere smooth and full‑rank — there is simply no configuration where a degree of freedom collapses (the only quirk is the harmless double cover, \(q\) vs \(-q\)).</p>
+    </div></details>
+  </div>
+</section>
+
+<footer>
+  Built as an interactive companion to ECE276A — Lecture 3: Rotations. Colors follow the X=red, Y=green, Z=blue convention throughout. Tip: use your browser’s Print → “Save as PDF” for a static copy (interactive 3D won’t move on paper).
+</footer>
+
+</div><!-- /wrap -->
+
+<script>
+/* ============================ MATH HELPERS ============================ */
+const DEG = Math.PI/180;
+function I3(){return [[1,0,0],[0,1,0],[0,0,1]];}
+function matmul(A,B){const C=[[0,0,0],[0,0,0],[0,0,0]];for(let i=0;i<3;i++)for(let j=0;j<3;j++){let s=0;for(let k=0;k<3;k++)s+=A[i][k]*B[k][j];C[i][j]=s;}return C;}
+function matvec(A,v){return [A[0][0]*v[0]+A[0][1]*v[1]+A[0][2]*v[2],A[1][0]*v[0]+A[1][1]*v[1]+A[1][2]*v[2],A[2][0]*v[0]+A[2][1]*v[1]+A[2][2]*v[2]];}
+function Rx(a){const c=Math.cos(a),s=Math.sin(a);return [[1,0,0],[0,c,-s],[0,s,c]];}
+function Ry(a){const c=Math.cos(a),s=Math.sin(a);return [[c,0,s],[0,1,0],[-s,0,c]];}
+function Rz(a){const c=Math.cos(a),s=Math.sin(a);return [[c,-s,0],[s,c,0],[0,0,1]];}
+function hat(v){return [[0,-v[2],v[1]],[v[2],0,-v[0]],[-v[1],v[0],0]];}
+function norm3(v){return Math.hypot(v[0],v[1],v[2]);}
+function normalize3(v){const n=norm3(v)||1;return [v[0]/n,v[1]/n,v[2]/n];}
+function trace(A){return A[0][0]+A[1][1]+A[2][2];}
+function clean(x){return Math.abs(x)<1e-9?0:x;}
+// Rodrigues from unit axis + angle
+function rodrigues(axis,ang){
+  const u=normalize3(axis), H=hat(u), H2=matmul(H,H);
+  const c=Math.cos(ang), s=Math.sin(ang);
+  const R=I3();
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++) R[i][j]= R[i][j] + s*H[i][j] + (1-c)*H2[i][j];
+  return R;
+}
+// quaternion [s,x,y,z]
+function quatFromAxisAngle(axis,ang){const u=normalize3(axis),h=ang/2,s=Math.sin(h);return [Math.cos(h),u[0]*s,u[1]*s,u[2]*s];}
+function quatRotate(q,v){ // returns rotated 3-vector
+  const [w,x,y,z]=q;
+  // R(q) v via formula v + 2w(qv x v) + 2 qv x (qv x v)
+  const qv=[x,y,z];
+  const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+  const t=cross(qv,v).map(c=>2*c);
+  const tt=cross(qv,t);
+  return [v[0]+w*t[0]+tt[0], v[1]+w*t[1]+tt[1], v[2]+w*t[2]+tt[2]];
+}
+function logMap(R){
+  let ct=(trace(R)-1)/2; ct=Math.max(-1,Math.min(1,ct));
+  const ang=Math.acos(ct);
+  let axis;
+  if(ang<1e-6){axis=[0,0,0];}
+  else if(Math.abs(ang-Math.PI)<1e-3){
+    // tr=-1 case: pick largest diagonal
+    let i=0; if(R[1][1]>R[i][i])i=1; if(R[2][2]>R[i][i])i=2;
+    const col=[ (i==0?1:0)+R[0][i], (i==1?1:0)+R[1][i], (i==2?1:0)+R[2][i] ];
+    axis=normalize3(col);
+  } else {
+    const f=1/(2*Math.sin(ang));
+    axis=[f*(R[2][1]-R[1][2]), f*(R[0][2]-R[2][0]), f*(R[1][0]-R[0][1])];
+  }
+  return {ang,axis};
+}
+function f3(x){const v=clean(x); return (v>=0?" ":"")+v.toFixed(3);}
+
+/* ============================ NUMERIC MATRIX RENDER ============================ */
+function renderMat(el,R){
+  if(!el) return;
+  const cls=['cx','cy','cz'];
+  let html='';
+  for(let i=0;i<3;i++) for(let j=0;j<3;j++) html+='<span class="'+cls[j]+'">'+f3(R[i][j])+'</span>';
+  el.innerHTML=html;
+}
+
+/* ============================ 2D ROTATION WIDGET ============================ */
+(function(){
+  const cv=document.getElementById('cv2d'), host=document.getElementById('host2d');
+  if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const s=document.getElementById('s2d'), vv=document.getElementById('v2d'),
+        mat=document.getElementById('m2d'), read=document.getElementById('r2d');
+  const pt=[1.4,0.6]; // base point in "math" units
+  function resize(){const r=host.getBoundingClientRect();const dpr=window.devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);draw();}
+  function draw(){
+    const th=parseFloat(s.value)*DEG;
+    const w=cv.clientWidth||host.clientWidth, h=cv.clientHeight||host.clientHeight;
+    const cx=w/2, cy=h/2, sc=Math.min(w,h)/5.2;
+    ctx.clearRect(0,0,w,h);
+    // grid
+    ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+    for(let gx=cx%sc; gx<w; gx+=sc){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,h);ctx.stroke();}
+    for(let gy=cy%sc; gy<h; gy+=sc){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(w,gy);ctx.stroke();}
+    // axes
+    ctx.strokeStyle='#39455a';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(w,cy);ctx.moveTo(cx,0);ctx.lineTo(cx,h);ctx.stroke();
+    const toPx=(p)=>[cx+p[0]*sc, cy-p[1]*sc];
+    // original point vector (blue)
+    function arrow(p,color){const [ex,ey]=toPx(p);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ex,ey);ctx.stroke();
+      const a=Math.atan2(ey-cy,ex-cx);ctx.beginPath();ctx.moveTo(ex,ey);
+      ctx.lineTo(ex-10*Math.cos(a-.4),ey-10*Math.sin(a-.4));ctx.lineTo(ex-10*Math.cos(a+.4),ey-10*Math.sin(a+.4));ctx.closePath();ctx.fill();
+    }
+    arrow(pt,'#5398FF');
+    const R=[[Math.cos(th),-Math.sin(th)],[Math.sin(th),Math.cos(th)]];
+    const rp=[R[0][0]*pt[0]+R[0][1]*pt[1], R[1][0]*pt[0]+R[1][1]*pt[1]];
+    // arc
+    ctx.strokeStyle='rgba(255,180,84,.5)';ctx.lineWidth=1.5;ctx.beginPath();
+    const a0=Math.atan2(pt[1],pt[0]);ctx.arc(cx,cy,sc*0.9,-a0,-a0-th,th>0);ctx.stroke();
+    arrow(rp,'#FFB454');
+    vv.textContent=parseFloat(s.value)+'°';
+    renderMat2(mat,R);
+    read.innerHTML='<b>x</b> = ('+pt[0].toFixed(2)+', '+pt[1].toFixed(2)+')<br><b class="hi">x′</b> = ('+rp[0].toFixed(2)+', '+rp[1].toFixed(2)+')<br>‖x‖ = ‖x′‖ = '+norm3([pt[0],pt[1],0]).toFixed(3);
+  }
+  function renderMat2(el,R){el.style.gridTemplateColumns='repeat(2,1fr)';let h='';for(let i=0;i<2;i++)for(let j=0;j<2;j++)h+='<span>'+f3(R[i][j])+'</span>';el.innerHTML=h;}
+  s.addEventListener('input',draw);
+  document.querySelectorAll('[data-a2d]').forEach(b=>b.addEventListener('click',()=>{s.value=b.getAttribute('data-a2d');draw();}));
+  window.addEventListener('resize',resize);
+  setTimeout(resize,60);
+})();
+
+/* ============================ THREE.JS EXPLORERS ============================ */
+const explorers=[];
+function hasThree(){return typeof THREE!=='undefined';}
+
+function buildScene(canvas, host){
+  const renderer=new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:false});
+  renderer.setClearColor(0x0d121b,1);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(42,1,0.1,100);
+  camera.up.set(0,0,1);
+  scene.add(new THREE.AmbientLight(0xffffff,0.62));
+  const dl=new THREE.DirectionalLight(0xffffff,0.7); dl.position.set(4,6,8); scene.add(dl);
+
+  // world triad (faint)
+  scene.add(triad(2.0, 0.018, [0xb44b4b,0x37a05f,0x3f74cc], 0.55, false));
+  // grid on XY plane
+  const grid=new THREE.GridHelper(8,16,0x223,0x18202c); grid.rotation.x=Math.PI/2; grid.material.opacity=0.5; grid.material.transparent=true; scene.add(grid);
+
+  // body group
+  const body=new THREE.Group();
+  body.matrixAutoUpdate=false;
+  body.add(triad(2.3,0.035,[0xFF5D5D,0x46D17C,0x5398FF],1.0,true));
+  body.add(probe());
+  scene.add(body);
+
+  // orbit state
+  let az=0.62, pol=1.05, rad=7.2;
+  function applyCam(){
+    camera.position.set(rad*Math.sin(pol)*Math.cos(az), rad*Math.sin(pol)*Math.sin(az), rad*Math.cos(pol));
+    camera.lookAt(0,0,0);
+  }
+  const api={renderer,scene,camera,body,needs:true,
+    setR(R){const m=new THREE.Matrix4();m.set(R[0][0],R[0][1],R[0][2],0, R[1][0],R[1][1],R[1][2],0, R[2][0],R[2][1],R[2][2],0, 0,0,0,1);body.matrix.copy(m);api.needs=true;},
+    extra:new THREE.Group(),
+    resize(){const r=host.getBoundingClientRect();const w=Math.max(10,r.width),h=Math.max(10,r.height);renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();api.needs=true;},
+    render(){applyCam();renderer.render(scene,camera);}
+  };
+  scene.add(api.extra);
+
+  // pointer orbit
+  let down=false,lx=0,ly=0;
+  function pd(e){down=true;const p=pt(e);lx=p.x;ly=p.y;}
+  function pm(e){if(!down)return;const p=pt(e);az-=(p.x-lx)*0.01;pol-=(p.y-ly)*0.01;pol=Math.max(0.15,Math.min(Math.PI-0.15,pol));lx=p.x;ly=p.y;api.needs=true;if(e.cancelable)e.preventDefault();}
+  function pu(){down=false;}
+  function pt(e){const t=e.touches?e.touches[0]:e;return {x:t.clientX,y:t.clientY};}
+  canvas.addEventListener('mousedown',pd);window.addEventListener('mousemove',pm);window.addEventListener('mouseup',pu);
+  canvas.addEventListener('touchstart',pd,{passive:true});canvas.addEventListener('touchmove',pm,{passive:false});canvas.addEventListener('touchend',pu);
+  canvas.addEventListener('wheel',e=>{rad*=(1+Math.sign(e.deltaY)*0.08);rad=Math.max(3.5,Math.min(16,rad));api.needs=true;e.preventDefault();},{passive:false});
+
+  api.setR(I3());
+  explorers.push(api);
+  return api;
+}
+function triad(len,r,colors,opacity,heads){
+  const g=new THREE.Group();
+  const dirs=[[1,0,0],[0,1,0],[0,0,1]];
+  dirs.forEach((d,i)=>{
+    const mat=new THREE.MeshBasicMaterial({color:colors[i],transparent:opacity<1,opacity:opacity});
+    const cyl=new THREE.Mesh(new THREE.CylinderGeometry(r,r,len,12),mat);
+    // cylinder is along Y by default; orient to d
+    orient(cyl,d,len/2);
+    g.add(cyl);
+    if(heads){const cone=new THREE.Mesh(new THREE.ConeGeometry(r*2.6,len*0.16,14),mat);orient(cone,d,len+len*0.04);g.add(cone);}
+  });
+  return g;
+}
+function orient(mesh,d,offset){
+  const v=new THREE.Vector3(d[0],d[1],d[2]).normalize();
+  const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),v);
+  mesh.quaternion.copy(q);
+  mesh.position.set(v.x*offset,v.y*offset,v.z*offset);
+}
+function probe(){
+  const g=new THREE.Group();
+  const steel=new THREE.MeshLambertMaterial({color:0x8fa3c4,transparent:true,opacity:0.9});
+  const dark=new THREE.MeshLambertMaterial({color:0x4a5876,transparent:true,opacity:0.9});
+  const amber=new THREE.MeshLambertMaterial({color:0xFFB454});
+  const fuse=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.28,1.7,18),steel);fuse.rotation.z=-Math.PI/2;g.add(fuse);
+  const nose=new THREE.Mesh(new THREE.ConeGeometry(0.28,0.6,18),amber);nose.rotation.z=-Math.PI/2;nose.position.x=1.15;g.add(nose);
+  const wing=new THREE.Mesh(new THREE.BoxGeometry(0.5,2.4,0.07),dark);wing.position.x=-0.1;g.add(wing);
+  const tail=new THREE.Mesh(new THREE.BoxGeometry(0.45,0.07,0.55),dark);tail.position.set(-0.78,0,0.25);g.add(tail);
+  return g;
+}
+
+/* ---- render loop ---- */
+function loop(){
+  if(!document.hidden){for(const e of explorers){if(e.needs){e.render();e.needs=false;}}}
+  requestAnimationFrame(loop);
+}
+
+/* ============================ EXPLORER A: EULER ============================ */
+function initEuler(){
+  const canvas=document.getElementById('cvE'),host=document.getElementById('hostE');
+  if(!canvas) return;
+  if(!hasThree()){host.innerHTML='<div class="fallback">3D view needs an internet connection to load the graphics library. The math, matrices, and explanations all work offline.</div>';return;}
+  const ex=buildScene(canvas,host);
+  const sR=document.getElementById('sR'),sP=document.getElementById('sP'),sY=document.getElementById('sY');
+  const vR=document.getElementById('vR'),vP=document.getElementById('vP'),vY=document.getElementById('vY');
+  const mE=document.getElementById('mE'),rE=document.getElementById('rE');
+  function update(){
+    const phi=+sR.value*DEG, th=+sP.value*DEG, psi=+sY.value*DEG;
+    vR.textContent=sR.value+'°';vP.textContent=sP.value+'°';vY.textContent=sY.value+'°';
+    const R=matmul(matmul(Rz(psi),Ry(th)),Rx(phi));
+    ex.setR(R); renderMat(mE,R);
+    const locked=Math.abs(Math.abs(+sP.value)-90)<3;
+    rE.innerHTML='det R = <b>'+f3(1).trim()+'</b> · orthonormal ✓<br>'+
+      (locked?'<span class="statusbad">⚠ near gimbal lock — roll &amp; yaw now share one axis</span>':'<span class="statusgood">non-singular configuration</span>');
+  }
+  [sR,sP,sY].forEach(s=>s.addEventListener('input',update));
+  document.getElementById('eReset').addEventListener('click',()=>{sR.value=20;sP.value=15;sY.value=30;update();});
+  document.getElementById('eGimbal').addEventListener('click',()=>{sP.value=90;update();});
+  update();
+}
+
+/* ============================ EXPLORER B: AXIS-ANGLE ============================ */
+function initAxis(){
+  const canvas=document.getElementById('cvA'),host=document.getElementById('hostA');
+  if(!canvas) return;
+  if(!hasThree()){host.innerHTML='<div class="fallback">3D view needs an internet connection to load the graphics library. The math, matrices, and explanations all work offline.</div>';return;}
+  const ex=buildScene(canvas,host);
+  // axis line in extra group
+  const axisLine=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,7,10),new THREE.MeshBasicMaterial({color:0xFFB454}));
+  ex.extra.add(axisLine);
+  const sx=document.getElementById('sAx'),sy=document.getElementById('sAy'),sz=document.getElementById('sAz'),sa=document.getElementById('sAa');
+  const vx=document.getElementById('vAx'),vy=document.getElementById('vAy'),vz=document.getElementById('vAz'),va=document.getElementById('vAa');
+  const mA=document.getElementById('mA'),rA=document.getElementById('rA');
+  function update(){
+    let ax=[+sx.value/100,+sy.value/100,+sz.value/100];
+    if(norm3(ax)<1e-3) ax=[0,0,1];
+    const u=normalize3(ax), ang=+sa.value*DEG;
+    vx.textContent=u[0].toFixed(2);vy.textContent=u[1].toFixed(2);vz.textContent=u[2].toFixed(2);va.textContent=sa.value+'°';
+    const R=rodrigues(u,ang); ex.setR(R); renderMat(mA,R);
+    // axis line orientation
+    const v=new THREE.Vector3(u[0],u[1],u[2]);
+    axisLine.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),v)); ex.needs=true;
+    const lg=logMap(R);
+    rA.innerHTML='η = ('+u.map(x=>x.toFixed(2)).join(', ')+')<br>'+
+      'rotation vector θη = ('+u.map(x=>(x*ang).toFixed(2)).join(', ')+')<br>'+
+      '<span class="hi">log(R):</span> θ = '+(lg.ang/DEG).toFixed(1)+'°, η = ('+lg.axis.map(x=>x.toFixed(2)).join(', ')+')';
+  }
+  [sx,sy,sz,sa].forEach(s=>s.addEventListener('input',update));
+  document.querySelectorAll('[data-axa]').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.getAttribute('data-axa');
+    const m={x:[100,0,0],y:[0,100,0],z:[0,0,100],d:[58,58,58]}[k];
+    sx.value=m[0];sy.value=m[1];sz.value=m[2];update();
+  }));
+  update();
+}
+
+/* ============================ EXPLORER C: QUATERNION ============================ */
+function initQuat(){
+  const canvas=document.getElementById('cvQ'),host=document.getElementById('hostQ');
+  if(!canvas) return;
+  if(!hasThree()){host.innerHTML='<div class="fallback">3D view needs an internet connection to load the graphics library. The math and explanations all work offline.</div>';return;}
+  const ex=buildScene(canvas,host);
+  ex.body.visible=false; // hide probe; show vectors instead
+  // axis line + input/output vector arrows
+  const axisLine=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,7,10),new THREE.MeshBasicMaterial({color:0xFFB454,transparent:true,opacity:0.5}));
+  ex.extra.add(axisLine);
+  const inArrow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),2.2,0x9fb0c8,0.4,0.26);
+  const outArrow=new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),2.2,0xFFB454,0.4,0.26);
+  ex.extra.add(inArrow);ex.extra.add(outArrow);
+  let xvec=[1,0,0];
+  const sx=document.getElementById('sQx'),sy=document.getElementById('sQy'),sz=document.getElementById('sQz'),sa=document.getElementById('sQa');
+  const vx=document.getElementById('vQx'),vy=document.getElementById('vQy'),vz=document.getElementById('vQz'),va=document.getElementById('vQa');
+  const rQ=document.getElementById('rQ');
+  function update(){
+    let ax=[+sx.value/100,+sy.value/100,+sz.value/100]; if(norm3(ax)<1e-3) ax=[0,0,1];
+    const u=normalize3(ax), ang=+sa.value*DEG;
+    vx.textContent=u[0].toFixed(2);vy.textContent=u[1].toFixed(2);vz.textContent=u[2].toFixed(2);va.textContent=sa.value+'°';
+    const q=quatFromAxisAngle(u,ang);
+    const xp=quatRotate(q,xvec);
+    inArrow.setDirection(new THREE.Vector3(xvec[0],xvec[1],xvec[2]).normalize());
+    outArrow.setDirection(new THREE.Vector3(xp[0],xp[1],xp[2]).normalize());
+    axisLine.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(u[0],u[1],u[2])));
+    ex.needs=true;
+    rQ.innerHTML='q = [ <b>'+q[0].toFixed(3)+'</b>, '+q[1].toFixed(3)+', '+q[2].toFixed(3)+', '+q[3].toFixed(3)+' ]<br>'+
+      '<span class="statusgood">‖q‖ = '+Math.sqrt(q[0]*q[0]+q[1]*q[1]+q[2]*q[2]+q[3]*q[3]).toFixed(3)+'</span><br>'+
+      '<b>x</b>  = ('+xvec.map(x=>x.toFixed(2)).join(', ')+')<br>'+
+      '<b class="hi">x′</b> = ('+xp.map(x=>x.toFixed(2)).join(', ')+')';
+  }
+  [sx,sy,sz,sa].forEach(s=>s.addEventListener('input',update));
+  document.querySelectorAll('[data-qv]').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.getAttribute('data-qv');xvec={x:[1,0,0],y:[0,1,0],z:[0,0,1]}[k];update();
+  }));
+  update();
+}
+
+/* ============================ BOOT ============================ */
+function bootThree(){
+  initEuler(); initAxis(); initQuat();
+  // resize all
+  function resizeAll(){for(const e of explorers)e.resize();}
+  window.addEventListener('resize',resizeAll);
+  setTimeout(resizeAll,80); setTimeout(resizeAll,400);
+  loop();
+}
+
+/* KaTeX + boot after libs load */
+(function(){
+  var mathDone=false, otherDone=false;
+  function renderMath(){
+    if(mathDone) return;
+    if(window.renderMathInElement){
+      try{renderMathInElement(document.body,{delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'\\[',right:'\\]',display:true},
+        {left:'\\(',right:'\\)',display:false}
+      ],throwOnError:false});}catch(e){}
+      mathDone=true;
+    }
+  }
+  function bootRest(){
+    if(otherDone) return; otherDone=true;
+    try{bootThree();}catch(e){}
+    try{setupNav();}catch(e){}
+  }
+  // Poll for KaTeX up to ~8s in case the CDN is slow; render as soon as it lands.
+  var tries=0;
+  (function pollKaTeX(){
+    renderMath();
+    if(!mathDone && tries++ < 160){ setTimeout(pollKaTeX,50); }
+  })();
+  // Re-run once on full load as a belt-and-suspenders pass.
+  window.addEventListener('load',renderMath);
+  // The 3D explorers + nav don't depend on KaTeX — start them right away.
+  if(document.readyState!=='loading') bootRest();
+  else document.addEventListener('DOMContentLoaded',bootRest);
+})();
+
+/* scroll-spy nav */
+function setupNav(){
+  const links=[...document.querySelectorAll('#navlinks a')];
+  const map={}; links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver((ents)=>{
+    ents.forEach(en=>{ if(en.isIntersecting){ links.forEach(l=>l.classList.remove('on')); const a=map[en.target.id]; if(a){a.classList.add('on'); a.scrollIntoView({block:'nearest',inline:'center'});} } });
+  },{rootMargin:'-45% 0px -50% 0px'});
+  document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));
+}
+</script>
+</body>
+</html>

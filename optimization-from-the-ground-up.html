@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optimization, from the ground up — an interactive guide</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#EAEEF4; --paper-2:#F7F9FC; --card:#FBFCFE;
+    --ink:#16202E; --ink-soft:#4C5C70; --ink-faint:#8294A8;
+    --line:#C5D1E0; --grid:#D9E1EC; --contour:#A9BAD0;
+    --grad:#D9542B;   /* gradient / uphill */
+    --path:#0E8A6B;   /* descent path */
+    --newton:#6B5BD6; /* Newton */
+    --min:#C0902A;    /* the minimum */
+    --display:'Space Grotesk','Inter',system-ui,sans-serif;
+    --body:'Newsreader',Charter,'Bitstream Charter',Georgia,serif;
+    --mono:ui-monospace,'SF Mono','JetBrains Mono',Menlo,monospace;
+    --maxw:740px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--body); font-size:19px; line-height:1.62;
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:28px 28px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .progress{position:fixed;top:0;left:0;height:3px;width:0;background:var(--grad);z-index:50}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px 120px}
+  header.hero{max-width:var(--maxw);margin:0 auto;padding:64px 22px 8px}
+  .eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 14px}
+  h1{font-family:var(--display);font-weight:600;font-size:clamp(34px,6vw,52px);line-height:1.04;letter-spacing:-.02em;margin:0 0 18px}
+  h1 .em{color:var(--grad)}
+  .lede{font-size:21px;color:var(--ink-soft);max-width:62ch;margin:0 0 8px}
+
+  .legend{display:flex;flex-wrap:wrap;gap:18px;margin:30px 0 10px;padding:14px 18px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px;font-family:var(--mono);font-size:12.5px}
+  .legend span{display:inline-flex;align-items:center;gap:8px;color:var(--ink-soft)}
+  .swatch{width:22px;height:0;border-top:3px solid;border-radius:2px}
+
+  section{margin-top:70px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1.5px solid var(--ink);padding-bottom:10px;margin-bottom:8px}
+  .sec-no{font-family:var(--mono);font-size:13px;color:var(--grad);letter-spacing:.1em;font-weight:600;white-space:nowrap}
+  h2{font-family:var(--display);font-weight:600;font-size:clamp(24px,4vw,32px);letter-spacing:-.01em;margin:0;line-height:1.1}
+  h3{font-family:var(--display);font-weight:500;font-size:20px;margin:34px 0 6px}
+  p{margin:14px 0}
+  .sub{color:var(--ink-soft);font-size:16.5px;margin-top:6px}
+  .key{background:linear-gradient(transparent 62%,rgba(217,84,43,.18) 0);padding:0 1px}
+
+  .plain{margin:22px 0;border-left:3px solid var(--path);padding:2px 0 2px 18px;background:linear-gradient(90deg,rgba(14,138,107,.05),transparent 60%)}
+  .plain .t{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--path);display:block;margin:6px 0 2px}
+  .proof{margin:18px 0;padding:4px 0 4px 18px;border-left:2.5px solid var(--newton)}
+  .proof .ptag{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--newton);display:block;margin:8px 0 2px}
+  .proof .qed{float:right;color:var(--newton);font-weight:700}
+  .step-list{margin:14px 0;padding-left:0;list-style:none;counter-reset:pf}
+  .step-list>li{counter-increment:pf;position:relative;padding:6px 0 6px 38px;border-top:1px solid var(--line)}
+  .step-list>li:first-child{border-top:none}
+  .step-list>li::before{content:counter(pf);position:absolute;left:0;top:8px;font-family:var(--mono);font-size:12px;color:var(--newton);border:1px solid var(--newton);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+
+  .block{margin:24px 0;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+  .block .tag{font-family:var(--mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;padding:9px 16px;border-bottom:1px solid var(--line);background:var(--paper-2);color:var(--ink-soft)}
+  .block .bd{padding:6px 18px 14px}
+  .block.def .tag{color:var(--newton)} .block.key-thm .tag{color:var(--grad)}
+
+  figure{margin:30px 0;border:1px solid var(--line);border-radius:14px;background:var(--paper-2);padding:16px 16px 18px}
+  figure svg{display:block;width:100%;height:auto;touch-action:none}
+  .controls{display:flex;flex-wrap:wrap;gap:16px 26px;align-items:center;margin:10px 4px 2px;font-family:var(--mono);font-size:13px;color:var(--ink-soft)}
+  .controls label{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px}
+  input[type=range]{width:100%;accent-color:var(--grad);cursor:pointer}
+  .btn{font-family:var(--mono);font-size:12.5px;letter-spacing:.06em;padding:8px 16px;border:1px solid var(--ink);background:var(--card);color:var(--ink);border-radius:8px;cursor:pointer}
+  .btn:hover{background:var(--ink);color:#fff}
+  .btn:active{transform:translateY(1px)}
+  .readout{font-family:var(--mono);font-size:13px;line-height:1.85;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:9px;padding:11px 14px;margin-top:12px}
+  .readout .g{color:var(--path)} .readout .n{color:var(--newton)} .readout .o{color:var(--grad);font-weight:600}
+  figcaption{font-size:15px;color:var(--ink-soft);margin-top:12px;font-family:var(--body)}
+  .hint{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint)}
+
+  details{margin:14px 0;border:1px solid var(--line);border-radius:10px;background:var(--card);overflow:hidden}
+  details summary{cursor:pointer;padding:14px 18px;font-family:var(--display);font-weight:500;font-size:17px;list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center}
+  details summary::-webkit-details-marker{display:none}
+  details summary .pno{font-family:var(--mono);font-size:12px;color:var(--grad)}
+  details summary::after{content:'show answer';font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;color:var(--ink-faint);text-transform:uppercase}
+  details[open] summary::after{content:'hide'}
+  details .soln{padding:2px 18px 16px;border-top:1px dashed var(--line);color:var(--ink-soft);font-size:17px}
+
+  .katex{font-size:1.02em}
+  .katex-display{margin:14px 0;overflow-x:auto;overflow-y:hidden;padding:2px 0}
+  a{color:var(--grad)}
+  footer{max-width:var(--maxw);margin:80px auto 0;padding:24px 22px;border-top:1.5px solid var(--ink);font-family:var(--mono);font-size:12.5px;color:var(--ink-faint)}
+
+  /* SVG colour + font safety net */
+  svg text{font-family:var(--mono)}
+  .c-contour{stroke:var(--contour)} .c-axis{stroke:var(--line)}
+  .c-grad{stroke:var(--grad)} .c-path{stroke:var(--path)} .c-newton{stroke:var(--newton)}
+  .f-grad{fill:var(--grad)} .f-path{fill:var(--path)} .f-newton{fill:var(--newton)} .f-min{fill:var(--min)} .f-ink{fill:var(--ink)}
+
+  @media (max-width:560px){body{font-size:18px}.readout{font-size:12px}}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+
+<header class="hero">
+  <p class="eyebrow">ECE276A · Deep-teach · the optimization half · beginner-friendly</p>
+  <h1>Optimization, from the ground up: how to roll <span class="em">downhill</span> on purpose</h1>
+  <p class="lede">Every method in this lecture is one idea wearing different outfits: stand on a hillside in fog, feel which way is down, take a step, repeat. The methods differ only in how cleverly they pick the step. Drag things, press buttons — you can see all of it move.</p>
+  <div class="legend">
+    <span><i class="swatch" style="border-color:var(--grad)"></i> gradient (uphill)</span>
+    <span><i class="swatch" style="border-color:var(--path)"></i> descent path</span>
+    <span><i class="swatch" style="border-color:var(--newton)"></i> Newton</span>
+    <span><i class="swatch" style="border-color:var(--min)"></i> the minimum</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- 1. THE GOAL -->
+<section id="s1">
+  <div class="sec-head"><span class="sec-no">§ 1</span><h2>The goal: find the lowest point</h2></div>
+  <p class="sub">Optimization is just looking for the bottom of a valley.</p>
+
+  <p>We're handed a function $f(\mathbf x)$ — read it as a <em>landscape</em>, where the height at location $\mathbf x$ is $f(\mathbf x)$. "Minimize $f$" means: find the location with the lowest height. Two flavors of "lowest":</p>
+
+  <div class="plain"><span class="t">in plain terms</span>
+    A <b>global minimizer</b> is the lowest point in the <em>entire</em> landscape. A <b>local minimizer</b> is the lowest point in its own little neighborhood — the bottom of one valley, even if a deeper valley exists somewhere else. The fog matters: standing in one valley, you can't see whether a deeper one is over the ridge.</div>
+
+  <p>The tool we'll lean on is the <b>gradient</b> $\nabla f(\mathbf x)$ — the vector of partial derivatives, i.e. the local slope. A <b>critical point</b> is where the ground goes flat: $\nabla f(\bar{\mathbf x})=\mathbf 0$. Here's the catch that trips up beginners: <span class="key">every minimizer is a critical point, but not every critical point is a minimizer.</span> Flat ground can be a valley bottom, a hilltop, or a saddle (the seat-shaped point that's a valley one way and a hill the other).</p>
+
+  <figure>
+    <svg viewBox="0 0 640 280" role="img" aria-label="A 1D landscape showing a local minimum, a saddle/maximum, and the global minimum, all places where the slope is flat.">
+      <line x1="30" y1="240" x2="610" y2="240" class="c-axis" stroke-width="1"/>
+      <path d="M30 70 Q110 250 175 150 Q230 70 300 120 Q360 165 430 70 Q500 -10 560 200 Q585 250 610 245"
+            fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+      <!-- markers -->
+      <circle cx="175" cy="150" r="6" class="f-path"/><text x="175" y="178" text-anchor="middle" class="f-path" font-size="12">local min</text>
+      <circle cx="300" cy="120" r="6" class="f-grad"/><text x="300" y="104" text-anchor="middle" class="f-grad" font-size="12">saddle / bump</text>
+      <circle cx="430" cy="70" r="6" class="f-ink"/><text x="430" y="54" text-anchor="middle" class="f-ink" font-size="12">local max</text>
+      <circle cx="544" cy="208" r="7" class="f-min"/><text x="556" y="226" class="f-min" font-size="12">global min ★</text>
+      <text x="40" y="60" class="f-ink" font-size="13" opacity="0.6">f(x)</text>
+    </svg>
+    <figcaption>All four dots sit on flat ground ($\nabla f=0$) — yet only the gold one is what we actually want. Solving $\nabla f=0$ finds <em>candidates</em>; we still have to check which are minima.</figcaption>
+  </figure>
+</section>
+
+<!-- 2. DOWNHILL -->
+<section id="s2">
+  <div class="sec-head"><span class="sec-no">§ 2</span><h2>Which way is downhill?</h2></div>
+  <p class="sub">The gradient points straight uphill. So its opposite is your best step.</p>
+
+  <p>A foundational fact: $\nabla f(\mathbf x)$ points in the direction of <em>steepest increase</em>. Therefore $-\nabla f(\mathbf x)$ points in the direction of <em>steepest decrease</em> — straight downhill. But you don't have to go <em>exactly</em> downhill to make progress; you just have to go <em>somewhat</em> downhill.</p>
+
+  <div class="block key-thm">
+    <div class="tag">The descent-direction test</div>
+    <div class="bd">
+      <p>A direction $\delta\mathbf x$ takes you downhill (for a small enough step) exactly when</p>
+      $$\nabla f(\mathbf x)^\top \delta\mathbf x \;<\; 0.$$
+      <p>This is an <em>inner product</em> being negative: the step must make an angle greater than $90^\circ$ with the uphill gradient. The very best such step is $\delta\mathbf x=-\nabla f(\mathbf x)$.</p>
+    </div>
+  </div>
+
+  <div class="proof">
+    <span class="ptag">Proof — why a negative dot product guarantees descent</span>
+    Fix the point $\mathbf x$ and a direction $\delta\mathbf x$, and watch the height as you walk along it: define the one-variable function $\varphi(\alpha)=f(\mathbf x+\alpha\,\delta\mathbf x)$. By the chain rule its slope at the start is
+    $$\varphi'(0)=\nabla f(\mathbf x)^\top\delta\mathbf x.$$
+    If this is strictly negative, then $\varphi$ is <em>decreasing</em> at $\alpha=0$. By the definition of derivative, $\frac{\varphi(\alpha)-\varphi(0)}{\alpha}\to\varphi'(0)<0$, so the ratio is negative for all small enough $\alpha>0$ — which means there is an $\varepsilon>0$ with $\varphi(\alpha)<\varphi(0)$, i.e. $f(\mathbf x+\alpha\,\delta\mathbf x)<f(\mathbf x)$, for every $\alpha\in(0,\varepsilon)$. That is exactly the descent-direction theorem. <span class="qed">∎</span>
+  </div>
+
+  <div class="plain"><span class="t">two definitions to nail down</span>
+    The <b>gradient</b> is the column of partial derivatives, $\nabla f(\mathbf x)=\big[\tfrac{\partial f}{\partial x_1}\;\cdots\;\tfrac{\partial f}{\partial x_d}\big]^\top$. Among all <em>unit</em>-length descent directions, the one that makes $\varphi'(0)=\nabla f^\top\delta\mathbf x$ most negative — by Cauchy–Schwarz, the most aligned with $-\nabla f$ — is the <b>steepest-descent direction</b> $\;\delta\mathbf x=-\nabla f(\mathbf x)/\lVert\nabla f(\mathbf x)\rVert.$</div>
+
+  <p>Drag the blue arrow around. Whenever it lands in the shaded "downhill" half, the dot product is negative and you'd descend; point it into the uphill half and you'd climb:</p>
+
+  <figure>
+    <svg id="w1" viewBox="0 0 560 360" role="img" aria-label="Interactive: a gradient arrow points uphill; a draggable step arrow is labelled descent when its dot product with the gradient is negative.">
+      <g id="w1-contours"></g>
+      <line id="w1-half" x1="0" y1="0" x2="0" y2="0" stroke="var(--line)" stroke-width="1.2" stroke-dasharray="3 4"/>
+      <line id="w1-grad" class="c-grad" x1="0" y1="0" x2="0" y2="0" stroke-width="2.6" marker-end="url(#ah-grad)"/>
+      <line id="w1-step" x1="0" y1="0" x2="0" y2="0" stroke="#2F6CA8" stroke-width="2.6" marker-end="url(#ah-step)"/>
+      <circle id="w1-P" r="4" class="f-ink"/>
+      <circle id="w1-handle" r="8" fill="#2F6CA8" stroke="#fff" stroke-width="2" tabindex="0" role="slider" aria-label="step direction; use arrow keys" style="cursor:grab"/>
+      <text id="w1-gl" class="f-grad" font-size="12">∇f (uphill)</text>
+      <defs>
+        <marker id="ah-grad" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="var(--grad)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+        <marker id="ah-step" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="#2F6CA8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+      </defs>
+    </svg>
+    <div class="readout" id="w1-out"></div>
+    <figcaption>The shaded region is the set of all descent directions. Gradient descent simply always picks the deepest one, $-\nabla f$. <span class="hint">drag the blue arrowhead</span></figcaption>
+  </figure>
+</section>
+
+<!-- 3. OPTIMALITY -->
+<section id="s3">
+  <div class="sec-head"><span class="sec-no">§ 3</span><h2>How do you know you've arrived?</h2></div>
+  <p class="sub">Two checks: the ground is flat, and it curves upward.</p>
+
+  <p>The conditions on the slide become very intuitive once you picture the valley bottom:</p>
+
+  <div class="plain"><span class="t">in plain terms</span>
+    <b>First check (necessary):</b> the slope is zero, $\nabla f=\mathbf 0$. You can't be at a bottom if the ground tilts — you'd just slide.<br>
+    <b>Second check:</b> the ground <em>curves upward</em> in every direction. The curvature is measured by the <b>Hessian</b> $\nabla^2 f$ (the matrix of second derivatives). "Curves up everywhere" is written $\nabla^2 f \succeq 0$ (positive semidefinite) as a necessary condition, and $\nabla^2 f \succ 0$ (positive definite) is enough to <em>guarantee</em> a local minimum.</div>
+
+  <p>Why both? Flat-and-curving-up is a valley bottom; flat-and-curving-down is a hilltop; flat-but-curving-up-one-way-and-down-another is a saddle. The Hessian is exactly the device that tells these flat points apart. (Recognize $\succ 0$? That's the positive-definite idea from the linear-algebra half — the same matrices that gave squared lengths now measure upward curvature.)</p>
+
+  <div class="block key-thm">
+    <div class="tag">The conditions, compactly</div>
+    <div class="bd">
+      <p><b>Necessary</b> (if $\bar{\mathbf x}$ is a local min): $\;\nabla f(\bar{\mathbf x})=\mathbf 0$ and $\nabla^2 f(\bar{\mathbf x})\succeq 0$.</p>
+      <p><b>Sufficient</b> (then $\bar{\mathbf x}$ <em>is</em> a local min): $\;\nabla f(\bar{\mathbf x})=\mathbf 0$ and $\nabla^2 f(\bar{\mathbf x})\succ 0$.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 4. CONVEXITY -->
+<section id="s4">
+  <div class="sec-head"><span class="sec-no">§ 4</span><h2>The dream case: convex</h2></div>
+  <p class="sub">One bowl, no false bottoms — and "flat ground" is all you ever need to check.</p>
+
+  <p>Two things can be convex: the <em>region</em> you're searching, and the <em>function</em> you're minimizing. Both appear in the lecture.</p>
+
+  <div class="block def">
+    <div class="tag">Definition · convex set</div>
+    <div class="bd">
+      <p>A set $D\subseteq\mathbb{R}^d$ is <b>convex</b> if for every pair of points in it, the whole straight segment joining them stays inside:</p>
+      $$\lambda\mathbf x+(1-\lambda)\mathbf y\in D\quad\text{for all }\mathbf x,\mathbf y\in D,\ \lambda\in[0,1].$$
+      <p>In plain terms: no dents, no holes, no gaps. A disk, a box, a half-plane are convex; a crescent or a donut is not. This is the shape a constraint region must have for the projected method in §6 to behave.</p>
+    </div>
+  </div>
+
+  <p>A <b>convex function</b> is one big bowl: no separate valleys, no fog problem. The defining picture is the <em>chord test</em> — pick any two points on the graph and connect them with a straight line; for a convex function that chord never dips below the curve. Formally, $f$ is convex when its domain is a convex set and $f(\lambda\mathbf x+(1-\lambda)\mathbf y)\le\lambda f(\mathbf x)+(1-\lambda)f(\mathbf y)$ for all $\lambda\in[0,1]$ — the curve sits below the chord. Drag the two points and switch between a convex bowl and a wavy non-convex landscape to feel the difference:</p>
+
+  <figure>
+    <svg id="w2" viewBox="0 0 640 320" role="img" aria-label="Interactive: chord between two points on a curve; for the convex curve the chord stays above, for the non-convex curve it can dip below.">
+      <line x1="40" y1="280" x2="610" y2="280" class="c-axis" stroke-width="1"/>
+      <path id="w2-curve" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+      <line id="w2-chord" x1="0" y1="0" x2="0" y2="0" stroke="var(--grad)" stroke-width="2"/>
+      <circle id="w2-A" r="7" class="f-grad" stroke="#fff" stroke-width="2" tabindex="0" role="slider" aria-label="point A" style="cursor:ew-resize"/>
+      <circle id="w2-B" r="7" class="f-grad" stroke="#fff" stroke-width="2" tabindex="0" role="slider" aria-label="point B" style="cursor:ew-resize"/>
+      <text id="w2-verdict" x="320" y="36" text-anchor="middle" font-size="15"></text>
+    </svg>
+    <div class="controls">
+      <label><span>point A</span><input id="w2-a" type="range" min="-3.4" max="3.4" step="0.05" value="-2.4"></label>
+      <label><span>point B</span><input id="w2-b" type="range" min="-3.4" max="3.4" step="0.05" value="2.6"></label>
+      <button class="btn" id="w2-toggle">switch to non-convex</button>
+    </div>
+    <figcaption>Convex curve: the chord is always above — so a local minimum is automatically the global one. Non-convex: the chord can cut below, and gradient methods can get stuck in the wrong valley.</figcaption>
+  </figure>
+
+  <div class="plain"><span class="t">why we care</span>
+    For a convex $f$, the first check alone is the whole story: $\nabla f(\bar{\mathbf x})=\mathbf 0\iff\bar{\mathbf x}$ is a <em>global</em> minimizer. No fog, no false bottoms, no need to test curvature point by point. This is why people work hard to <em>pose</em> problems as convex ones. The algebraic tests: a smooth $f$ is convex iff $\nabla^2 f(\mathbf x)\succeq 0$ everywhere (curves up at every point), equivalently iff every tangent line lies below the graph: $f(\mathbf y)\ge f(\mathbf x)+\nabla f(\mathbf x)^\top(\mathbf y-\mathbf x)$.</div>
+
+  <div class="proof">
+    <span class="ptag">Proof — the chord test gives the tangent-below test</span>
+    Start from the chord definition and let the two points be $\mathbf x$ and $\mathbf y$. For $\lambda\in(0,1]$, write the convex combination as $\mathbf x+\lambda(\mathbf y-\mathbf x)$. Convexity says
+    $$f\big(\mathbf x+\lambda(\mathbf y-\mathbf x)\big)\le(1-\lambda)f(\mathbf x)+\lambda f(\mathbf y)=f(\mathbf x)+\lambda\big(f(\mathbf y)-f(\mathbf x)\big).$$
+    Subtract $f(\mathbf x)$ and divide by $\lambda>0$:
+    $$\frac{f\big(\mathbf x+\lambda(\mathbf y-\mathbf x)\big)-f(\mathbf x)}{\lambda}\le f(\mathbf y)-f(\mathbf x).$$
+    Let $\lambda\to 0^+$. The left side is the definition of the directional derivative of $f$ at $\mathbf x$ along $\mathbf y-\mathbf x$, which equals $\nabla f(\mathbf x)^\top(\mathbf y-\mathbf x)$. Hence $\nabla f(\mathbf x)^\top(\mathbf y-\mathbf x)\le f(\mathbf y)-f(\mathbf x)$, i.e. $f(\mathbf y)\ge f(\mathbf x)+\nabla f(\mathbf x)^\top(\mathbf y-\mathbf x)$. <span class="qed">∎</span>
+  </div>
+
+  <div class="proof">
+    <span class="ptag">Corollary — for convex $f$, a flat point is a global minimum</span>
+    Suppose $\nabla f(\bar{\mathbf x})=\mathbf 0$. Plug it into the tangent-below inequality: for every $\mathbf y$, $f(\mathbf y)\ge f(\bar{\mathbf x})+\mathbf 0^\top(\mathbf y-\bar{\mathbf x})=f(\bar{\mathbf x})$. So $\bar{\mathbf x}$ beats every other point — it is a global minimizer. The converse holds because every minimizer is a critical point. <span class="qed">∎</span>
+  </div>
+</section>
+
+<!-- 5. GRADIENT DESCENT -->
+<section id="s5">
+  <div class="sec-head"><span class="sec-no">§ 5</span><h2>Gradient descent: step downhill, repeat</h2></div>
+  <p class="sub">The simplest method, and the workhorse behind most of machine learning.</p>
+
+  <p>We can rarely solve $\nabla f=\mathbf 0$ by hand, so we sneak up on it. Start somewhere, then repeatedly take a step in the downhill direction:</p>
+  $$\mathbf x_{k+1}=\mathbf x_k-\alpha\,\nabla f(\mathbf x_k).$$
+  <p>The number $\alpha$ is the <b>step size</b> (in machine learning, the "learning rate"). It is a Goldilocks knob:</p>
+
+  <div class="plain"><span class="t">the step-size trade-off</span>
+    Too <b>small</b> → you creep, taking forever. Too <b>big</b> → you overshoot the valley and bounce up the far wall, sometimes flying off to infinity. A safe choice is $\alpha=1/L$, where $L$ is how fast the slope can change (the Lipschitz constant of $\nabla f$). Try to break it below.</div>
+
+  <div class="block def">
+    <div class="tag">Definition · the general descent template &amp; how to pick the step</div>
+    <div class="bd">
+      <p>Every method in this lecture is a special case of one loop: from $\mathbf x_k$, choose a descent direction $\delta\mathbf x_k$ and a step size $\alpha_k>0$, then</p>
+      $$\mathbf x_{k+1}=\mathbf x_k+\alpha_k\,\delta\mathbf x_k.$$
+      <p>Gradient descent is the choice $\delta\mathbf x_k=-\nabla f(\mathbf x_k)$; Newton (§7) and Gauss–Newton (§8) choose smarter directions. For the step size there are two standard recipes:</p>
+      <p><b>Exact line search:</b> walk along $\delta\mathbf x_k$ to the lowest point on that line, $\;\alpha_k\in\arg\min_{\alpha>0}f(\mathbf x_k+\alpha\,\delta\mathbf x_k).$ Optimal per step, but usually too costly.</p>
+      <p><b>Approximate (backtracking) line search:</b> start with a trial $\alpha$ and shrink it until $f$ drops by a "sufficient" amount. Cheap, and what's used in practice.</p>
+      <p>The fixed choice $\alpha=1/L$ used below is the simplest safe option, where $L$ is the <b>Lipschitz constant</b> of the gradient: the smallest number with $\;\lVert\nabla f(\mathbf x)-\nabla f(\mathbf x')\rVert\le L\,\lVert\mathbf x-\mathbf x'\rVert\;$ for all $\mathbf x,\mathbf x'$. It caps how fast the slope can swing, so a step of $1/L$ can never overshoot.</p>
+    </div>
+  </div>
+
+  <p>This playground minimizes a stretched bowl $f(x,y)=\tfrac12\!\left(x^2+\kappa\,y^2\right)$. Drag the start point; scrub the <b>steps</b> slider to walk the path; raise the <b>stretch</b> $\kappa$ to see the dreaded zig-zag; push the <b>step size</b> past the stability limit to watch it diverge.</p>
+
+  <figure>
+    <svg id="w3" viewBox="0 0 560 420" role="img" aria-label="Interactive gradient descent on an elliptical bowl: the iterate path zig-zags toward the centre and diverges if the step size is too large.">
+      <g id="w3-contours"></g>
+      <line x1="30" y1="210" x2="530" y2="210" class="c-axis" stroke-width="0.8" opacity="0.5"/>
+      <line x1="280" y1="20" x2="280" y2="400" class="c-axis" stroke-width="0.8" opacity="0.5"/>
+      <polyline id="w3-path" class="c-path" fill="none" stroke-width="2"/>
+      <g id="w3-dots"></g>
+      <path id="w3-star" class="f-min" d=""/>
+      <circle id="w3-start" r="8" class="f-grad" stroke="#fff" stroke-width="2" tabindex="0" role="slider" aria-label="start point; use arrow keys" style="cursor:grab"/>
+    </svg>
+    <div class="controls">
+      <label><span>step size α = <b id="w3-av">0.15</b></span><input id="w3-alpha" type="range" min="0.02" max="1.05" step="0.01" value="0.15"></label>
+      <label><span>stretch κ = <b id="w3-kv">6</b></span><input id="w3-kappa" type="range" min="1" max="14" step="1" value="6"></label>
+      <label><span>steps = <b id="w3-nv">14</b></span><input id="w3-steps" type="range" min="0" max="40" step="1" value="14"></label>
+    </div>
+    <div class="readout" id="w3-out"></div>
+    <figcaption>The rounder the bowl ($\kappa$ near 1), the straighter and faster the path. The more stretched it is, the more the steps ricochet between the steep walls — that ratio is the <em>condition number</em>, and it's the single biggest factor in how slow plain gradient descent can be.</figcaption>
+  </figure>
+
+  <div class="block def">
+    <div class="tag">Definition · the convergence result, in words</div>
+    <div class="bd">
+      <p>If the bowl is bounded between two curvatures, $mI\preceq\nabla^2 f\preceq LI$, then with $\alpha=1/L$ the distance to the minimum shrinks by a constant factor each step:</p>
+      $$\lVert\mathbf x_k-\mathbf x^\star\rVert\le\Big(1-\tfrac{m}{L}\Big)^{k}\lVert\mathbf x_0-\mathbf x^\star\rVert.$$
+      <p>The ratio $\kappa=L/m$ is the <b>condition number</b>. A round bowl has $\kappa=1$ and converges in almost one step; a stretched bowl has large $\kappa$, the factor $1-m/L$ is close to $1$, and progress is painfully slow. <em>That</em> is what the zig-zag above is showing you.</p>
+    </div>
+  </div>
+
+  <h3>The proof, step by step</h3>
+  <p>Here is the complete derivation from the slides — it's worth doing in full, because the single trick (a mean-value-theorem step plus an eigenvalue bound) is reused verbatim for projected gradient descent in §6. Assume $f$ is twice continuously differentiable with $mI\preceq\nabla^2 f(\mathbf x)\preceq LI$ everywhere, and take $\alpha=1/L$.</p>
+
+  <div class="proof">
+    <span class="ptag">Part 1 — the slope dies out: $\lVert\nabla f(\mathbf x_k)\rVert\to 0$</span>
+    <ol class="step-list">
+      <li><b>Mean value theorem for the gradient.</b> There is a point $\mathbf c_k$ on the segment between $\mathbf x_k$ and $\mathbf x_{k+1}$ with $\nabla f(\mathbf x_{k+1})=\nabla f(\mathbf x_k)+\nabla^2 f(\mathbf c_k)(\mathbf x_{k+1}-\mathbf x_k)$. Since the update is $\mathbf x_{k+1}-\mathbf x_k=-\alpha\nabla f(\mathbf x_k)$,
+        $$\nabla f(\mathbf x_{k+1})=\big(I-\alpha\,\nabla^2 f(\mathbf c_k)\big)\nabla f(\mathbf x_k).$$</li>
+      <li><b>Bound the matrix by its eigenvalues.</b> $\nabla^2 f(\mathbf c_k)$ is symmetric with eigenvalues $\lambda_i\in[m,L]$. So $I-\alpha\nabla^2 f(\mathbf c_k)$ has eigenvalues $1-\alpha\lambda_i$. With $\alpha=1/L$, the bound $m\le\lambda_i\le L$ gives
+        $$0\;=\;1-\tfrac{L}{L}\;\le\;1-\tfrac{\lambda_i}{L}\;\le\;1-\tfrac{m}{L}\;<\;1.$$
+        Because the matrix is symmetric, its spectral norm equals its largest eigenvalue magnitude, so $\lVert I-\alpha\nabla^2 f(\mathbf c_k)\rVert\le 1-\tfrac{m}{L}$.</li>
+      <li><b>Contraction, then iterate.</b> Taking norms in step 1, $\lVert\nabla f(\mathbf x_{k+1})\rVert\le\big(1-\tfrac{m}{L}\big)\lVert\nabla f(\mathbf x_k)\rVert$. Applying this $k{+}1$ times,
+        $$\lVert\nabla f(\mathbf x_{k+1})\rVert\le\big(1-\tfrac{m}{L}\big)^{k+1}\lVert\nabla f(\mathbf x_0)\rVert\;\xrightarrow{k\to\infty}\;0,$$
+        since $0\le 1-\tfrac{m}{L}<1$. The slope vanishes <em>linearly</em>. <span class="qed">∎</span></li>
+    </ol>
+  </div>
+
+  <div class="proof">
+    <span class="ptag">Part 2 — the iterates land on the minimum: $\lVert\mathbf x_k-\mathbf x^\star\rVert\to 0$</span>
+    <ol class="step-list">
+      <li><b>Mean value theorem again, now toward $\mathbf x^\star$.</b> For some $\tilde{\mathbf c}_k$ between $\mathbf x_k$ and $\mathbf x^\star$, $\;\nabla f(\mathbf x_k)-\nabla f(\mathbf x^\star)=\nabla^2 f(\tilde{\mathbf c}_k)(\mathbf x_k-\mathbf x^\star)$. The minimizer is critical, $\nabla f(\mathbf x^\star)=\mathbf 0$, so $\nabla f(\mathbf x_k)=\nabla^2 f(\tilde{\mathbf c}_k)(\mathbf x_k-\mathbf x^\star)$.</li>
+      <li><b>Substitute into the update.</b> $\;\mathbf x_{k+1}-\mathbf x^\star=(\mathbf x_k-\mathbf x^\star)-\alpha\nabla f(\mathbf x_k)=\big(I-\alpha\nabla^2 f(\tilde{\mathbf c}_k)\big)(\mathbf x_k-\mathbf x^\star).$</li>
+      <li><b>Same eigenvalue bound finishes it.</b> The matrix is again $\le 1-\tfrac{m}{L}$ in norm, so $\lVert\mathbf x_{k+1}-\mathbf x^\star\rVert\le\big(1-\tfrac{m}{L}\big)\lVert\mathbf x_k-\mathbf x^\star\rVert$, and therefore
+        $$\lVert\mathbf x_k-\mathbf x^\star\rVert\le\big(1-\tfrac{m}{L}\big)^{k}\lVert\mathbf x_0-\mathbf x^\star\rVert\to 0.$$ <span class="qed">∎</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- 6. PROJECTED GRADIENT DESCENT -->
+<section id="s6b">
+  <div class="sec-head"><span class="sec-no">§ 6</span><h2>Projected gradient descent: optimizing inside a fence</h2></div>
+  <p class="sub">What if the answer must obey constraints? Take a normal step, then snap back into the allowed region.</p>
+
+  <p>So far the search ran over all of $\mathbb{R}^d$. Often it can't: a probability must stay in $[0,1]$, a pose may be box-bounded, an estimate must lie in a convex feasible set $C$. The problem becomes $\min_{\mathbf x\in C}f(\mathbf x)$ with $C$ a closed convex set. The fix is beautifully simple — gradient-step as usual, then <b>project</b> back onto $C$:</p>
+  $$\mathbf x_{k+1}=\Pi_C\big(\mathbf x_k-\alpha\nabla f(\mathbf x_k)\big),\qquad \Pi_C(\mathbf z):=\arg\min_{\mathbf y\in C}\lVert\mathbf y-\mathbf z\rVert.$$
+  <p>$\Pi_C$ is the closest-point map — exactly the orthogonal projection you proved properties of in the linear-algebra lecture, now onto a set instead of a subspace. Drag the start point; each step takes a gradient move (which may leave the box) and then snaps to the nearest feasible point. Watch it slide along the fence to the constrained optimum:</p>
+
+  <figure>
+    <svg id="w6" viewBox="0 0 560 420" role="img" aria-label="Interactive projected gradient descent: iterates take a gradient step then project onto a box constraint, converging to a point on the boundary.">
+      <g id="w6-contours"></g>
+      <rect id="w6-box" fill="rgba(47,108,168,.06)" stroke="#2F6CA8" stroke-width="1.5" rx="2"/>
+      <text id="w6-boxlbl" fill="#2F6CA8" font-size="12">feasible set C</text>
+      <polyline id="w6-path" class="c-path" fill="none" stroke-width="2"/>
+      <g id="w6-extras"></g>
+      <g id="w6-dots"></g>
+      <circle id="w6-uncon" r="5" fill="none" stroke="var(--ink-faint)" stroke-width="1.5"/>
+      <text id="w6-unconlbl" fill="var(--ink-faint)" font-size="11">unconstrained min</text>
+      <path id="w6-star" class="f-min" d=""/>
+      <circle id="w6-start" r="8" class="f-grad" stroke="#fff" stroke-width="2" tabindex="0" role="slider" aria-label="start point; use arrow keys" style="cursor:grab"/>
+    </svg>
+    <div class="controls">
+      <label><span>step size α = <b id="w6-av">0.18</b></span><input id="w6-alpha" type="range" min="0.02" max="0.6" step="0.01" value="0.18"></label>
+      <label><span>steps = <b id="w6-nv">12</b></span><input id="w6-steps" type="range" min="0" max="40" step="1" value="12"></label>
+    </div>
+    <div class="readout" id="w6-out"></div>
+    <figcaption>The unconstrained minimum (hollow dot) sits outside the box, so the true answer (gold) lives on the boundary. The faint hops show where each gradient step <em>would</em> land; the dashed arrows are the projection snapping it back in.</figcaption>
+  </figure>
+
+  <p>Two facts make this converge, and both are worth proving — they're short and they reuse the orthogonal-projection ideas you already have.</p>
+
+  <div class="block def">
+    <div class="tag">Definition · the variational characterization of projection</div>
+    <div class="bd">
+      <p>For a closed convex $C$, the point $\mathbf p=\Pi_C(\mathbf z)$ is characterized by an obtuse-angle condition: the vector from $\mathbf p$ to $\mathbf z$ makes a $\ge 90^\circ$ angle with every feasible direction,</p>
+      $$\langle \mathbf z-\mathbf p,\ \mathbf y-\mathbf p\rangle\le 0\quad\text{for all }\mathbf y\in C.$$
+      <p>(This is just the first-order optimality condition for minimizing $\tfrac12\lVert\mathbf y-\mathbf z\rVert^2$ over the convex set $C$: the gradient $\mathbf p-\mathbf z$ cannot point into any feasible direction.)</p>
+    </div>
+  </div>
+
+  <div class="proof">
+    <span class="ptag">Fact 1 — projection never increases distances (non-expansive)</span>
+    Claim: $\lVert\Pi_C(\mathbf x)-\Pi_C(\mathbf y)\rVert\le\lVert\mathbf x-\mathbf y\rVert$. Let $\mathbf p=\Pi_C(\mathbf x)$, $\mathbf q=\Pi_C(\mathbf y)$.
+    <ol class="step-list">
+      <li>Apply the characterization at $\mathbf p$ with the feasible point $\mathbf q$: $\;\langle\mathbf x-\mathbf p,\ \mathbf q-\mathbf p\rangle\le 0.$</li>
+      <li>Apply it at $\mathbf q$ with the feasible point $\mathbf p$: $\;\langle\mathbf y-\mathbf q,\ \mathbf p-\mathbf q\rangle\le 0.$</li>
+      <li>Add the two inequalities and group terms around $(\mathbf q-\mathbf p)$:
+        $$\langle(\mathbf x-\mathbf y)-(\mathbf p-\mathbf q),\ \mathbf q-\mathbf p\rangle\le 0\;\Longrightarrow\;\lVert\mathbf p-\mathbf q\rVert^2\le\langle\mathbf x-\mathbf y,\ \mathbf p-\mathbf q\rangle.$$</li>
+      <li>Cauchy–Schwarz on the right: $\lVert\mathbf p-\mathbf q\rVert^2\le\lVert\mathbf x-\mathbf y\rVert\,\lVert\mathbf p-\mathbf q\rVert$. Divide by $\lVert\mathbf p-\mathbf q\rVert$ to get $\lVert\mathbf p-\mathbf q\rVert\le\lVert\mathbf x-\mathbf y\rVert$. <span class="qed">∎</span></li>
+    </ol>
+  </div>
+
+  <div class="proof">
+    <span class="ptag">Fact 2 — the solution is a fixed point of the iteration</span>
+    Claim: $\mathbf x^\star$ solves $\min_{\mathbf x\in C}f$ iff $\mathbf x^\star=\Pi_C(\mathbf x^\star-\alpha\nabla f(\mathbf x^\star))$ for any $\alpha>0$. The constrained optimality condition for convex $f$ is $\langle\nabla f(\mathbf x^\star),\mathbf y-\mathbf x^\star\rangle\ge 0$ for all $\mathbf y\in C$ (no feasible direction goes downhill). Now read the projection characterization with $\mathbf p=\mathbf x^\star$ and $\mathbf z=\mathbf x^\star-\alpha\nabla f(\mathbf x^\star)$:
+    $$\mathbf x^\star=\Pi_C(\mathbf z)\iff\langle\mathbf z-\mathbf x^\star,\mathbf y-\mathbf x^\star\rangle\le0\iff\langle-\alpha\nabla f(\mathbf x^\star),\mathbf y-\mathbf x^\star\rangle\le0\iff\langle\nabla f(\mathbf x^\star),\mathbf y-\mathbf x^\star\rangle\ge0,$$
+    which is exactly the optimality condition (dividing by $\alpha>0$). <span class="qed">∎</span>
+  </div>
+
+  <div class="proof">
+    <span class="ptag">Putting them together — convergence</span>
+    Both $\mathbf x_{k+1}=\Pi_C(\mathbf x_k-\alpha\nabla f(\mathbf x_k))$ and $\mathbf x^\star=\Pi_C(\mathbf x^\star-\alpha\nabla f(\mathbf x^\star))$ are projections. By Fact 1 (non-expansiveness),
+    $$\lVert\mathbf x_{k+1}-\mathbf x^\star\rVert\le\big\lVert(\mathbf x_k-\alpha\nabla f(\mathbf x_k))-(\mathbf x^\star-\alpha\nabla f(\mathbf x^\star))\big\rVert=\big\lVert(\mathbf x_k-\mathbf x^\star)-\alpha(\nabla f(\mathbf x_k)-\nabla f(\mathbf x^\star))\big\rVert.$$
+    The right-hand side is <em>identical</em> to the quantity bounded in Part 2 of the gradient-descent proof, $\le(1-\tfrac{m}{L})\lVert\mathbf x_k-\mathbf x^\star\rVert$. So $\lVert\mathbf x_k-\mathbf x^\star\rVert\le(1-\tfrac{m}{L})^k\lVert\mathbf x_0-\mathbf x^\star\rVert\to0$: <span class="key">the projection comes for free</span> — adding the constraint costs nothing in the convergence rate. <span class="qed">∎</span>
+  </div>
+</section>
+
+<!-- 6. NEWTON -->
+<section id="s6">
+  <div class="sec-head"><span class="sec-no">§ 7</span><h2>Newton's method: use the curve, not just the slope</h2></div>
+  <p class="sub">Fit a parabola to where you stand, then jump straight to the bottom of that parabola.</p>
+
+  <p>Gradient descent only knows the slope. Newton's method also uses the <em>curvature</em> (the Hessian), which lets it take much smarter steps. The idea: near your current point, approximate $f$ by the best-fitting parabola (its second-order Taylor expansion), then leap to that parabola's minimum — and repeat.</p>
+  $$\mathbf x_{k+1}=\mathbf x_k-\big(\nabla^2 f(\mathbf x_k)\big)^{-1}\nabla f(\mathbf x_k).$$
+  <p>Press <b>Step</b> and watch the violet parabola snap onto the curve at the current point; the next point lands at its lowest spot. Notice how few steps it takes:</p>
+
+  <figure>
+    <svg id="w4" viewBox="0 0 640 360" role="img" aria-label="Interactive Newton's method: a parabola is fitted at the current point and the next iterate jumps to its vertex.">
+      <line x1="40" y1="300" x2="610" y2="300" class="c-axis" stroke-width="1"/>
+      <line x1="325" y1="30" x2="325" y2="312" class="c-axis" stroke-width="1"/>
+      <path id="w4-curve" fill="none" stroke="var(--ink)" stroke-width="2.5"/>
+      <path id="w4-para" class="c-newton" fill="none" stroke-width="2" stroke-dasharray="6 4"/>
+      <line id="w4-drop" x1="0" y1="0" x2="0" y2="0" stroke="var(--newton)" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.7"/>
+      <circle id="w4-cur" r="6" class="f-newton" stroke="#fff" stroke-width="1.5"/>
+      <circle id="w4-next" r="5" class="f-grad"/>
+      <path id="w4-star" class="f-min" d=""/>
+    </svg>
+    <div class="controls">
+      <button class="btn" id="w4-step">Step ▶</button>
+      <button class="btn" id="w4-reset">Reset</button>
+      <label style="flex:1"><span>start point</span><input id="w4-x0" type="range" min="-3.6" max="3.6" step="0.1" value="3.2"></label>
+    </div>
+    <div class="readout" id="w4-out"></div>
+    <figcaption>Far from the bottom the steps are merely good; close to it, the error roughly <em>squares</em> each step (it doubles in correct digits) — this is "quadratic convergence," and it's why Newton finishes in a handful of steps where gradient descent needs hundreds.</figcaption>
+  </figure>
+
+  <div class="plain"><span class="t">the catch</span>
+    Newton needs the Hessian $\nabla^2 f$ — and it must be positive-definite (a real bowl, not a saddle) for the jump to point downhill. In high dimensions, forming and inverting that matrix is expensive, and far from the optimum the raw jump can overshoot. The fix is a <b>damped</b> step $\mathbf x_{k+1}=\mathbf x_k-\alpha(\nabla^2 f)^{-1}\nabla f$ with a cautious $\alpha<1$ early on, switching to the full $\alpha=1$ once you're close. That's the "damped phase → quadratic phase" the slides describe.</div>
+</section>
+
+<!-- 7. GN + LM -->
+<section id="s7">
+  <div class="sec-head"><span class="sec-no">§ 8</span><h2>Gauss–Newton &amp; Levenberg–Marquardt</h2></div>
+  <p class="sub">The version that runs your SLAM solver — Newton's speed without the costly second derivatives.</p>
+
+  <p>A huge fraction of robotics problems are <b>least squares</b>: minimize a sum of squared errors, $f(\mathbf x)=\tfrac12\lVert\mathbf e(\mathbf x)\rVert^2$, where $\mathbf e$ stacks all your measurement residuals. For this special shape, the gradient and Hessian are
+  $$\nabla f=J^\top\mathbf e,\qquad \nabla^2 f=J^\top J+\textstyle\sum_i e_i\nabla^2 e_i,$$
+  where $J=\partial\mathbf e/\partial\mathbf x$ is the Jacobian. Near a good fit the residuals $e_i$ are small, so that messy second term nearly vanishes.</p>
+
+  <div class="plain"><span class="t">Gauss–Newton, in one line</span>
+    Throw away the expensive second-derivative term and approximate the Hessian by $J^\top J$. The Newton step becomes
+    $$J^\top J\,\delta\mathbf x=-J^\top\mathbf e,$$
+    which needs only first derivatives. <span class="key">These are exactly the normal equations</span> — the orthogonal-projection / least-squares system from the linear-algebra half. Each Gauss–Newton step projects the linearized residual.</div>
+
+  <div class="proof">
+    <span class="ptag">The cleaner derivation — linearize the residual, not the cost</span>
+    There's a second route to the same system that makes the "projection" reading obvious. Instead of approximating $f$, approximate the residual vector itself with its first-order Taylor expansion around $\mathbf x_k$:
+    $$\mathbf e(\mathbf x_k+\delta\mathbf x)\approx\mathbf e(\mathbf x_k)+J\,\delta\mathbf x.$$
+    Substitute into $f=\tfrac12\lVert\mathbf e\rVert^2$ to get a quadratic in $\delta\mathbf x$:
+    $$f\approx\tfrac12\big\lVert\mathbf e(\mathbf x_k)+J\,\delta\mathbf x\big\rVert^2=\tfrac12\,\mathbf e^\top\mathbf e+\mathbf e^\top J\,\delta\mathbf x+\tfrac12\,\delta\mathbf x^\top J^\top J\,\delta\mathbf x.$$
+    Set the gradient with respect to $\delta\mathbf x$ to zero: $\;J^\top\mathbf e+J^\top J\,\delta\mathbf x=\mathbf 0$, i.e. $\;J^\top J\,\delta\mathbf x=-J^\top\mathbf e$ — the same normal equations. This is literally "project $-\mathbf e(\mathbf x_k)$ onto the column space of $J$," which is why each step is an orthogonal projection of the linearized residual. <span class="qed">∎</span>
+  </div>
+
+  <p><b>Levenberg–Marquardt</b> adds one safety knob $\lambda$: solve $(J^\top J+\lambda D)\,\delta\mathbf x=-J^\top\mathbf e$. It blends the two methods you just met. Turn the knob:</p>
+
+  <figure>
+    <svg id="w5" viewBox="0 0 560 320" role="img" aria-label="Interactive: the Levenberg-Marquardt step direction rotates from the Gauss-Newton direction toward steepest descent as lambda increases.">
+      <g id="w5-contours"></g>
+      <line id="w5-gn" class="c-newton" x1="0" y1="0" x2="0" y2="0" stroke-width="1.6" stroke-dasharray="5 4" opacity="0.6"/>
+      <line id="w5-sd" class="c-grad" x1="0" y1="0" x2="0" y2="0" stroke-width="1.6" stroke-dasharray="5 4" opacity="0.6"/>
+      <line id="w5-lm" x1="0" y1="0" x2="0" y2="0" stroke="var(--path)" stroke-width="3" marker-end="url(#ah-lm)"/>
+      <circle id="w5-P" r="4" class="f-ink"/>
+      <path id="w5-star" class="f-min" d=""/>
+      <text id="w5-l0" class="f-newton" font-size="11">λ→0 : Gauss–Newton</text>
+      <text id="w5-l1" class="f-grad" font-size="11">λ→∞ : steepest descent</text>
+      <defs><marker id="ah-lm" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="var(--path)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    </svg>
+    <div class="controls">
+      <label><span>λ (cautious ⟶) = <b id="w5-lv">0.0</b></span><input id="w5-lambda" type="range" min="0" max="30" step="0.2" value="0"></label>
+    </div>
+    <div class="readout" id="w5-out"></div>
+    <figcaption>$\lambda=0$ gives the Gauss–Newton step — aggressive, points straight at the bottom, trusts the model. Large $\lambda$ rotates the step toward $-\nabla f$ and shortens it — cautious, used when the model is unreliable or the step made things worse. LM adapts $\lambda$ automatically each iteration.</figcaption>
+  </figure>
+</section>
+
+<!-- 8. FINALE -->
+<section id="s8">
+  <div class="sec-head"><span class="sec-no">§ 9</span><h2>The grand finale: one problem, every method</h2></div>
+  <p class="sub">When the bowl is an exact quadratic, the smart methods finish in a single step.</p>
+
+  <p>The lecture closes by running all four methods on $f(\mathbf x)=\tfrac12\sum_{j}\lVert A_j\mathbf x+\mathbf b_j\rVert^2$. Its gradient and Hessian are
+  $$\nabla f(\mathbf x)=\Big(\textstyle\sum_j A_j^\top A_j\Big)\mathbf x+\textstyle\sum_j A_j^\top\mathbf b_j,\qquad \nabla^2 f=\textstyle\sum_j A_j^\top A_j\;(\text{constant!}).$$
+  <p>Because the Hessian is constant and positive-definite, this is a perfect quadratic bowl, and three things fall out:</p>
+
+  <div class="plain"><span class="t">the punchline</span>
+    <b>Convex condition:</b> set $\nabla f=\mathbf 0$ and solve once for the exact answer $\mathbf x^\star=-(\sum_j A_j^\top A_j)^{-1}(\sum_j A_j^\top\mathbf b_j)$.<br>
+    <b>Newton:</b> its parabola model <em>is</em> $f$ exactly, so a single full step lands on $\mathbf x^\star$.<br>
+    <b>Gauss–Newton:</b> with $J_j=A_j$ it solves the identical system — also one step.<br>
+    <b>Gradient descent:</b> still has to crawl, taking many steps at a rate set by the condition number of $\sum_j A_j^\top A_j$.</div>
+
+  <p>That's the whole lecture in one picture: the methods differ only in how much they exploit the shape of the bowl. Gradient descent uses the slope; Newton and Gauss–Newton use the curvature and so cut straight to the bottom of any quadratic — which is exactly what a linearized SLAM step is.</p>
+</section>
+
+<!-- PRACTICE -->
+<section id="s9">
+  <div class="sec-head"><span class="sec-no">§ P</span><h2>Practice</h2></div>
+  <p class="sub">Short and concrete. Try each, then reveal the answer.</p>
+
+  <details><summary><span><span class="pno">P1</span> &nbsp;Minimize $f(x)=x^2-4x+7$ by hand. Find the minimizer and confirm it really is a minimum.</span></summary>
+    <div class="soln"><p>$f'(x)=2x-4=0\Rightarrow x=2$ (first check: flat ground). $f''(x)=2>0$ everywhere (second check: curves up), so $x=2$ is a minimum, with $f(2)=3$. Since $f$ is convex, it's the <em>global</em> minimum.</p></div></details>
+
+  <details><summary><span><span class="pno">P2</span> &nbsp;Is $f(x,y)=x^2+3y^2$ convex? Where is its minimum, and what is its condition number?</span></summary>
+    <div class="soln"><p>Hessian $\nabla^2 f=\begin{bmatrix}2&0\\0&6\end{bmatrix}\succ 0$, so $f$ is convex. Minimum at $(0,0)$. Curvatures are $m=2$, $L=6$, so $\kappa=L/m=3$ — a mildly stretched bowl, gradient descent will zig-zag a little.</p></div></details>
+
+  <details><summary><span><span class="pno">P3</span> &nbsp;One gradient-descent step on $f(x,y)=\tfrac12(x^2+9y^2)$ from $(4,2)$. Try $\alpha=0.1$, then $\alpha=0.25$. What goes wrong with the bigger step?</span></summary>
+    <div class="soln"><p>$\nabla f=(x,9y)=(4,18)$. With $\alpha=0.1$: $\mathbf x_1=(4,2)-0.1(4,18)=(3.6,0.2)$ — both shrink toward $0$, good. With $\alpha=0.25$: the $y$-update is $2-0.25\cdot18=-2.5$ — it overshot the valley and landed <em>farther</em> out. The stability limit here is $\alpha<2/L=2/9\approx0.22$, and $0.25$ breaks it: the $y$-coordinate diverges. (Match this against the playground in §5.)</p></div></details>
+
+  <details><summary><span><span class="pno">P4</span> &nbsp;Newton's method on $f(x)=3x^2-12x+5$. Take one step from <em>any</em> start $x_0$. What do you notice?</span></summary>
+    <div class="soln"><p>$f'(x)=6x-12$, $f''(x)=6$. Newton step: $x_1=x_0-\dfrac{6x_0-12}{6}=x_0-(x_0-2)=2$. <b>One step lands exactly on the minimum $x=2$, no matter where you start</b> — because the parabola Newton fits to a quadratic <em>is</em> the function itself. This is the §9 finale in miniature, and the reason Gauss–Newton solves a linearized SLAM step in one shot.</p></div></details>
+
+  <details><summary><span><span class="pno">P5</span> &nbsp;Projected gradient descent. Minimize $f(x)=\tfrac12(x-5)^2$ over the interval $C=[0,2]$ with $\alpha=0.5$, starting at $x_0=0.5$. Take two steps, and identify the constrained minimum.</span></summary>
+    <div class="soln"><p>Here $\Pi_C(z)=\min(\max(z,0),2)$ (clamp to $[0,2]$), and $f'(x)=x-5$. Step 1: gradient move $0.5-0.5(0.5-5)=0.5+2.25=2.75$, project $\to 2$. Step 2: from $2$, gradient move $2-0.5(2-5)=2+1.5=3.5$, project $\to 2$. It's stuck at $x=2$ — and that's correct: the unconstrained minimizer is $x=5$, outside $C$, so the constrained minimum sits on the nearest boundary, $x^\star=2$. Check the fixed-point fact: $\Pi_C(2-0.5\cdot(2-5))=\Pi_C(3.5)=2=x^\star$. ✓</p></div></details>
+
+  <details><summary><span><span class="pno">P6</span> &nbsp;In the convergence proof, why does the step $\alpha=1/L$ make the contraction factor work? Show the eigenvalues of $I-\alpha\nabla^2 f$ land in $[0,\,1-m/L]$.</span></summary>
+    <div class="soln"><p>The eigenvalues of $\nabla^2 f$ lie in $[m,L]$, so those of $I-\alpha\nabla^2 f$ are $1-\alpha\lambda_i$ with $\lambda_i\in[m,L]$. Plug $\alpha=1/L$: the largest eigenvalue $\lambda_i=L$ gives $1-L/L=0$; the smallest $\lambda_i=m$ gives $1-m/L$. So every eigenvalue is in $[0,\,1-m/L]$. Two consequences: it's $\ge 0$ (no sign flips, so no overshoot/divergence), and it's $<1$ (strict shrink each step). A larger $\alpha$ would push the top eigenvalue below $0$ and eventually past $-1$ — that's exactly the divergence you trigger in the §5 playground.</p></div></details>
+</section>
+
+</div>
+
+<footer>ECE276A · optimization, from the ground up · drag-to-learn lecture · downhill is just −∇f</footer>
+
+<script>
+window.addEventListener("DOMContentLoaded",function(){
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{delimiters:[
+      {left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false},
+      {left:"\\[",right:"\\]",display:true},{left:"\\(",right:"\\)",display:false}
+    ],throwOnError:false});
+  }
+});
+var prog=document.getElementById("progress");
+addEventListener("scroll",function(){var h=document.documentElement;prog.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+"%";},{passive:true});
+
+function S(id){return document.getElementById(id);}
+function set(e,a){for(var k in a)e.setAttribute(k,a[k]);}
+function fmt(n){return (Math.round(n*100)/100).toFixed(2);}
+var SVGNS="http://www.w3.org/2000/svg";
+function el(tag,a){var e=document.createElementNS(SVGNS,tag);set(e,a);return e;}
+function pointer(svg,e){var r=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal;
+  var cx=(e.touches?e.touches[0].clientX:e.clientX),cy=(e.touches?e.touches[0].clientY:e.clientY);
+  return {x:(cx-r.left)/r.width*vb.width,y:(cy-r.top)/r.height*vb.height};}
+
+/* ===== W1 : downhill direction ===== */
+(function(){
+  var svg=S("w1"),O={x:280,y:180},s=1;
+  // draw a few contour ellipses for a bowl f=0.5(x^2+2y^2), grad=(x,2y); pick point P
+  var bb=2.0, P={x:2.2,y:-1.4}, sc=44;
+  function toS(p){return{x:O.x+sc*p.x,y:O.y-sc*p.y};}
+  var cg=S("w1-contours");
+  [0.7,1.6,2.9,4.6].forEach(function(c){
+    cg.appendChild(el("ellipse",{cx:O.x,cy:O.y,rx:sc*Math.sqrt(2*c),ry:sc*Math.sqrt(2*c/bb),
+      fill:"none","class":"c-contour","stroke-width":1,opacity:0.55}));
+  });
+  var g={x:P.x,y:bb*P.y}; // gradient
+  var sP=toS(P);
+  set(S("w1-P"),{cx:sP.x,cy:sP.y});
+  var gl=Math.hypot(g.x,g.y), gu={x:g.x/gl,y:g.y/gl};
+  set(S("w1-grad"),{x1:sP.x,y1:sP.y,x2:sP.x+sc*1.5*gu.x,y2:sP.y-sc*1.5*gu.y});
+  set(S("w1-gl"),{x:sP.x+sc*1.5*gu.x+4,y:sP.y-sc*1.5*gu.y});
+  // the perpendicular dividing line (level direction)
+  var pp={x:-gu.y,y:gu.x};
+  set(S("w1-half"),{x1:sP.x-sc*2.4*pp.x,y1:sP.y+sc*2.4*pp.y,x2:sP.x+sc*2.4*pp.x,y2:sP.y-sc*2.4*pp.y});
+  // shade the descent half-plane (opposite the gradient)
+  var ds={x:-gu.x,y:gu.y}, E1={x:sP.x-sc*2.4*pp.x,y:sP.y+sc*2.4*pp.y}, E2={x:sP.x+sc*2.4*pp.x,y:sP.y-sc*2.4*pp.y}, big=540;
+  var shade=el("polygon",{points:[E1.x+","+E1.y,E2.x+","+E2.y,(E2.x+big*ds.x)+","+(E2.y+big*ds.y),(E1.x+big*ds.x)+","+(E1.y+big*ds.y)].join(" "),fill:"var(--path)",opacity:0.09});
+  svg.insertBefore(shade,cg);
+  var ang=Math.PI*0.85; // step direction state
+  function draw(){
+    var d={x:Math.cos(ang),y:Math.sin(ang)};
+    var tip={x:sP.x+sc*1.5*d.x,y:sP.y-sc*1.5*d.y};
+    set(S("w1-step"),{x1:sP.x,y1:sP.y,x2:tip.x,y2:tip.y});
+    set(S("w1-handle"),{cx:tip.x,cy:tip.y});
+    var dot=g.x*d.x+g.y*d.y;
+    var word=dot<-1e-6?"<span class='g'>DESCENT — you go downhill</span>":(dot>1e-6?"<span class='o'>ASCENT — you climb</span>":"level — no change");
+    S("w1-out").innerHTML="∇f·δx = "+fmt(dot)+" &nbsp;→&nbsp; "+word;
+  }
+  var svgEl=svg,drag=false,handle=S("w1-handle");
+  function upd(e){var p=pointer(svg,e);ang=Math.atan2(sP.y-p.y,p.x-sP.x);draw();}
+  handle.addEventListener("mousedown",function(e){drag=true;e.preventDefault();});
+  handle.addEventListener("touchstart",function(e){drag=true;e.preventDefault();},{passive:false});
+  addEventListener("mousemove",function(e){if(drag)upd(e);});
+  addEventListener("touchmove",function(e){if(drag)upd(e);},{passive:false});
+  addEventListener("mouseup",function(){drag=false;});addEventListener("touchend",function(){drag=false;});
+  handle.addEventListener("keydown",function(e){var d={ArrowLeft:0.12,ArrowRight:-0.12,ArrowUp:0.12,ArrowDown:-0.12}[e.key];if(d===undefined)return;e.preventDefault();ang+=d;draw();});
+  draw();
+})();
+
+/* ===== W2 : convexity chord ===== */
+(function(){
+  var svg=S("w2"),O={x:325,y:280},sx=80,sy=20;
+  var convex=true;
+  function f(x){return convex?(0.55*x*x+0.6):(0.10*x*x*x*x-0.95*x*x+3.1);}
+  function toS(x){return{x:O.x+sx*x,y:O.y-sy*f(x)};}
+  function curve(){var d="";for(var i=0;i<=120;i++){var x=-3.6+7.2*i/120;var p=toS(x);d+=(i?"L":"M")+fmt(p.x)+" "+fmt(p.y);}return d;}
+  var aS=S("w2-a"),bS=S("w2-b");
+  function draw(){
+    set(S("w2-curve"),{d:curve()});
+    var xa=parseFloat(aS.value),xb=parseFloat(bS.value);
+    var A=toS(xa),B=toS(xb);
+    set(S("w2-A"),{cx:A.x,cy:A.y});set(S("w2-B"),{cx:B.x,cy:B.y});
+    set(S("w2-chord"),{x1:A.x,y1:A.y,x2:B.x,y2:B.y});
+    // check if chord dips below curve anywhere between
+    var below=false,lo=Math.min(xa,xb),hi=Math.max(xa,xb);
+    for(var t=0;t<=1;t+=0.02){var x=lo+(hi-lo)*t;
+      var chordY=f(lo)+(f(hi)-f(lo))*((x-lo)/(hi-lo||1));
+      if(chordY<f(x)-1e-3){below=true;break;}}
+    var v=S("w2-verdict");
+    if(!below){v.textContent="chord stays above ✓  convex here";v.setAttribute("class","f-path");}
+    else{v.textContent="chord dips below ✗  not convex";v.setAttribute("class","f-grad");}
+  }
+  aS.addEventListener("input",draw);bS.addEventListener("input",draw);
+  S("w2-toggle").addEventListener("click",function(){convex=!convex;this.textContent=convex?"switch to non-convex":"switch to convex";draw();});
+  draw();
+})();
+
+/* ===== W3 : gradient descent playground ===== */
+(function(){
+  var svg=S("w3"),O={x:280,y:210},sc=34;
+  var start={x:-3.4,y:2.4};
+  var alpha=S("w3-alpha"),kappa=S("w3-kappa"),steps=S("w3-steps");
+  function toS(p){return{x:O.x+sc*p.x,y:O.y-sc*p.y};}
+  var st=toS(start);
+  // min star
+  (function(){var c=O,r=7,d="";for(var i=0;i<10;i++){var ang=-Math.PI/2+i*Math.PI/5,rr=i%2?r*0.42:r;d+=(i?"L":"M")+(c.x+rr*Math.cos(ang))+" "+(c.y+rr*Math.sin(ang));}d+="Z";S("w3-star").setAttribute("d",d);})();
+  function drawContours(b){
+    var g=S("w3-contours");g.innerHTML="";
+    [0.6,1.8,3.6,6.2,9.5].forEach(function(c){
+      g.appendChild(el("ellipse",{cx:O.x,cy:O.y,rx:sc*Math.sqrt(2*c),ry:sc*Math.sqrt(2*c/b),fill:"none","class":"c-contour","stroke-width":1,opacity:0.5}));
+    });
+  }
+  function draw(){
+    var a=parseFloat(alpha.value),b=parseFloat(kappa.value),N=parseInt(steps.value);
+    S("w3-av").textContent=fmt(a);S("w3-kv").textContent=b;S("w3-nv").textContent=N;
+    drawContours(b);
+    var pts=[{x:start.x,y:start.y}],p={x:start.x,y:start.y};
+    for(var k=0;k<N;k++){p={x:p.x*(1-a*1),y:p.y*(1-a*b)};pts.push({x:p.x,y:p.y});}
+    var poly="",dg=S("w3-dots");dg.innerHTML="";
+    pts.forEach(function(q,i){var s=toS(q);poly+=s.x+","+s.y+" ";
+      if(i>0&&i<=N)dg.appendChild(el("circle",{cx:s.x,cy:s.y,r:3,"class":"f-path",opacity:0.85}));});
+    S("w3-path").setAttribute("points",poly);
+    var sS=toS(start);set(S("w3-start"),{cx:sS.x,cy:sS.y});
+    var dist=Math.hypot(p.x,p.y),stable=(Math.abs(1-a*b)<1&&Math.abs(1-a)<1);
+    S("w3-out").innerHTML="after "+N+" steps: distance to min = <span class='g'>"+fmt(dist)+
+      "</span> &nbsp;·&nbsp; "+(stable?"<span class='g'>stable ✓</span>":"<span class='o'>diverging — α too big (need α &lt; "+fmt(2/b)+")</span>")+
+      " &nbsp;·&nbsp; condition κ = "+fmt(b);
+  }
+  [alpha,kappa,steps].forEach(function(c){c.addEventListener("input",draw);});
+  // drag start
+  var handle=S("w3-start"),drag=false;
+  function upd(e){var pt=pointer(svg,e);start={x:Math.max(-6,Math.min(6,(pt.x-O.x)/sc)),y:Math.max(-5,Math.min(5,(O.y-pt.y)/sc))};draw();}
+  handle.addEventListener("mousedown",function(e){drag=true;e.preventDefault();});
+  handle.addEventListener("touchstart",function(e){drag=true;e.preventDefault();},{passive:false});
+  addEventListener("mousemove",function(e){if(drag)upd(e);});
+  addEventListener("touchmove",function(e){if(drag)upd(e);},{passive:false});
+  addEventListener("mouseup",function(){drag=false;});addEventListener("touchend",function(){drag=false;});
+  handle.addEventListener("keydown",function(e){var d={ArrowLeft:[-0.3,0],ArrowRight:[0.3,0],ArrowUp:[0,0.3],ArrowDown:[0,-0.3]}[e.key];if(!d)return;e.preventDefault();start={x:start.x+d[0],y:start.y+d[1]};draw();});
+  draw();
+})();
+
+/* ===== W4 : Newton stepping ===== */
+(function(){
+  var svg=S("w4"),O={x:325,y:300},sx=72,sy=9.2;
+  function f(x){return x*x*x*x/12+x*x/2;}
+  function fp(x){return x*x*x/3+x;}
+  function fpp(x){return x*x+1;}
+  function toS(x,y){return{x:O.x+sx*x,y:O.y-sy*y};}
+  function curve(){var d="";for(var i=0;i<=120;i++){var x=-3.8+7.6*i/120;var p=toS(x,f(x));d+=(i?"L":"M")+fmt(p.x)+" "+fmt(p.y);}return d;}
+  S("w4-curve").setAttribute("d",curve());
+  (function(){var c=toS(0,0),r=7,d="";for(var i=0;i<10;i++){var a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*0.42:r;d+=(i?"L":"M")+(c.x+rr*Math.cos(a))+" "+(c.y+rr*Math.sin(a));}d+="Z";S("w4-star").setAttribute("d",d);})();
+  var x=3.2,k=0;
+  function draw(){
+    var g=fp(x),h=fpp(x),xn=x-g/h;
+    // parabola q(t)=f(x)+g(t-x)+0.5h(t-x)^2 near x
+    var d="";for(var i=0;i<=40;i++){var t=x-2.2+4.4*i/40;var y=f(x)+g*(t-x)+0.5*h*(t-x)*(t-x);var p=toS(t,y);d+=(i?"L":"M")+fmt(p.x)+" "+fmt(p.y);}
+    S("w4-para").setAttribute("d",d);
+    var cur=toS(x,f(x)),nxt=toS(xn,f(xn)),vert=toS(xn,f(x)+g*(xn-x)+0.5*h*(xn-x)*(xn-x));
+    set(S("w4-cur"),{cx:cur.x,cy:cur.y});
+    set(S("w4-next"),{cx:nxt.x,cy:nxt.y});
+    set(S("w4-drop"),{x1:vert.x,y1:vert.y,x2:toS(xn,0).y?vert.x:vert.x,y2:nxt.y});
+    set(S("w4-drop"),{x1:vert.x,y1:vert.y,x2:vert.x,y2:O.y});
+    S("w4-out").innerHTML="step "+k+": &nbsp; x = <span class='n'>"+fmt(x)+
+      "</span> &nbsp;·&nbsp; slope f'(x) = "+fmt(g)+" &nbsp;·&nbsp; next x = <span class='o'>"+fmt(xn)+"</span>"+
+      (Math.abs(g)<0.01?" &nbsp;— <b>converged ✓</b>":"");
+  }
+  S("w4-step").addEventListener("click",function(){var g=fp(x),h=fpp(x);x=x-g/h;k++;draw();});
+  S("w4-reset").addEventListener("click",function(){x=parseFloat(S("w4-x0").value);k=0;draw();});
+  S("w4-x0").addEventListener("input",function(){x=parseFloat(this.value);k=0;draw();});
+  draw();
+})();
+
+/* ===== W5 : Levenberg-Marquardt knob ===== */
+(function(){
+  var svg=S("w5"),O={x:280,y:160},sc=40,b=4.0; // bowl f=0.5(x^2+b y^2)
+  var P={x:-3.0,y:1.7};
+  function toS(p){return{x:O.x+sc*p.x,y:O.y-sc*p.y};}
+  var cg=S("w5-contours");
+  [0.7,1.9,3.8,6.5].forEach(function(c){cg.appendChild(el("ellipse",{cx:O.x,cy:O.y,rx:sc*Math.sqrt(2*c),ry:sc*Math.sqrt(2*c/b),fill:"none","class":"c-contour","stroke-width":1,opacity:0.5}));});
+  (function(){var c=O,r=7,d="";for(var i=0;i<10;i++){var a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*0.42:r;d+=(i?"L":"M")+(c.x+rr*Math.cos(a))+" "+(c.y+rr*Math.sin(a));}d+="Z";S("w5-star").setAttribute("d",d);})();
+  var sP=toS(P);set(S("w5-P"),{cx:sP.x,cy:sP.y});
+  var grad={x:P.x,y:b*P.y};           // ∇f
+  // GN/Newton dir = -(H)^-1 grad = -(x, y)  -> straight to origin
+  var gn={x:-P.x,y:-P.y};
+  var sd={x:-grad.x,y:-grad.y};
+  function unit(v){var n=Math.hypot(v.x,v.y);return{x:v.x/n,y:v.y/n};}
+  var ugn=unit(gn),usd=unit(sd);
+  set(S("w5-gn"),{x1:sP.x,y1:sP.y,x2:sP.x+sc*1.6*ugn.x,y2:sP.y-sc*1.6*ugn.y});
+  set(S("w5-sd"),{x1:sP.x,y1:sP.y,x2:sP.x+sc*1.6*usd.x,y2:sP.y-sc*1.6*usd.y});
+  set(S("w5-l0"),{x:12,y:24});set(S("w5-l1"),{x:12,y:300});
+  function draw(){
+    var lam=parseFloat(S("w5-lambda").value);
+    S("w5-lv").textContent=fmt(lam);
+    // LM dir = -(H+λI)^-1 grad ; H=diag(1,b)
+    var d={x:-grad.x/(1+lam),y:-grad.y/(b+lam)};
+    var u=unit(d);
+    set(S("w5-lm"),{x1:sP.x,y1:sP.y,x2:sP.x+sc*1.7*u.x,y2:sP.y-sc*1.7*u.y});
+    var cos=(u.x*ugn.x+u.y*ugn.y);
+    var mode=lam<0.3?"<span class='n'>≈ Gauss–Newton (aims at the minimum)</span>":(lam>10?"<span class='o'>≈ steepest descent (cautious)</span>":"a blend of both");
+    S("w5-out").innerHTML="λ = "+fmt(lam)+" &nbsp;→&nbsp; step is "+mode;
+  }
+  S("w5-lambda").addEventListener("input",draw);draw();
+})();
+
+/* ===== W6 : projected gradient descent ===== */
+(function(){
+  var svg=S("w6"),O={x:280,y:210},sc=44;
+  var b=2.0, mn={x:3.4,y:0.8};          // bowl f=0.5((x-mx)^2+b(y-my)^2), min OUTSIDE box
+  var BOX=2.0;                           // C = [-2,2]^2
+  var cmin={x:Math.max(-BOX,Math.min(BOX,mn.x)),y:Math.max(-BOX,Math.min(BOX,mn.y))}; // constrained min
+  var start={x:-3.3,y:2.6};
+  var alpha=S("w6-alpha"),steps=S("w6-steps");
+  function toS(p){return{x:O.x+sc*p.x,y:O.y-sc*p.y};}
+  function clamp(p){return{x:Math.max(-BOX,Math.min(BOX,p.x)),y:Math.max(-BOX,Math.min(BOX,p.y))};}
+  function grad(p){return{x:(p.x-mn.x),y:b*(p.y-mn.y)};}
+  // static: box, contours, markers
+  (function(){
+    var tl=toS({x:-BOX,y:BOX}); set(S("w6-box"),{x:tl.x,y:tl.y,width:2*BOX*sc,height:2*BOX*sc});
+    set(S("w6-boxlbl"),{x:tl.x+6,y:tl.y+16});
+    var su=toS(mn); set(S("w6-uncon"),{cx:su.x,cy:su.y}); set(S("w6-unconlbl"),{x:su.x-2,y:su.y-10,"text-anchor":"middle"});
+    var sm=toS(cmin),r=7,d="";for(var i=0;i<10;i++){var a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*0.42:r;d+=(i?"L":"M")+(sm.x+rr*Math.cos(a))+" "+(sm.y+rr*Math.sin(a));}d+="Z";S("w6-star").setAttribute("d",d);
+    var g=S("w6-contours");[0.5,1.6,3.4,6,9.5].forEach(function(c){
+      g.appendChild(el("ellipse",{cx:toS(mn).x,cy:toS(mn).y,rx:sc*Math.sqrt(2*c),ry:sc*Math.sqrt(2*c/b),fill:"none","class":"c-contour","stroke-width":1,opacity:0.4}));});
+  })();
+  function draw(){
+    var a=parseFloat(alpha.value),N=parseInt(steps.value);
+    S("w6-av").textContent=fmt(a);S("w6-nv").textContent=N;
+    var pts=[clamp(start)],pre=[],p=clamp(start);
+    for(var k=0;k<N;k++){var y={x:p.x-a*grad(p).x,y:p.y-a*grad(p).y};pre.push(y);p=clamp(y);pts.push({x:p.x,y:p.y});}
+    var poly="",dg=S("w6-dots"),ex=S("w6-extras");dg.innerHTML="";ex.innerHTML="";
+    pts.forEach(function(q,i){var sp=toS(q);poly+=sp.x+","+sp.y+" ";
+      if(i>0)dg.appendChild(el("circle",{cx:sp.x,cy:sp.y,r:3,"class":"f-path",opacity:0.85}));});
+    S("w6-path").setAttribute("points",poly);
+    // show pre-projection hops + snap arrows for the last few steps
+    pre.forEach(function(y,i){ if(i<Math.max(0,N-6)) return;
+      var sy=toS(y),sp=toS(pts[i+1]);
+      if(Math.abs(y.x)>BOX+1e-6||Math.abs(y.y)>BOX+1e-6){
+        ex.appendChild(el("circle",{cx:sy.x,cy:sy.y,r:2.6,fill:"var(--ink-faint)",opacity:0.7}));
+        ex.appendChild(el("line",{x1:sy.x,y1:sy.y,x2:sp.x,y2:sp.y,stroke:"var(--ink-faint)","stroke-width":1,"stroke-dasharray":"3 3",opacity:0.7}));
+      }});
+    var sS=toS(clamp(start));set(S("w6-start"),{cx:sS.x,cy:sS.y});
+    var dist=Math.hypot(p.x-cmin.x,p.y-cmin.y);
+    var onEdge=(Math.abs(p.x-BOX)<0.02||Math.abs(p.x+BOX)<0.02||Math.abs(p.y-BOX)<0.02||Math.abs(p.y+BOX)<0.02);
+    S("w6-out").innerHTML="after "+N+" steps: distance to constrained min = <span class='g'>"+fmt(dist)+
+      "</span> &nbsp;·&nbsp; "+(onEdge?"<span class='o'>resting on the fence (boundary)</span>":"interior");
+  }
+  [alpha,steps].forEach(function(c){c.addEventListener("input",draw);});
+  var handle=S("w6-start"),drag=false;
+  function upd(e){var pt=pointer(svg,e);start={x:Math.max(-BOX,Math.min(BOX,(pt.x-O.x)/sc)),y:Math.max(-BOX,Math.min(BOX,(O.y-pt.y)/sc))};draw();}
+  handle.addEventListener("mousedown",function(e){drag=true;e.preventDefault();});
+  handle.addEventListener("touchstart",function(e){drag=true;e.preventDefault();},{passive:false});
+  addEventListener("mousemove",function(e){if(drag)upd(e);});
+  addEventListener("touchmove",function(e){if(drag)upd(e);},{passive:false});
+  addEventListener("mouseup",function(){drag=false;});addEventListener("touchend",function(){drag=false;});
+  handle.addEventListener("keydown",function(e){var d={ArrowLeft:[-0.25,0],ArrowRight:[0.25,0],ArrowUp:[0,0.25],ArrowDown:[0,-0.25]}[e.key];if(!d)return;e.preventDefault();start=clamp({x:start.x+d[0],y:start.y+d[1]});draw();});
+  draw();
+})();
+</script>
+</body>
+</html>
