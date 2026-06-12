@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robotics — Layer 5 Interactive Textbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="window.__katexReady=true;if(window.__doRender)window.__doRender();"></script>
+<style>
+/* ============================================================
+   DESIGN SYSTEM — "Signal & Field"
+   A computational-textbook identity: cool paper, deep indigo
+   ink, an electric coral reserved EXCLUSIVELY for things you
+   can touch (the signature), teal as the secondary data hue.
+   ============================================================ */
+:root{
+  --paper:#F4F5F8;
+  --surface:#FFFFFF;
+  --ink:#14162A;
+  --ink-soft:#474B66;
+  --ink-faint:#878BA6;
+  --indigo:#4338CA;
+  --indigo-deep:#2A2090;
+  --indigo-wash:#EEEEF8;
+  --coral:#FF5C49;
+  --coral-deep:#E8412E;
+  --teal:#0E9C92;
+  --teal-wash:#E4F3F1;
+  --amber:#C98314;
+  --amber-wash:#FBF1DC;
+  --tint:#EDEEF7;
+  --line:#DBDDE8;
+  --line-soft:#E7E8F0;
+  --code-bg:#191B30;
+  --code-ink:#E8E9F2;
+  --shadow:0 1px 2px rgba(20,22,42,.04),0 8px 30px rgba(20,22,42,.06);
+  --shadow-lg:0 4px 12px rgba(20,22,42,.08),0 20px 50px rgba(20,22,42,.10);
+  --serif:"Newsreader",Georgia,serif;
+  --display:"Space Grotesk",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --reading:760px;
+  --wide:1000px;
+  --sidebar:280px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:19px;
+  line-height:1.72;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+::selection{background:var(--coral);color:#fff}
+
+/* ---------- reading progress ---------- */
+#progress{
+  position:fixed;top:0;left:0;height:3px;width:0%;
+  background:linear-gradient(90deg,var(--indigo),var(--coral));
+  z-index:120;transition:width .12s linear;
+}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);
+  background:var(--surface);border-right:1px solid var(--line);
+  padding:30px 0 40px;overflow-y:auto;z-index:100;
+}
+.sidebar-brand{padding:0 26px 22px;border-bottom:1px solid var(--line-soft);margin-bottom:18px}
+.sidebar-brand .eyebrow{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--coral);font-weight:500;
+}
+.sidebar-brand h1{
+  font-family:var(--display);font-weight:700;font-size:22px;
+  line-height:1.12;margin-top:8px;letter-spacing:-.01em;color:var(--ink);
+}
+.sidebar-brand .sub{font-size:13px;color:var(--ink-faint);margin-top:7px;font-family:var(--display);font-weight:400}
+.toc{list-style:none;font-family:var(--display);font-size:14px}
+.toc>li{margin:1px 0}
+.toc .chap{
+  display:flex;gap:11px;align-items:baseline;padding:8px 26px;
+  color:var(--ink-soft);text-decoration:none;font-weight:500;
+  border-left:3px solid transparent;transition:all .15s;
+}
+.toc .chap .num{font-family:var(--mono);font-size:11px;color:var(--ink-faint);min-width:18px}
+.toc .chap:hover{background:var(--indigo-wash);color:var(--indigo)}
+.toc .chap.active{color:var(--indigo);border-left-color:var(--coral);background:var(--indigo-wash)}
+.toc .chap.active .num{color:var(--coral)}
+.toc .subs{list-style:none;padding:2px 0 6px}
+.toc .subs a{
+  display:block;padding:4px 26px 4px 55px;font-size:12.5px;
+  color:var(--ink-faint);text-decoration:none;border-left:3px solid transparent;
+}
+.toc .subs a:hover{color:var(--indigo)}
+.toc .subs a.active{color:var(--ink);border-left-color:var(--line)}
+
+/* ---------- mobile menu ---------- */
+.menu-btn{
+  display:none;position:fixed;top:14px;left:14px;z-index:130;
+  background:var(--ink);color:#fff;border:none;border-radius:9px;
+  width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:var(--shadow);
+}
+.scrim{display:none;position:fixed;inset:0;background:rgba(20,22,42,.4);z-index:99}
+
+/* ---------- main layout ---------- */
+.content{margin-left:var(--sidebar);padding:0 0 120px}
+.wrap{max-width:var(--reading);margin:0 auto;padding:0 28px}
+.wrap-wide{max-width:var(--wide);margin:0 auto;padding:0 28px}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;height:clamp(440px,72vh,640px);
+  display:flex;align-items:center;overflow:hidden;
+  background:linear-gradient(165deg,#15172E 0%,#221C6B 55%,#3A2D9E 100%);
+  margin-bottom:70px;
+}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;opacity:.9}
+.hero-inner{position:relative;z-index:2;max-width:var(--wide);margin:0 auto;padding:0 48px;width:100%}
+.hero .eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  color:#FF8C7E;font-weight:500;margin-bottom:20px;
+}
+.hero h1{
+  font-family:var(--display);font-weight:700;color:#fff;
+  font-size:clamp(40px,7vw,76px);line-height:.98;letter-spacing:-.03em;
+}
+.hero h1 em{font-style:normal;color:#B9B2FF}
+.hero .lead{
+  font-family:var(--serif);color:#C9CCE8;font-size:clamp(17px,2.2vw,21px);
+  max-width:620px;margin-top:26px;line-height:1.6;
+}
+.hero .scroll-cue{
+  margin-top:38px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:#9A9DD0;display:flex;align-items:center;gap:10px;
+}
+.hero .scroll-cue::before{content:"";width:34px;height:1px;background:#6E72B8}
+
+/* ---------- typography in body ---------- */
+.chapter{padding-top:34px;margin-top:34px}
+.chapter-head{margin-bottom:14px}
+.chapter-head .kicker{
+  font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:12px;
+}
+.chapter-head .kicker::after{content:"";flex:1;height:1px;background:var(--line)}
+.chapter-head h2{
+  font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,42px);
+  line-height:1.06;letter-spacing:-.02em;margin-top:14px;color:var(--ink);
+}
+h3{
+  font-family:var(--display);font-weight:600;font-size:25px;line-height:1.2;
+  margin:46px 0 4px;letter-spacing:-.01em;color:var(--ink);
+}
+h4{
+  font-family:var(--display);font-weight:500;font-size:18px;
+  margin:30px 0 2px;color:var(--indigo-deep);letter-spacing:-.005em;
+}
+.content p{margin:16px 0;color:var(--ink)}
+.content p.intro{font-size:21px;line-height:1.66;color:var(--ink-soft)}
+.content a{color:var(--indigo);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.content a:hover{text-decoration-color:var(--coral)}
+strong{font-weight:600;color:var(--ink)}
+em{font-style:italic}
+.term{font-weight:600;color:var(--indigo-deep);font-style:normal}
+code{font-family:var(--mono);font-size:.84em;background:var(--tint);padding:.12em .4em;border-radius:5px;color:var(--indigo-deep)}
+ul,ol{margin:16px 0 16px 4px;padding-left:26px}
+li{margin:8px 0;padding-left:4px}
+li::marker{color:var(--coral)}
+hr{border:none;border-top:1px solid var(--line);margin:54px 0}
+
+/* ---------- callout boxes ---------- */
+.box{border-radius:14px;padding:22px 26px;margin:28px 0;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
+.box .box-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.box .box-label::before{content:"";width:7px;height:7px;border-radius:50%}
+.box p:first-of-type,.box .box-label+p{margin-top:0}
+.box p:last-child{margin-bottom:0}
+
+.def{background:var(--indigo-wash);border-color:#D6D7F0}
+.def .box-label{color:var(--indigo)}
+.def .box-label::before{background:var(--indigo)}
+
+.intuition{background:var(--teal-wash);border-color:#C4E4E0}
+.intuition .box-label{color:var(--teal)}
+.intuition .box-label::before{background:var(--teal)}
+
+.note{background:var(--amber-wash);border-color:#EAD9AE}
+.note .box-label{color:var(--amber)}
+.note .box-label::before{background:var(--amber)}
+
+.derivation{background:var(--surface);border-color:var(--line);border-left:4px solid var(--ink)}
+.derivation .box-label{color:var(--ink)}
+.derivation .box-label::before{background:var(--ink)}
+.derivation .step{display:flex;gap:14px;margin:14px 0;align-items:flex-start}
+.derivation .step .s-num{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;background:var(--ink);
+  min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  margin-top:4px;flex-shrink:0;
+}
+.derivation .step .s-body{flex:1}
+.derivation .step .s-body p{margin:0 0 4px}
+
+/* ---------- math display ---------- */
+.katex-display{margin:20px 0!important;overflow-x:auto;overflow-y:hidden;padding:4px 0}
+.eqn{position:relative}
+.content .katex{font-size:1.04em}
+
+/* ---------- figures & demos ---------- */
+figure{margin:34px 0;text-align:center}
+figcaption{font-family:var(--display);font-size:13.5px;color:var(--ink-faint);margin-top:14px;line-height:1.5}
+figcaption b{color:var(--ink-soft);font-weight:600}
+.svg-fig{width:100%;height:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+
+.demo{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  margin:34px 0;box-shadow:var(--shadow-lg);overflow:hidden;
+}
+.demo-head{padding:18px 24px 16px;border-bottom:1px solid var(--line-soft);background:linear-gradient(180deg,#FFF,#FCFCFE)}
+.demo-head .tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:8px;
+}
+.demo-head .tag::before{content:"▶";font-size:8px}
+.demo-head h4{font-family:var(--display);font-weight:600;font-size:18px;color:var(--ink);margin:7px 0 0}
+.demo-body{padding:22px 24px}
+.demo canvas{display:block;max-width:100%;border-radius:10px;background:#FBFBFD;border:1px solid var(--line-soft)}
+.demo-controls{display:flex;flex-wrap:wrap;gap:18px 28px;margin-top:18px;align-items:flex-end}
+.ctrl{display:flex;flex-direction:column;gap:6px;min-width:150px;flex:1}
+.ctrl label{font-family:var(--display);font-size:12.5px;font-weight:500;color:var(--ink-soft);display:flex;justify-content:space-between;gap:10px}
+.ctrl label .val{font-family:var(--mono);color:var(--coral);font-weight:700}
+.demo .readout{font-family:var(--mono);font-size:13px;color:var(--ink-soft);background:var(--tint);padding:10px 14px;border-radius:8px;margin-top:14px;line-height:1.6}
+.demo .readout b{color:var(--indigo-deep)}
+
+/* coral = interactive (the signature) */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;
+  background:var(--line);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;border:none;
+}
+.btn{
+  font-family:var(--display);font-weight:500;font-size:13.5px;cursor:pointer;
+  background:var(--coral);color:#fff;border:none;padding:9px 18px;border-radius:9px;
+  transition:transform .1s,background .15s;
+}
+.btn:hover{background:var(--coral-deep)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--indigo);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--indigo-wash);color:var(--indigo)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{
+  font-family:var(--display);font-size:12.5px;font-weight:500;background:var(--surface);
+  border:none;padding:8px 14px;cursor:pointer;color:var(--ink-soft);border-right:1px solid var(--line);
+}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--indigo);color:#fff}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto;margin:30px 0}
+table{border-collapse:collapse;width:100%;font-size:15.5px;font-family:var(--display)}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-soft)}
+th{font-weight:600;color:var(--indigo-deep);border-bottom:2px solid var(--line);font-size:13px;letter-spacing:.02em}
+td{color:var(--ink-soft)}
+tr:hover td{background:var(--indigo-wash)}
+td code{font-size:.9em}
+
+/* ---------- pill / chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.chip{font-family:var(--mono);font-size:11px;background:var(--tint);color:var(--indigo-deep);padding:5px 11px;border-radius:20px;border:1px solid var(--line)}
+
+/* ---------- footer ---------- */
+.endcard{
+  background:linear-gradient(165deg,#15172E,#2A2090);color:#fff;border-radius:18px;
+  padding:44px;margin:60px 0 0;box-shadow:var(--shadow-lg);
+}
+.endcard .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#FF8C7E}
+.endcard h3{color:#fff;margin-top:10px}
+.endcard p{color:#C9CCE8}
+.endcard a{color:#B9B2FF}
+
+footer.page{padding:40px 0 0;color:var(--ink-faint);font-family:var(--display);font-size:13px;text-align:center}
+
+/* ---------- responsive ---------- */
+@media(max-width:1080px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .25s;width:300px;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-btn{display:block}
+  .scrim.show{display:block}
+  .content{margin-left:0}
+  .hero-inner{padding:0 26px}
+  .wrap,.wrap-wide{padding:0 22px}
+}
+@media(max-width:640px){
+  body{font-size:17.5px}
+  .content p.intro{font-size:18.5px}
+  .demo-controls{gap:14px}
+  .ctrl{min-width:120px}
+  .endcard{padding:28px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto}
+}
+
+/* --- code blocks --- */
+pre{font-family:var(--mono);font-size:13px;line-height:1.7;background:#14162A;color:#E7E8F2;
+  border-radius:12px;padding:18px 22px;overflow-x:auto;margin:24px 0;border:1px solid #2A2D4A;
+  box-shadow:var(--shadow)}
+pre .c{color:#8C90B8;font-style:italic}
+pre .k{color:#9BA2FF;font-weight:600}
+pre .s{color:#6FD3C7}
+pre .f{color:#FF8C7E}
+.cd-cap{font-family:var(--mono);font-size:12px;color:var(--ink-faint);margin:-14px 0 26px 4px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<button class="menu-btn" id="menuBtn" aria-label="Open contents">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">
+    <div class="brand-mark">L5</div>
+    <div class="brand-text"><strong>Robotics</strong><span>Robotics &amp; VLA · Layer 5 of 6</span></div>
+  </div>
+  <nav>
+  <ul class="toc">
+    <li><a class="chap" href="#ch1"><span class="num">01</span><span>The Machine</span></a>
+      <ul class="subs">
+        <li><a href="#anatomy">Links, joints, actuators</a></li>
+        <li><a href="#workspace">Workspace &amp; DOF</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch2"><span class="num">02</span><span>Forward Kinematics</span></a>
+      <ul class="subs">
+        <li><a href="#frames">Frames &amp; transforms</a></li>
+        <li><a href="#fk">FK, derived</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch3"><span class="num">03</span><span>Inverse Kinematics</span></a>
+      <ul class="subs">
+        <li><a href="#ikproblem">The inverse problem</a></li>
+        <li><a href="#ikanalytic">The analytic solution</a></li>
+        <li><a href="#iknumeric">Numerical IK</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch4"><span class="num">04</span><span>The Jacobian</span></a>
+      <ul class="subs">
+        <li><a href="#jac">Velocities</a></li>
+        <li><a href="#singular">Singularities</a></li>
+        <li><a href="#forces">Forces: τ = JᵀF</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch5"><span class="num">05</span><span>Dynamics &amp; Control</span></a>
+      <ul class="subs">
+        <li><a href="#dynamics">Equations of motion</a></li>
+        <li><a href="#pid">PID, derived</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch6"><span class="num">06</span><span>Sensing &amp; Estimation</span></a>
+      <ul class="subs">
+        <li><a href="#sensors">The sensor suite</a></li>
+        <li><a href="#kalman">The Kalman filter</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch7"><span class="num">07</span><span>Motion Planning</span></a>
+      <ul class="subs">
+        <li><a href="#cspace">Configuration space</a></li>
+        <li><a href="#astar">Graph search &amp; A*</a></li>
+        <li><a href="#sampling">Sampling: PRM &amp; RRT</a></li>
+        <li><a href="#traj">Paths → trajectories</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch8"><span class="num">08</span><span>ROS &amp; ROS 2</span></a>
+      <ul class="subs">
+        <li><a href="#whyros">What ROS actually is</a></li>
+        <li><a href="#concepts">Core concepts</a></li>
+        <li><a href="#firstnodes">Your first nodes</a></li>
+        <li><a href="#workflow">The full workflow</a></li>
+        <li><a href="#ros1v2">ROS 1 vs ROS 2 · QoS</a></li>
+        <li><a href="#stacks">Nav2, MoveIt, ros2_control</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch9"><span class="num">09</span><span>Simulation &amp; Sim-to-Real</span></a>
+      <ul class="subs">
+        <li><a href="#integrate">Physics engines</a></li>
+        <li><a href="#sim2real">The reality gap</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch10"><span class="num">10</span><span>The Robot Stack</span></a>
+      <ul class="subs">
+        <li><a href="#stack">Putting it together</a></li>
+      </ul></li>
+  </ul>
+  </nav>
+  <div class="side-foot">Layer 5 · Robotics<br>← <em>Layer 4 · Decision Making</em> · → <em>Layer 6 · VLA Systems</em></div>
+</aside>
+<div id="scrim"></div>
+
+<div class="content">
+
+  <header class="hero">
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero-inner">
+      <div class="eyebrow">Robotics &amp; VLA Curriculum · Layer 5</div>
+      <h1>Robotics: <em>the body</em></h1>
+      <p class="lead">Kinematics, dynamics, control, sensing, motion planning, ROS 2, and simulation — the complete classical toolkit that turns mathematics into motion. Every formula derived from scratch; every concept something you can drag, tune, or crash.</p>
+      <div class="scroll-cue">Scroll to begin · 10 chapters</div>
+    </div>
+  </header>
+
+  <section class="wrap" id="preface">
+    <p class="intro">Four layers of mathematics and learning have been waiting for a body. This layer supplies it — and with it, the discipline that hardware enforces. Pixels forgive; payloads don't. The classical robotics in these chapters (transforms, Jacobians, PID, Kalman filters, planners) is not what learned policies replaced — it is what they <em>stand on</em>: the safety layer, the vocabulary, and very often still the inner loops of every modern robot, VLAs included. We build it all, derive it all, and wire it together with ROS 2.</p>
+    <div class="box note">
+      <div class="box-label">How to read this</div>
+      <p>Blue panels are <span class="term">definitions</span>; green panels build <span style="color:var(--teal);font-weight:600">intuition</span>; black-edged panels are <strong>step-by-step derivations</strong> — and in the ROS chapter, step-by-step <em>workflows</em>; dark panels are runnable <strong>code</strong>; coral elements are <strong style="color:var(--coral)">interactive</strong>. Twelve demos: you will drag an arm through configuration space, tune a PID until it stops oscillating, and watch an RRT grow.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 1 ===================== -->
+  <section class="wrap chapter" id="ch1">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 01</div>
+      <h2>The Machine</h2>
+    </div>
+    <p class="intro">Before mathematics: metal. A robot is a chain of rigid pieces, motors that bend the chain, and sensors that report what happened. Naming these parts precisely is the first step, because every equation in this layer is about them.</p>
+
+    <h3 id="anatomy">1.1 · Links, joints, actuators, sensors</h3>
+    <p>A manipulator is an alternating chain of <span class="term">links</span> (rigid bodies) and <span class="term">joints</span> (the connections that allow motion). Two joint types dominate: <span class="term">revolute</span> (rotation about an axis — an elbow) and <span class="term">prismatic</span> (sliding along an axis — a piston). The chain ends in the <span class="term">end-effector</span>: gripper, suction cup, welding tip — the part that touches the world. The list of all current joint values, $\mathbf{q}=(q_1,\dots,q_n)$, is the robot's <span class="term">configuration</span> — one number per joint, and the single most important vector in this layer.</p>
+    <p>Each joint is driven by an <span class="term">actuator</span> — almost always an electric motor plus a <span class="term">gearbox</span>. The gearbox trades speed for torque (ratio $N$: output torque $\times N$, output speed $\div N$) and is a genuine design fork: high ratios (harmonic drives, ~100:1) give precision and strength but make the joint stiff and "numb" to contact; low ratios (quasi-direct drive, as in many legged robots) let the motor <em>feel</em> the world through the transmission — crucial when your job is touching things. Sensors live everywhere: <span class="term">encoders</span> on every joint (measuring $q$ — the robot always knows its own pose far better than it knows the world), IMUs, force/torque sensors, cameras. Chapter 6 treats them properly.</p>
+    <div class="box intuition">
+      <div class="box-label">Intuition — your arm, inventoried</div>
+      <p>Hold out your arm: shoulder ≈ 3 revolute joints sharing a point, elbow 1, wrist 3 — seven joints to place a 6-DOF hand, one joint spare (that spare is <em>redundancy</em>: keep your fingertip fixed on the table and you can still swing your elbow). Muscles are the actuators; tendons the transmission; proprioception the encoders. Every concept in this chapter has lived in your sleeve all along.</p>
+    </div>
+
+    <h3 id="workspace">1.2 · Degrees of freedom &amp; workspace</h3>
+    <div class="box def">
+      <div class="box-label">Definition — DOF and workspace</div>
+      <p>The <span class="term">degrees of freedom</span> (DOF) of a robot is the number of independent joint variables — the dimension of its configuration space. A free rigid body in 3-D has 6 DOF (3 position + 3 orientation), so placing an object <em>arbitrarily</em> needs at least a 6-DOF arm; 7+ adds redundancy. The <span class="term">workspace</span> is the set of all points the end-effector can reach — the image of all configurations under the kinematics of Chapter 2.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the workspace of a 2-link arm is an annulus</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Links of length $L_1, L_2$, both joints free. The farthest reach is both links aligned outward: radius $L_1+L_2$. The nearest is the second link folded fully back: radius $|L_1-L_2|$.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Every radius between is achievable by partially folding the elbow (the reach $r(\theta_2)=\sqrt{L_1^2+L_2^2+2L_1L_2\cos\theta_2}$ — the law of cosines, Layer 1 Ch 1 — sweeps continuously from $|L_1-L_2|$ to $L_1+L_2$ as $\theta_2$ goes from $\pi$ to $0$), and any direction by spinning the shoulder. Workspace: the ring</p>$$|L_1-L_2|\;\le\;\sqrt{x^2+y^2}\;\le\;L_1+L_2$$<p>with a <em>dead zone</em> in the middle whenever $L_1\neq L_2$ — a region the robot literally cannot touch, however clever its software. Geometry is destiny; feel it below.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Workspace explorer — geometry is destiny</h4></div>
+      <div class="demo-body">
+        <canvas id="wsCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>link 1 length $L_1$ <span class="val" id="wsL1v">0.60</span></label><input type="range" id="wsL1" min="0.2" max="1.0" step="0.02" value="0.6"></div>
+          <div class="ctrl"><label>link 2 length $L_2$ <span class="val" id="wsL2v">0.40</span></label><input type="range" id="wsL2" min="0.2" max="1.0" step="0.02" value="0.4"></div>
+        </div>
+        <div class="readout" id="wsReadout"></div>
+      </div>
+    </div>
+    <p>The shaded ring is everything this arm will ever reach; the arm sweeps to prove it. Make the links equal and the dead zone closes (the arm can touch its own shoulder); make them unequal and a forbidden disk opens. Robot selection in industry starts from exactly this picture: does the ring cover the workcell?</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 2 ===================== -->
+  <section class="wrap chapter" id="ch2">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 02</div>
+      <h2>Forward Kinematics</h2>
+    </div>
+    <p class="intro">The first real question of robotics: <em>given the joint angles, where is the hand?</em> The answer is a small machine built from Layer 1's rotation matrices — and the habit of thinking in coordinate frames that it teaches is the single most transferable skill in this field (it returns as ROS's TF tree in Chapter 8).</p>
+
+    <h3 id="frames">2.1 · Frames &amp; homogeneous transforms</h3>
+    <div class="box def">
+      <div class="box-label">Definition — rotation matrix and homogeneous transform (2-D)</div>
+      <p>A frame rotated by $\theta$ has basis vectors $(\cos\theta,\sin\theta)$ and $(-\sin\theta,\cos\theta)$ — and Layer 1 Ch 2 taught that <em>the columns of a matrix are where the basis lands</em>, so the rotation matrix writes itself:</p>
+      $$R(\theta)=\begin{pmatrix}\cos\theta&-\sin\theta\\ \sin\theta&\cos\theta\end{pmatrix}$$
+      <p>To also carry a translation $\mathbf{t}$ in one multiplication, embed both in a <span class="term">homogeneous transform</span> acting on $(x,y,1)$:</p>
+      $$T=\begin{pmatrix}R(\theta)&\mathbf{t}\\ \mathbf{0}&1\end{pmatrix}\qquad\Rightarrow\qquad T\begin{pmatrix}\mathbf{p}\\1\end{pmatrix}=\begin{pmatrix}R\mathbf{p}+\mathbf{t}\\1\end{pmatrix}$$
+      <p>The padding 1 is the whole trick: it lets the translation ride inside a matrix product, so <em>chains of frames become chains of multiplications</em> — Layer 1's "matrix multiplication is composition," now load-bearing. (3-D is identical with $3\times3$ rotations in a $4\times4$ box.)</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — frames are sentences with a point of view</div>
+      <p>"The cup is at (0.3, 0.1)" is meaningless until you say <em>in whose coordinates</em> — the camera's? the gripper's? the table's? A transform $T_{AB}$ is a translator: it rewrites a point expressed in frame $B$ into frame $A$'s language. Chains compose like relayed translations: $T_{\text{world,hand}}=T_{\text{world,shoulder}}\,T_{\text{shoulder,elbow}}\,T_{\text{elbow,hand}}$. Half of practical robotics bugs are sentences attributed to the wrong narrator — which is why ROS dedicates an entire subsystem (TF2) to tracking who's speaking.</p>
+    </div>
+
+    <h3 id="fk">2.2 · Forward kinematics, derived</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the 2-link arm, joint angles → hand position</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Walk the chain. The elbow sits at the end of link 1, which points in direction $\theta_1$:</p>$$\mathbf{p}_{\text{elbow}}=\big(L_1\cos\theta_1,\;\,L_1\sin\theta_1\big)$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Link 2 is mounted <em>on</em> link 1, so its absolute direction is the sum $\theta_1+\theta_2$ (rotations about the same axis compose by addition — multiply two $R(\theta)$'s and the angle-sum identities pop out). Add its contribution:</p>$$x=L_1\cos\theta_1+L_2\cos(\theta_1+\theta_2)\qquad y=L_1\sin\theta_1+L_2\sin(\theta_1+\theta_2)$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>That's forward kinematics: a recipe of cosines, one term per link — and exactly the matrix chain $T_{01}(\theta_1)T_{12}(\theta_2)$ multiplied out. For real 6-DOF arms the principle is unchanged; only bookkeeping grows, which is why the field standardized it: <span class="term">Denavit–Hartenberg parameters</span> assign each link four numbers and a canonical transform, and the URDF files of Chapter 8 are this same chain written as XML. FK is always: <em>multiply the chain</em>.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>FK live — turn the joints, read the formula</h4></div>
+      <div class="demo-body">
+        <canvas id="fkCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>$\theta_1$ <span class="val" id="fkT1v">40°</span></label><input type="range" id="fkT1" min="-180" max="180" step="1" value="40"></div>
+          <div class="ctrl"><label>$\theta_2$ <span class="val" id="fkT2v">50°</span></label><input type="range" id="fkT2" min="-160" max="160" step="1" value="50"></div>
+        </div>
+        <div class="readout" id="fkReadout"></div>
+      </div>
+    </div>
+    <p>Each joint carries its own little frame (axes drawn); the readout substitutes your angles into the derivation's formula, term by term. Notice the second link's frame rotating with the first — that's the $\theta_1+\theta_2$ in the math, visible as metal.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 3 ===================== -->
+  <section class="wrap chapter" id="ch3">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 03</div>
+      <h2>Inverse Kinematics</h2>
+    </div>
+    <p class="intro">Robotics' questions usually arrive backwards: not "where is the hand?" but "<em>the cup is there — what angles put my hand on it?</em>" Inverting the cosine recipe is harder than running it forward, in instructive ways: solutions can be multiple, absent, or infinite, and each case teaches something a robot programmer needs in their bones.</p>
+
+    <h3 id="ikproblem">3.1 · The inverse problem and its personalities</h3>
+    <div class="box def">
+      <div class="box-label">Definition — inverse kinematics (IK)</div>
+      <p>Given a desired end-effector pose $\mathbf{x}_d$, find joint values $\mathbf{q}$ with $\text{FK}(\mathbf{q})=\mathbf{x}_d$. Unlike FK (always one answer, cheap), IK can have: <strong>multiple solutions</strong> (a 2-link arm reaches most points two ways — elbow-up and elbow-down), <strong>no solution</strong> (target outside the Chapter 1 annulus), or <strong>infinitely many</strong> (redundant arms: your 7-DOF arm holding a point while the elbow orbits).</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — why backwards is harder</div>
+      <p>FK is evaluating a function; IK is solving an equation — and Layer 1 taught the asymmetry: evaluating $\cos$ is trivial, inverting mixtures of cosines is not. The multiplicity isn't a nuisance, it's <em>choice</em>: elbow-up vs elbow-down differ in clearance, joint limits, and how close they sit to a singularity, and motion planners (Ch 7) actively exploit the options. The no-solution case is why every grasp pipeline first asks "is it even reachable?"</p>
+    </div>
+
+    <h3 id="ikanalytic">3.2 · The analytic solution, derived completely</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — closed-form IK for the 2-link arm</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><strong>Find $\theta_2$ from the distance alone.</strong> The shoulder, elbow, target form a triangle with sides $L_1$, $L_2$, and $r=\sqrt{x^2+y^2}$. The law of cosines (Layer 1, Ch 1 — the same identity that proved the dot product) on the elbow's interior angle gives, after using $\cos(\pi-\theta_2)=-\cos\theta_2$:</p>$$\cos\theta_2=\frac{x^2+y^2-L_1^2-L_2^2}{2L_1L_2}=:D$$<p>Immediately the existence test falls out: a solution exists iff $|D|\le1$ — which is algebraically <em>exactly</em> the annulus condition of Chapter 1. The workspace was never a separate fact; it is IK's solvability condition.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>Two elbows.</strong> $\cos\theta_2=D$ has two solutions:</p>$$\theta_2=\pm\;\text{atan2}\!\big(\sqrt{1-D^2},\,D\big)$$<p>the $+$ and $-$ being elbow-down and elbow-up — the two mirror triangles over the shoulder–target line. (Why atan2 and not $\arccos$? atan2$(y,x)$ returns the angle of the point $(x,y)$ with correct quadrant — robotics uses it everywhere angles are recovered from coordinates.)</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Then $\theta_1$ by subtracting the wedge.</strong> The line to the target sits at angle $\text{atan2}(y,x)$. The first link doesn't point at the target; it points off by the small interior angle at the shoulder, whose tangent we can read from components along/perpendicular to link 1 — the target in link-1's frame is $(L_1+L_2\cos\theta_2,\;L_2\sin\theta_2)$. So:</p>$$\theta_1=\text{atan2}(y,x)-\text{atan2}\!\big(L_2\sin\theta_2,\;L_1+L_2\cos\theta_2\big)$$<p>Done: a complete, exact, microsecond-fast solver. Industrial 6-DOF arms have analogous closed forms (their last three axes intersecting at the wrist splits the problem into position + orientation halves); when geometry is less kind, we go numerical — next.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>IK live — drag the target, the math answers</h4></div>
+      <div class="demo-body">
+        <canvas id="ikCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>branch</label><div class="seg" id="ikSeg"><button class="on" data-b="down">elbow-down</button><button data-b="up">elbow-up</button></div></div>
+        </div>
+        <div class="readout" id="ikReadout"></div>
+      </div>
+    </div>
+    <p><strong>Drag anywhere.</strong> Inside the ring, the solid arm is your chosen branch and the ghost is the other — same fingertip, different elbow. Drag outside and the arm strains to the boundary while the readout reports $|D|>1$: the equation itself refusing. Drag to full stretch and watch the two ghosts merge into one — a fact that becomes the <em>singularity</em> of the next chapter.</p>
+
+    <h3 id="iknumeric">3.3 · Numerical IK — when there is no formula</h3>
+    <p>Redundant arms, joint limits, extra objectives ("…and keep the camera level") break closed forms. The general tool is Layer 1's favorite move — <em>linearize and iterate</em>. The next chapter builds the Jacobian $J$, the matrix with $\dot{\mathbf{x}}=J\dot{\mathbf{q}}$; numerical IK simply inverts that relationship in small steps:</p>
+    $$\Delta\mathbf{q}=J^{+}\,\big(\mathbf{x}_d-\text{FK}(\mathbf{q})\big)\qquad\text{repeat until converged}$$
+    <p>where $J^{+}$ is the pseudo-inverse (least-squares inverse — Layer 1 Ch 6's normal equations, reborn). It is gradient-descent's sibling: follow the local linear map toward the target. Practical solvers add <span class="term">damping</span> ($J^\top(JJ^\top+\lambda I)^{-1}$ — ridge regression! Layer 1 Ch 7) to behave near singularities, and project secondary objectives into the redundant null space. Every modern manipulation stack (MoveIt's KDL/TRAC-IK solvers, Ch 8) is this loop with engineering armor.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 4 ===================== -->
+  <section class="wrap chapter" id="ch4">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 04</div>
+      <h2>The Jacobian</h2>
+    </div>
+    <p class="intro">One matrix runs the show between geometry and motion. The Jacobian answers "if I nudge the joints, how does the hand move?" — Layer 1's derivative, grown up into robotics — and by a beautiful duality it also answers "if the hand pushes, what do the motors feel?"</p>
+
+    <h3 id="jac">4.1 · Velocities — differentiate the kinematics</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the 2-link Jacobian</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Differentiate the FK of Ch 2 with respect to time, chain rule throughout (Layer 1 Ch 3, in both variables):</p>$$\dot x=-L_1\sin\theta_1\,\dot\theta_1-L_2\sin(\theta_1{+}\theta_2)(\dot\theta_1{+}\dot\theta_2)$$$$\dot y=\;\;\,L_1\cos\theta_1\,\dot\theta_1+L_2\cos(\theta_1{+}\theta_2)(\dot\theta_1{+}\dot\theta_2)$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Collect into a matrix — joint rates in, hand velocity out:</p>$$\dot{\mathbf{x}}=J(\mathbf{q})\,\dot{\mathbf{q}},\qquad J=\begin{pmatrix}-L_1 s_1-L_2 s_{12} & -L_2 s_{12}\\[2pt] \;\;L_1 c_1+L_2 c_{12} & \;\;L_2 c_{12}\end{pmatrix}$$<p>(shorthand $s_{12}=\sin(\theta_1+\theta_2)$ etc.). $J$ depends on $\mathbf{q}$: the same joint twitch moves the hand differently in different poses — the Jacobian is the <em>local linear portrait</em> of the arm, recomputed wherever you stand. Layer 1's "smooth maps are locally linear," wearing aluminum.</p></div></div>
+    </div>
+
+    <h3 id="singular">4.2 · Singularities — where the portrait collapses</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — det J, and what its zero means</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Compute the determinant (expand, apply the sine-difference identity; the cross terms collapse):</p>$$\det J=L_1L_2\sin\theta_2$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Layer 1 Ch 2: determinant = area scaling. $\det J=0$ at $\theta_2=0$ or $\pi$ — arm fully stretched or fully folded — where the matrix <em>flattens</em> the space of hand velocities: both joints can only swing the hand sideways; no combination of joint rates moves it along the arm. A whole direction of motion is lost, exactly where the two IK branches merged in Ch 3's demo. Near (not at) the singularity it's worse in practice: producing modest speed in the dying direction demands enormous $\dot{\mathbf q}$ — the $J^{-1}$ blowing up that damped IK exists to tame.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The honest picture is the <span class="term">manipulability ellipsoid</span>: feed unit joint speeds in all directions through $J$ and the output velocities trace an ellipse whose axes are $J$'s singular directions (the eigen-story of Layer 1 Ch 2, via $JJ^\top$). Round ellipse = agile pose; needle = one good direction; line = singular. Watch it breathe below.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The manipulability ellipse — agility, drawn at the fingertip</h4></div>
+      <div class="demo-body">
+        <canvas id="jacCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>$\theta_1$ <span class="val" id="jacT1v">35°</span></label><input type="range" id="jacT1" min="-180" max="180" step="1" value="35"></div>
+          <div class="ctrl"><label>$\theta_2$ <span class="val" id="jacT2v">70°</span></label><input type="range" id="jacT2" min="-179" max="179" step="1" value="70"></div>
+        </div>
+        <div class="readout" id="jacReadout"></div>
+      </div>
+    </div>
+    <p>The ellipse is every hand-velocity reachable with unit joint effort. Drive $\theta_2\to0$: the ellipse starves into a needle, det J → 0, and the readout turns coral. Real arm controllers monitor exactly this number and steer trajectories around its zeros — and now you know why videos of robot arms sometimes show a strange detour mid-reach.</p>
+
+    <h3 id="forces">4.3 · Forces — the transpose duality</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — τ = JᵀF from one line of virtual work</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Let the hand press on the world with force $\mathbf{F}$ while the joints hold torques $\boldsymbol\tau$. In equilibrium, any imagined tiny motion $\delta\mathbf{q}$ does zero net work:</p>$$\boldsymbol\tau^{\top}\delta\mathbf{q}-\mathbf{F}^{\top}\delta\mathbf{x}=0$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>But motions aren't independent — the kinematics ties them: $\delta\mathbf{x}=J\,\delta\mathbf{q}$. Substitute and factor:</p>$$\big(\boldsymbol\tau^{\top}-\mathbf{F}^{\top}J\big)\,\delta\mathbf{q}=0\ \ \text{for all }\delta\mathbf{q}\quad\Longrightarrow\quad \boldsymbol\tau=J^{\top}\mathbf{F}$$<p>The <em>same matrix</em>, transposed, converts hand forces to motor torques. No new derivation needed, ever: compute $J$ once, get velocity control and force control both. This duality is why force-controlled assembly, impedance control, and the "feel" of quasi-direct-drive legs all route through the Jacobian — and (Layer 1 Ch 2 foreshadowed it) why the transpose keeps showing up wherever a linear map runs backwards, gradients included.</p></div></div>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 5 ===================== -->
+  <section class="wrap chapter" id="ch5">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 05</div>
+      <h2>Dynamics &amp; Control</h2>
+    </div>
+    <p class="intro">Kinematics is geometry; the world runs on forces. Dynamics asks what torques produce what motions — and control asks the inverse under uncertainty: what torques, applied <em>by feedback</em>, make the robot do what we want despite gravity, friction, and our imperfect models. The star is the humble PID loop, running right now in every joint of every robot on Earth.</p>
+
+    <h3 id="dynamics">5.1 · Equations of motion — the Lagrangian shortcut</h3>
+    <div class="box intuition">
+      <div class="box-label">Intuition — energy bookkeeping beats force bookkeeping</div>
+      <p>Newton's $F=ma$ works but demands you track every internal constraint force pulling link on link — misery for chains. Lagrange's insight: write only the <em>energies</em> (kinetic $T$, potential $V$), and one turn-the-crank equation produces the motion, constraint forces never appearing. For learning-flavored readers: it is the same spirit as Layer 4's log-derivative trick — choose the formulation in which the hard terms cancel themselves.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — a 1-link arm under gravity, from energies to motion</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Point mass $m$ at the end of a massless rod of length $l$, angle $\theta$ from straight-down, motor torque $\tau$. Energies:</p>$$T=\tfrac12 m l^2\dot\theta^{2}\qquad V=-mgl\cos\theta\qquad \mathcal{L}=T-V$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>The Euler–Lagrange equation (with the applied torque on the right):</p>$$\frac{d}{dt}\frac{\partial\mathcal{L}}{\partial\dot\theta}-\frac{\partial\mathcal{L}}{\partial\theta}=\tau$$<p>Compute each piece: $\partial\mathcal{L}/\partial\dot\theta=ml^2\dot\theta$, its time-derivative $ml^2\ddot\theta$; and $\partial\mathcal{L}/\partial\theta=-mgl\sin\theta$. Assemble:</p>$$ml^{2}\,\ddot\theta+mgl\sin\theta=\tau$$<p>Inertia times acceleration, plus a gravity torque that is worst ($mgl$) with the arm horizontal and zero hanging straight down — matching every intuition you have about holding a weight out sideways.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Multi-link arms follow the identical crank and land in the universal form</p>$$M(\mathbf{q})\,\ddot{\mathbf q}+C(\mathbf q,\dot{\mathbf q})\,\dot{\mathbf q}+\mathbf g(\mathbf q)=\boldsymbol\tau$$<p>— configuration-dependent inertia $M$, velocity-coupling (Coriolis/centrifugal) $C$, gravity $\mathbf g$. Two practical readings: <em>gravity compensation</em> (command $\boldsymbol\tau=\mathbf g(\mathbf q)$ and the arm floats, weightless under your hand — how teach-by-demonstration teleop works, the very data source of Layer 4 Ch 7), and <em>why control is needed at all</em>: $M$ and $\mathbf g$ are never known exactly, so pure feedforward always misses. Feedback eats the miss.</p></div></div>
+    </div>
+
+    <h3 id="pid">5.2 · PID control, derived term by term</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the PID law</div>
+      <p>With error $e(t)=\theta_d-\theta(t)$:</p>
+      $$\tau(t)=K_p\,e(t)\;+\;K_i\!\int_0^t e\,dt\;+\;K_d\,\dot e(t)$$
+      <p>Proportional: push harder the wronger you are. Integral: accumulate grudges against persistent error. Derivative: brake against approach speed.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — what each gain provably does</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><strong>P alone cannot finish the job.</strong> Suppose P-control settles the gravity arm at rest at some $\theta$: then $\ddot\theta=\dot\theta=0$, and the equation of motion demands torque balance,</p>$$K_p(\theta_d-\theta)=mgl\sin\theta\;\;\Rightarrow\;\;e_{ss}=\frac{mgl\sin\theta}{K_p}\neq0$$<p>A pure spring must <em>stretch</em> to hold a load: steady-state error is structural, shrinking only as $K_p\to\infty$ — which buys oscillation instead.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>PD is a virtual spring–damper.</strong> Read $\tau=K_p(\theta_d-\theta)-K_d\dot\theta$ into the dynamics: the closed loop is literally a mass on a spring of stiffness $K_p$ with damper $K_d$, anchored at the target —</p>$$ml^2\ddot\theta+K_d\dot\theta+K_p\theta\approx K_p\theta_d\;(+\,\text{gravity})$$<p>a second-order system whose character you can <em>choose</em>: natural frequency $\omega_n=\sqrt{K_p/ml^2}$, damping ratio $\zeta=K_d/(2\sqrt{K_p\,ml^2})$. $\zeta\lt1$: overshoot and ring; $\zeta=1$: critical — fastest with no overshoot; $\zeta\gt1$: sluggish. Gain tuning is just sculpting this one ratio.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>I erases the bias.</strong> At any steady state the integral term keeps growing unless $e=0$ — so the only equilibrium PID accepts is zero error: the integrator quietly learns the constant torque gravity demands and supplies it. Cost: integrators add lag and can <em>wind up</em> during saturation (hence anti-windup clamps in every real implementation). The full loop runs at 1 kHz per joint, in firmware, beneath everything — when Layer 6's VLA "moves the arm," its actions are setpoints handed to exactly this controller.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Tune a real loop — gravity arm to 60°, gains in your hands</h4></div>
+      <div class="demo-body">
+        <canvas id="pidCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>$K_p$ <span class="val" id="pidPv">30</span></label><input type="range" id="pidP" min="0" max="120" step="1" value="30"></div>
+          <div class="ctrl"><label>$K_i$ <span class="val" id="pidIv">0</span></label><input type="range" id="pidI" min="0" max="60" step="1" value="0"></div>
+          <div class="ctrl"><label>$K_d$ <span class="val" id="pidDv">4</span></label><input type="range" id="pidD" min="0" max="30" step="0.5" value="4"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="pidRun">▸ Run 6 s</button></div>
+        </div>
+        <div class="readout" id="pidReadout"></div>
+      </div>
+    </div>
+    <p>Run the defaults and meet the textbook trio in the response plot: the P-only droop below the target (step 1's formula, measurable), the ring of an underdamped PD, the slow exactness of PID. Then break it on purpose — $K_p=120,K_d=0$ shakes itself apart; huge $K_i$ overshoots from windup. The readout computes overshoot, settling time, and steady-state error each run. Ten minutes here is most of a controls lab.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 6 ===================== -->
+  <section class="wrap chapter" id="ch6">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 06</div>
+      <h2>Sensing &amp; State Estimation</h2>
+    </div>
+    <p class="intro">Control assumed we know $\theta$. We never quite do. Every sensor lies a little, each in its own style — and the art of estimation is fusing several styles of lie into one good guess. Its crown jewel, the Kalman filter, is Layer 1's Bayes-with-Gaussians turned into an algorithm, and we derive it completely.</p>
+
+    <h3 id="sensors">6.1 · The sensor suite, and how each one lies</h3>
+    <table>
+      <tr><th>Sensor</th><th>Measures</th><th>Its style of lying</th></tr>
+      <tr><td>Joint encoder</td><td>joint angle $q$</td><td>Almost honest — quantization only. Robots know their own pose superbly.</td></tr>
+      <tr><td>IMU (gyro + accelerometer)</td><td>angular rate, specific force</td><td>Fast and smooth, but integrating it <strong>drifts</strong>: bias × time accumulates without bound.</td></tr>
+      <tr><td>Wheel odometry</td><td>distance rolled</td><td>Drifts with slip — confidently wrong after a long hallway.</td></tr>
+      <tr><td>Camera (RGB)</td><td>appearance</td><td>Rich but indirect: no depth, lighting-dependent — needs Layers 2–3 to interpret.</td></tr>
+      <tr><td>Depth / stereo / LiDAR</td><td>range to surfaces</td><td>Geometric truth with dropouts: glass, black surfaces, sunlight.</td></tr>
+      <tr><td>Force/torque, tactile</td><td>contact wrench, pressure</td><td>Noisy and local — but the only sensors that feel.</td></tr>
+    </table>
+    <div class="box intuition">
+      <div class="box-label">Intuition — complementary liars</div>
+      <p>Notice the pattern: odometry/IMU are <em>smooth but drifting</em> (excellent short-term, hopeless long-term); GPS/vision landmarks are <em>jittery but anchored</em> (noisy each instant, unbiased forever). One lies slowly, the other lies loudly. Fusion isn't averaging two bad signals — it's pairing liars whose lies are <em>orthogonal</em>, taking smoothness from one and truth from the other. The Kalman filter is the provably-best way to do it when the lies are Gaussian.</p>
+    </div>
+
+    <h3 id="kalman">6.2 · The Kalman filter, derived from Bayes</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — 1-D Kalman: predict, then update (it's all Layer 1)</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><strong>Beliefs are Gaussians.</strong> Track position as $\mathcal N(\mu,\sigma^2)$. <strong>Predict:</strong> the robot commands a move $u$ with process noise $q^2$ (wheels slip). Shift the mean, and — variances of independent errors add (Layer 1 Ch 4) — inflate the uncertainty:</p>$$\mu^{-}=\mu+u\qquad \sigma^{2-}=\sigma^{2}+q^{2}$$<p>Prediction always <em>loses</em> certainty. That is drift, stated probabilistically.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>Update = Bayes with two Gaussians.</strong> A measurement $z$ arrives with noise $r^2$. Posterior ∝ prior × likelihood, and the product of two Gaussians is Gaussian with <em>precisions adding</em> and means precision-weighted:</p>$$\frac{1}{\sigma^{2+}}=\frac{1}{\sigma^{2-}}+\frac{1}{r^{2}}\qquad \mu^{+}=\sigma^{2+}\Big(\frac{\mu^{-}}{\sigma^{2-}}+\frac{z}{r^{2}}\Big)$$<p>(One completes the square in the exponents — Layer 1 Ch 4 algebra; each observer votes with weight = its confidence.)</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Rearrange into the famous gain form.</strong> Define $K=\dfrac{\sigma^{2-}}{\sigma^{2-}+r^{2}}\in[0,1]$ and the update becomes</p>$$\mu^{+}=\mu^{-}+K\,(z-\mu^{-})\qquad \sigma^{2+}=(1-K)\,\sigma^{2-}$$<p>Read it like prose: <em>move toward the measurement by a fraction K equal to how much of the total uncertainty is yours.</em> Confident prediction, noisy sensor → $K\approx0$, ignore the blip. Drifted prediction, sharp sensor → $K\approx1$, snap to it. The filter <em>continuously re-derives its own trust</em> — and the multivariate version (matrices replacing scalars, $J$'s as measurement maps) is the same three lines wearing Layer 1 Ch 2's linear algebra. Add landmarks to the state and you get SLAM; this loop is the beating heart of every drone, vacuum, and self-driving stack.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Fusion in action — drifting odometry + jittery fixes = truth</h4></div>
+      <div class="demo-body">
+        <canvas id="kfCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>odometry noise $q$ <span class="val" id="kfQv">0.06</span></label><input type="range" id="kfQ" min="0.01" max="0.20" step="0.01" value="0.06"></div>
+          <div class="ctrl"><label>sensor noise $r$ <span class="val" id="kfRv">0.50</span></label><input type="range" id="kfR" min="0.05" max="1.2" step="0.05" value="0.5"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="kfRun">▸ New run</button></div>
+        </div>
+        <div class="readout" id="kfReadout"></div>
+      </div>
+    </div>
+    <p>Dashed: the true path. Amber: dead-reckoned odometry, smoothly wandering off. Dots: raw position fixes, honest but shaky. Indigo: the Kalman estimate threading between them — smooth <em>and</em> anchored. Now starve it: crank sensor noise and watch the filter lean on odometry (and slowly inherit its drift); crank odometry noise and watch it chase the dots. The RMSE readout keeps score — the fusion beats both parents every time.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 7 ===================== -->
+  <section class="wrap chapter" id="ch7">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 07</div>
+      <h2>Motion Planning</h2>
+    </div>
+    <p class="intro">Between "I want the hand there" and "send these joint angles" lies a genuinely deep problem: find a <em>whole path</em> that never hits anything, through a space you can't even draw. This chapter builds planning completely — the configuration-space idea that reframes it, the graph search that solves small versions exactly, the sampling methods that conquer high dimensions, and the time-parameterization that turns a path into motion.</p>
+
+    <h3 id="cspace">7.1 · Configuration space — the reframe that makes planning possible</h3>
+    <div class="box def">
+      <div class="box-label">Definition — C-space, free space, and the planning problem</div>
+      <p>The <span class="term">configuration space</span> $\mathcal{C}$ is the set of all joint vectors $\mathbf q$ — for our 2-link arm, the $(\theta_1,\theta_2)$ square (a torus, really: both angles wrap). Workspace obstacles map into it: the <span class="term">C-obstacle</span> $\mathcal{C}_{obs}$ is every configuration in which <em>any part of the robot's body</em> intersects an obstacle, and $\mathcal{C}_{free}=\mathcal C\setminus\mathcal C_{obs}$. Motion planning, stated cleanly at last:</p>
+      $$\text{find a continuous path }\;\mathbf q(s)\in\mathcal{C}_{free},\;\;\mathbf q(0)=\mathbf q_{start},\;\;\mathbf q(1)=\mathbf q_{goal}$$
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — the robot becomes a point</div>
+      <p>In the workspace, planning is awful: an arm is a jointed shape sweeping through clutter, and "does this motion collide?" tangles geometry with mechanics. The C-space move shifts <em>all</em> of that complexity into the map: the robot collapses to a single point, obstacles inflate into strange C-obstacle continents, and planning becomes the oldest problem there is — walk a point through a maze. The cost is honest: the maze lives in $n$ dimensions (one per joint) and its walls have shapes nobody can write formulas for; we can only <em>query</em> them ("does configuration $\mathbf q$ collide? yes/no"). Every planner below is a strategy for exploring a maze you can only tap with a cane.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Two views of one arm — workspace vs. configuration space</h4></div>
+      <div class="demo-body">
+        <canvas id="csCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>obstacle size <span class="val" id="csRv">0.14</span></label><input type="range" id="csR" min="0.06" max="0.26" step="0.01" value="0.14"></div>
+        </div>
+        <div class="readout" id="csReadout"></div>
+      </div>
+    </div>
+    <p><strong>Drag the dot in the right panel</strong> (C-space) and watch the arm move on the left; drag into the coral continent and the arm on the left is visibly impaling the obstacle — the continent <em>is</em> that obstacle, translated into joint coordinates. Grow the obstacle and watch free space pinch into corridors: a path between two white regions in this picture is exactly a safe motion of the arm. Once you see this dual view, you can never unsee it — and you understand why planning is search.</p>
+
+    <h3 id="astar">7.2 · Graph search — Dijkstra, A*, and the optimality proof</h3>
+    <p>Discretize $\mathcal C_{free}$ into a grid (or any graph): nodes are configurations, edges connect neighbors, edge costs are distances. <span class="term">Dijkstra's algorithm</span> expands nodes in order of cost-from-start $g(n)$ — guaranteed optimal, but it floods <em>in every direction</em>, knowing nothing about where the goal is. <span class="term">A*</span> adds a compass:</p>
+    <div class="box def">
+      <div class="box-label">Definition — A*</div>
+      <p>Expand open nodes in order of $f(n)=g(n)+h(n)$, where $h(n)$ estimates remaining cost to the goal. $h$ is <span class="term">admissible</span> if it never overestimates: $h(n)\le$ true remaining cost (straight-line distance is the classic choice — the real path can't beat a straight line).</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — admissible h ⇒ A* returns an optimal path</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Let $C^{\ast}$ be the true optimal cost. Suppose, for contradiction, A* terminates by expanding the goal via a <em>suboptimal</em> route: $f(\text{goal})=g(\text{goal})>C^{\ast}$ (at the goal $h=0$, so $f=g$ there).</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>The optimal path exists, so at this moment some node $n$ on it sits in the open set with its optimal $g(n)$. Then</p>$$f(n)=g(n)+h(n)\;\le\;g(n)+\big(\text{true remaining from }n\big)=C^{\ast}\;<\;f(\text{goal})$$<p>using admissibility in the middle step.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>But A* always expands the open node of <em>smallest</em> $f$ — so it must pick $n$ before the goal. Contradiction; the suboptimal termination can't happen. Moral of the proof: the heuristic may be optimistic but never pessimistic — optimism only makes you check promising routes first; pessimism can make you abandon the truth. (Layer 4's UCB rang the same bell: optimism is safe; the better $h$ hugs the truth, the fewer nodes you touch, with $h\equiv0$ collapsing A* back into Dijkstra.)</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>A* vs Dijkstra — same maze, with and without a compass</h4></div>
+      <div class="demo-body">
+        <canvas id="asCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>algorithm</label><div class="seg" id="asSeg"><button class="on" data-a="astar">A* (h = distance)</button><button data-a="dij">Dijkstra (h = 0)</button></div></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="asRun">▸ Search</button> <button class="btn ghost" id="asClear">Clear walls</button></div>
+        </div>
+        <div class="readout" id="asReadout"></div>
+      </div>
+    </div>
+    <p><strong>Click cells to draw walls</strong>, then search. The tinted flood is the explored set, shaded by expansion order; the indigo line is the returned path — identical length for both algorithms (the proof guaranteed it), but count the flood: Dijkstra soaks the whole map while A*'s flood leans hungrily toward the goal. The heuristic doesn't change the answer; it changes the <em>bill</em>.</p>
+
+    <h3 id="sampling">7.3 · Sampling-based planning — RRT and friends</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why grids die, and sampling survives</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Grid resolution $k$ cells per joint, $n$ joints: $k^{n}$ cells. A modest arm — 7 joints, 100 cells each — is $100^{7}=10^{14}$ cells. At a nanosecond per collision check that is <em>days</em> just to build the map, for one obstacle layout. The curse of dimensionality (Layer 1 Ch 7's nemesis) kills explicit maps outright.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>The escape: never build the map. <em>Sample</em> random configurations, keep the collision-free ones, connect near neighbors with collision-checked segments — a sparse graph that probes only where queries actually go. Cost scales with the <em>complexity of the solution path</em>, not the volume of the space.</p></div></div>
+    </div>
+    <div class="box def">
+      <div class="box-label">Definition — the RRT algorithm (Rapidly-exploring Random Tree)</div>
+      <p>Grow a tree from $\mathbf q_{start}$. Repeat: (1) <strong>sample</strong> a random configuration $\mathbf q_{rand}$ (with a small bias, ~5%, toward the goal); (2) find the tree's <strong>nearest</strong> node; (3) <strong>steer</strong> from it one step $\epsilon$ toward $\mathbf q_{rand}$; (4) if the step is collision-free, <strong>add</strong> it. Stop when a node lands near the goal; the path is read off by walking parents back to the root.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — why "rapidly exploring" is earned</div>
+      <p>The magic is in step (2): the probability a tree node is selected for extension is proportional to the volume of space <em>closest to it</em> — its Voronoi cell. Nodes on the frontier of unexplored territory own gigantic cells, so the tree is automatically yanked toward the unknown; interior nodes, crowded by neighbors, are left alone. Exploration pressure, for free, with no map and no gradient. RRT is <em>probabilistically complete</em> (a solution, if one exists, is found with probability → 1) but not optimal — its paths jag. <span class="term">RRT*</span> repairs that by rewiring the tree as better routes appear (asymptotically optimal); <span class="term">PRM</span> builds a reusable roadmap once when many queries will share one world. These three are the workhorses inside MoveIt (Ch 8), planning real 7-DOF reaches in milliseconds.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Watch an RRT think — a tree yanked toward the unknown</h4></div>
+      <div class="demo-body">
+        <canvas id="rrtCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>step size $\epsilon$ <span class="val" id="rrtEv">22</span></label><input type="range" id="rrtE" min="8" max="50" step="1" value="22"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="rrtRun">▸ Grow</button> <button class="btn ghost" id="rrtReset">Reset</button></div>
+        </div>
+        <div class="readout" id="rrtReadout"></div>
+      </div>
+    </div>
+    <p>The tree feels its way around the obstacles — note how growth concentrates at the frontier, exactly the Voronoi argument — until a branch touches the goal and the path lights up. Re-run: a <em>different</em> tree, a different jagged path, same success. Tiny $\epsilon$ creeps; huge $\epsilon$ lunges and gets rejected at walls. The jaggedness is real and is precisely what the next section exists to fix.</p>
+
+    <h3 id="traj">7.4 · From path to trajectory — adding the clock</h3>
+    <p>A planner returns geometry: waypoints with no notion of time. Motors need a <em>trajectory</em> — position as a function of time respecting velocity and acceleration limits. (First, practical systems <em>shortcut</em> the jagged path: repeatedly try connecting random pairs of waypoints directly, keeping straight segments that miss obstacles.) Then time-parameterize:</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the trapezoidal velocity profile, completely</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Travel distance $d$ with limits $v_{\max}, a_{\max}$. The greedy optimum: accelerate flat-out, cruise, brake flat-out — velocity vs. time a trapezoid. Ramp time and ramp distance:</p>$$t_a=\frac{v_{\max}}{a_{\max}}\qquad d_a=\tfrac12 a_{\max}t_a^{2}=\frac{v_{\max}^{2}}{2a_{\max}}$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>Case A (long move, $d\ge 2d_a$):</strong> a cruise phase exists, covering $d-2d_a$ at $v_{\max}$. Total time:</p>$$T=2t_a+\frac{d-2d_a}{v_{\max}}=\frac{d}{v_{\max}}+\frac{v_{\max}}{a_{\max}}$$<p>— the ideal time $d/v_{\max}$ plus one full ramp as the price of obeying physics.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Case B (short move, $d\lt 2d_a$):</strong> no room to reach $v_{\max}$ — the trapezoid degenerates to a triangle. Accelerate to a peak $v_p$ then immediately brake; each half covers $d/2=v_p^{2}/2a_{\max}$, so</p>$$v_p=\sqrt{a_{\max}\,d}\qquad T=\frac{2v_p}{a_{\max}}=2\sqrt{\frac{d}{a_{\max}}}$$<p>Run this per segment (or with quintic polynomials when smooth jerk matters), feed the result to Chapter 5's PID as a stream of setpoints, and the pipeline is complete: <em>plan → shortcut → time → track</em>. That four-beat rhythm is what Nav2 and MoveIt industrialize in the next chapter.</p></div></div>
+    </div>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>C-space is where Layer 4's policies actually live (a policy maps observations to <em>points in C-space</em>); A*'s admissibility echoes UCB's optimism; and Layer 6's VLAs increasingly skip explicit planning for short horizons — yet ship with a classical planner underneath as the safety net and long-horizon scaffold. Knowing both sides is the working roboticist's edge.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 8 ===================== -->
+  <section class="wrap chapter" id="ch8">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 08</div>
+      <h2>ROS &amp; ROS 2</h2>
+    </div>
+    <p class="intro">A real robot is dozens of programs — camera driver, estimator, planner, controller, logger — written by different people, running at different rates, needing to talk. ROS (the Robot Operating System — actually middleware, not an OS) is how the field solved that plumbing once, together. This chapter teaches it properly: the concepts, your first nodes line by line, the complete build-and-run workflow, ROS 1 vs ROS 2, QoS, and the big application stacks.</p>
+
+    <h3 id="whyros">8.1 · What ROS actually is</h3>
+    <div class="box intuition">
+      <div class="box-label">Intuition — a nervous system in software</div>
+      <p>Without ROS, every robot project rewrites the same glue: serial drivers, message formats, logging, visualization, "how does the planner call the controller." ROS standardizes the glue: programs become <span class="term">nodes</span>, conversations become named <span class="term">topics</span> carrying typed <span class="term">messages</span>, and a constellation of tools (record, replay, visualize, introspect) works on <em>any</em> robot speaking the protocol. The payoff is an ecosystem: a LiDAR vendor ships a driver node, a lab ships a SLAM node, you wire them together at lunch. ROS 1 (born 2007 at Willow Garage) carried the field for 15 years and reached end-of-life in May 2025; <span class="term">ROS 2</span> — a ground-up rebuild on the DDS industrial messaging standard, fixing real-time, multi-robot, security, and the single-point-of-failure master — is the present and future, in LTS releases like Humble (2022) and Jazzy (2024). Everything below is ROS 2.</p>
+    </div>
+
+    <h3 id="concepts">8.2 · Core concepts, one by one</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the seven nouns of ROS 2</div>
+      <p><span class="term">Node</span>: one process with a job ("camera_driver", "planner"). <span class="term">Topic</span>: a named, typed broadcast channel ("/scan", "/cmd_vel") — publishers send, subscribers receive, <em>neither knows the other exists</em>. <span class="term">Message</span>: the typed payload (geometry_msgs/Twist has linear and angular velocity fields). <span class="term">Service</span>: request/reply for quick questions ("/spawn_entity"). <span class="term">Action</span>: a long-running goal with feedback and cancellation ("navigate_to_pose" — the right tool when the answer takes 30 seconds and you want progress reports). <span class="term">Parameter</span>: a named config value on a node, changeable at runtime. <span class="term">Launch file</span>: a Python script that starts and wires a whole constellation at once.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — pub/sub is the load-bearing decision</div>
+      <p>Why broadcast channels instead of function calls? <strong>Decoupling.</strong> The camera node publishes images whether one node listens or five; the planner subscribes to /map without caring if the map comes from SLAM, a file, or a simulator. Swap any component without touching the others; record any conversation (<code>ros2 bag</code>) and replay it later — which is, notice, exactly how robot demonstration datasets for Layer 4's imitation learning get collected. The graph of nodes-and-topics <em>is</em> the architecture diagram, live and inspectable.</p>
+    </div>
+    <p>Two more pieces complete the core. <span class="term">TF2</span> is the transform system: every node publishes the frames it knows (<code>map → odom → base_link → camera_link → gripper</code>...) into one tree, and any node may ask "where was the gripper <em>in map coordinates</em>, 80 ms ago?" — Chapter 2's homogeneous transforms as a queryable, time-traveling service, and the single most useful subsystem in ROS. <span class="term">URDF</span> is the robot description: an XML file of links, joints, masses, and meshes — Chapter 2's kinematic chain as data, consumed by TF, RViz, simulators, and MoveIt alike:</p>
+<pre>&lt;robot name=<span class="s">"two_link_arm"</span>&gt;
+  &lt;link name=<span class="s">"base"</span>/&gt;
+  &lt;link name=<span class="s">"upper_arm"</span>/&gt;
+  &lt;joint name=<span class="s">"shoulder"</span> type=<span class="s">"revolute"</span>&gt;
+    &lt;parent link=<span class="s">"base"</span>/&gt;  &lt;child link=<span class="s">"upper_arm"</span>/&gt;
+    &lt;axis xyz=<span class="s">"0 0 1"</span>/&gt;  &lt;limit lower=<span class="s">"-3.14"</span> upper=<span class="s">"3.14"</span> effort=<span class="s">"10"</span> velocity=<span class="s">"2"</span>/&gt;
+  &lt;/joint&gt;
+&lt;/robot&gt;</pre>
+    <p class="cd-cap">Chapter 2, serialized: the kinematic chain as XML that every ROS tool can read.</p>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>A live computation graph — echo topics, kill nodes, see decoupling</h4></div>
+      <div class="demo-body">
+        <canvas id="rosCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:1"><label>click a <b style="color:var(--coral)">topic pill</b> to echo it · click a node to kill / restart it</label></div>
+        </div>
+        <div class="readout" id="rosReadout"></div>
+      </div>
+    </div>
+    <p>This is a small mobile-robot system: drivers feeding perception feeding planning feeding motors. <strong>Click /scan or /cmd_vel</strong> to watch live messages stream (that's <code>ros2 topic echo</code>). <strong>Click the planner node</strong> to kill it: its outputs go silent, the motor node starves — but the camera and SLAM keep humming, oblivious. Restart it and flow resumes. That graceful partial failure is pub/sub decoupling, the reason ROS systems survive their own bugs.</p>
+
+    <h3 id="firstnodes">8.3 · Your first nodes, line by line</h3>
+<pre><span class="c"># talker.py — publishes a string at 2 Hz</span>
+<span class="k">import</span> rclpy
+<span class="k">from</span> rclpy.node <span class="k">import</span> Node
+<span class="k">from</span> std_msgs.msg <span class="k">import</span> String
+
+<span class="k">class</span> <span class="f">Talker</span>(Node):
+    <span class="k">def</span> <span class="f">__init__</span>(self):
+        super().__init__(<span class="s">'talker'</span>)                          <span class="c"># node name on the graph</span>
+        self.pub = self.create_publisher(String, <span class="s">'/chatter'</span>, 10)   <span class="c"># type, topic, queue</span>
+        self.create_timer(0.5, self.tick)                    <span class="c"># call tick() at 2 Hz</span>
+        self.n = 0
+    <span class="k">def</span> <span class="f">tick</span>(self):
+        msg = String(); msg.data = f<span class="s">'hello {self.n}'</span>; self.n += 1
+        self.pub.publish(msg)
+
+<span class="k">def</span> <span class="f">main</span>():
+    rclpy.init()
+    rclpy.spin(Talker())      <span class="c"># hand the node to the executor: run callbacks forever</span></pre>
+<pre><span class="c"># listener.py — prints whatever arrives</span>
+<span class="k">class</span> <span class="f">Listener</span>(Node):
+    <span class="k">def</span> <span class="f">__init__</span>(self):
+        super().__init__(<span class="s">'listener'</span>)
+        self.create_subscription(String, <span class="s">'/chatter'</span>, self.on_msg, 10)
+    <span class="k">def</span> <span class="f">on_msg</span>(self, msg):
+        self.get_logger().info(f<span class="s">'heard: {msg.data}'</span>)</pre>
+    <p>Read the shape, because every ROS node ever written has it: <strong>inherit Node → declare what you publish/subscribe/serve in __init__ → do all work in callbacks → spin.</strong> There is no main loop of your own; <code>rclpy.spin()</code> runs an executor that fires your callbacks as timers tick and messages arrive (single-threaded by default — a slow callback blocks the others, the first performance lesson everyone learns the hard way). The two processes never reference each other: they discover one another through the topic name and type, via DDS, automatically.</p>
+
+    <h3 id="workflow">8.4 · The complete workflow, step by step</h3>
+    <div class="box derivation">
+      <div class="box-label">Workflow — from empty folder to running system (the loop you'll run daily)</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><strong>Make a workspace.</strong> A workspace is just a folder with a <code>src/</code>:</p><pre style="margin:8px 0">mkdir -p ~/ros2_ws/src &amp;&amp; cd ~/ros2_ws</pre></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>Create a package</strong> — the unit of ROS code (a folder with manifest + build config):</p><pre style="margin:8px 0">cd src
+ros2 pkg create my_bot --build-type ament_python --dependencies rclpy std_msgs</pre><p>Drop <code>talker.py</code>/<code>listener.py</code> into <code>my_bot/my_bot/</code>, and register them as executables in <code>setup.py</code>'s <code>entry_points</code> (<code>'talker = my_bot.talker:main'</code>).</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Build with colcon, then source the result.</strong> Building generates an environment; sourcing makes your packages visible:</p><pre style="margin:8px 0">cd ~/ros2_ws &amp;&amp; colcon build
+source install/setup.bash      <span class="c"># every new terminal — yes, really, every one</span></pre><p>(Forgetting to source is the #1 beginner error; "package not found" almost always means this.)</p></div></div>
+      <div class="step"><div class="s-num">4</div><div class="s-body"><p><strong>Run, in two terminals:</strong></p><pre style="margin:8px 0">ros2 run my_bot talker
+ros2 run my_bot listener       <span class="c"># prints: heard: hello 0, hello 1, ...</span></pre></div></div>
+      <div class="step"><div class="s-num">5</div><div class="s-body"><p><strong>Introspect — the superpower.</strong> From any third terminal, interrogate the living system:</p><pre style="margin:8px 0">ros2 node list                  <span class="c"># /talker /listener</span>
+ros2 topic list                 <span class="c"># /chatter ...</span>
+ros2 topic echo /chatter        <span class="c"># tap the wire</span>
+ros2 topic hz /chatter          <span class="c"># measure: ~2 Hz</span>
+ros2 bag record -a              <span class="c"># record EVERYTHING for replay</span></pre></div></div>
+      <div class="step"><div class="s-num">6</div><div class="s-body"><p><strong>Scale up with a launch file</strong> (Python) that starts the whole constellation, parameters and remappings included:</p><pre style="margin:8px 0"><span class="k">def</span> <span class="f">generate_launch_description</span>():
+    <span class="k">return</span> LaunchDescription([
+        Node(package=<span class="s">'my_bot'</span>, executable=<span class="s">'talker'</span>),
+        Node(package=<span class="s">'my_bot'</span>, executable=<span class="s">'listener'</span>),
+    ])</pre><p><code>ros2 launch my_bot demo.launch.py</code> — and from here, RViz to visualize, Gazebo to simulate, real systems being this exact loop with more nodes.</p></div></div>
+    </div>
+
+    <h3 id="ros1v2">8.5 · ROS 1 vs ROS 2 — and QoS, the new dial that matters</h3>
+    <table>
+      <tr><th></th><th>ROS 1 (2007–2025)</th><th>ROS 2 (the present)</th></tr>
+      <tr><td>Discovery</td><td>central <code>roscore</code> master — one process dies, everything dies</td><td>peer-to-peer DDS discovery — no master, no single point of failure</td></tr>
+      <tr><td>Transport</td><td>custom TCPROS</td><td>DDS (Fast DDS / Cyclone) — an industrial standard with QoS</td></tr>
+      <tr><td>Real-time / embedded</td><td>not really</td><td>designed for it; micro-ROS reaches microcontrollers</td></tr>
+      <tr><td>Build / launch</td><td>catkin · XML launch</td><td>colcon · Python launch</td></tr>
+      <tr><td>Node lifecycle, security</td><td>ad hoc</td><td>managed lifecycle states; DDS security (auth/encryption)</td></tr>
+    </table>
+    <div class="box def">
+      <div class="box-label">Definition — Quality of Service (QoS)</div>
+      <p>Every ROS 2 publisher/subscriber carries a QoS profile; the two settings you'll actually tune: <span class="term">reliability</span> — <em>reliable</em> (retransmit until delivered) vs <em>best-effort</em> (drop and move on) — and <span class="term">durability</span> — whether late joiners receive the last message (<em>transient-local</em>, perfect for maps and robot descriptions) or only new ones (<em>volatile</em>). The doctrine: high-rate sensor streams go best-effort (a stale camera frame is worthless — drop it, send the fresh one); commands and state changes go reliable (a dropped "stop" is a safety incident). Mismatched QoS between pub and sub means <em>silent</em> non-connection — the second-most-classic ROS 2 debugging hour, after forgetting to source.</p>
+    </div>
+
+    <h3 id="stacks">8.6 · The application stacks — this layer, productionized</h3>
+    <p>Three frameworks turn this book's chapters into deployable systems, and you now possess the theory under each. <span class="term">Nav2</span> is Chapter 7 industrialized for mobile robots: costmaps (C-space, rasterized, with obstacles inflated by the robot's radius), a planner server (A*/hybrid search on the costmap), a controller server (local trajectory tracking), recovery behaviors, all orchestrated by a behavior tree — talk to it through one action: <code>navigate_to_pose</code>. <span class="term">MoveIt 2</span> is Chapters 3–7 for arms: IK solvers, OMPL's sampling planners (RRT-Connect by default), trajectory time-parameterization, collision checking against the URDF and sensed scene. <span class="term">ros2_control</span> is Chapter 5 made pluggable: a controller manager runs your PID/effort controllers at 100–1000 Hz against standardized hardware interfaces, so the same controller code drives simulation and metal. And the modern bridge: a learned policy — up to a full VLA — typically lives as <em>one more node</em>, subscribing to images and joint states, publishing setpoints into ros2_control, with Nav2/MoveIt as fallback and safety scaffolding. That node is what Layer 6 builds.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 9 ===================== -->
+  <section class="wrap chapter" id="ch9">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 09</div>
+      <h2>Simulation &amp; Sim-to-Real</h2>
+    </div>
+    <p class="intro">Layer 4 argued that imagined experience is the only affordable kind at scale; robotics took that argument literally and built an industry of hand-crafted world models — physics simulators. They run on a numerical heartbeat with failure modes you can derive exactly, and the gap between their physics and reality is the last boss of this layer.</p>
+
+    <h3 id="integrate">9.1 · Physics engines — the heartbeat and its flaw</h3>
+    <p>A simulator holds state $(\mathbf q,\dot{\mathbf q})$, computes accelerations from Chapter 5's dynamics, and advances time in discrete steps $\Delta t$ — thousands per second. The whole craft hides in <em>how</em> it steps. (Contact — the moment a foot strikes ground — is the genuinely hard part: forces become discontinuous and stiff, which is why simulators differ most in their contact models, and why MuJoCo's smooth contact made it the RL community's favorite. Isaac Lab's trick is throughput: thousands of environments stepping in parallel on one GPU — Layer 4's PPO needs exactly that firehose.)</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — explicit Euler injects energy (exactly, provably)</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>The obvious integrator (explicit Euler) follows the local slope — Layer 1 Ch 3's tangent line, taken literally:</p>$$x_{t+1}=x_t+\Delta t\,v_t\qquad v_{t+1}=v_t+\Delta t\,a(x_t)$$<p>Taylor's theorem says the truth is $x(t+\Delta t)=x+\Delta t\,\dot x+O(\Delta t^2)$ — so each step commits an $O(\Delta t^2)$ error, accumulating to $O(\Delta t)$ over a fixed duration. Small, surely harmless?</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Not harmless — <em>biased</em>. Test on the harmonic oscillator $a=-\omega^2 x$ (every joint near equilibrium looks like one) and track the energy $E\propto \omega^2x^2+v^2$. Substitute the update and expand:</p>$$\omega^2x_{t+1}^2+v_{t+1}^2=\omega^2(x+\Delta t\,v)^2+(v-\omega^2\Delta t\,x)^2=(1+\omega^2\Delta t^2)\big(\omega^2x^2+v^2\big)$$<p>(the cross terms cancel <em>exactly</em>). Energy multiplies by $1+\omega^2\Delta t^2$ <strong>every step</strong> — exponential growth. Your simulated pendulum doesn't just drift; it provably winds itself up until it explodes.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The one-character fix — <span class="term">semi-implicit Euler</span>: update velocity <em>first</em>, then position with the <em>new</em> velocity. This integrator is symplectic: it conserves a slightly-wrong energy exactly, so oscillations stay bounded forever — which is why every game and robotics engine uses it (or better, like RK4's $O(\Delta t^4)$ accuracy). Two morals: timestep choices are stability choices (stiff contacts force small $\Delta t$), and "it's just numerical error" is never a complete sentence — errors have <em>structure</em>.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Three integrators, one pendulum — watch the flaw you just derived</h4></div>
+      <div class="demo-body">
+        <canvas id="dtCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>timestep $\Delta t$ <span class="val" id="dtV">0.05</span></label><input type="range" id="dtS" min="0.005" max="0.12" step="0.005" value="0.05"></div>
+        </div>
+        <div class="readout" id="dtReadout"></div>
+      </div>
+    </div>
+    <p>Same pendulum, same start, no friction: true motion should swing forever at constant amplitude. The coral trace (explicit Euler) grows each cycle by exactly the factor you derived; the indigo (semi-implicit) breathes but stays bounded; teal (RK4) hugs the truth. Crank $\Delta t$ and watch explicit Euler go from "subtly wrong" to airborne in seconds — and remember this picture whenever a simulation "blows up."</p>
+
+    <h3 id="sim2real">9.2 · The reality gap — and randomization, the blunt cure</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the sim-to-real problem, and domain randomization</div>
+      <p>A policy trained in simulator dynamics $\hat f$ meets reality $f\neq\hat f$ — unmodeled friction, latency, backlash, soft contacts. This is precisely Layer 4 Ch 8's model error $\varepsilon$, with its compounding bound now charged against a physical robot. <span class="term">Domain randomization</span> attacks it by refusing to commit: train across a <em>distribution</em> of simulators,</p>
+      $$\max_\theta\;\mathbb{E}_{\xi\sim p(\xi)}\;\mathbb{E}\big[\,R\mid \text{dynamics }\xi\,\big]$$
+      <p>randomizing masses, frictions, latencies, motor strengths, visuals. If reality's $\xi^{\ast}$ lies inside the support of $p(\xi)$, the policy has — in effect — already practiced on the real world without knowing which day that was.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — train a thousand slightly different robots</div>
+      <p>A policy fit to one simulator overfits to its quirks — Layer 1 Ch 7's disease, with dynamics as the training set. Randomization is regularization in dynamics-space: the policy can't exploit any single simulator's lies, so it learns strategies that work across the whole family — necessarily more conservative, measurably more transferable. It is how simulation-trained locomotion first walked on real legs, and (turned up to anime levels: randomized colors, textures, lighting) how sim-trained <em>vision</em> transfers too. The complementary tool is <span class="term">system identification</span> — measure reality, shrink $p(\xi)$ around it — spending engineering effort to buy back the performance conservatism costs.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The gap, felt — one controller, many possible realities</h4></div>
+      <div class="demo-body">
+        <canvas id="gapCanvas" width="640" height="340"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>gains tuned…</label><div class="seg" id="gapSeg"><button class="on" data-m="sim">in one sim (aggressive)</button><button data-m="dr">with randomization (robust)</button></div></div>
+          <div class="ctrl"><label>true payload mass <span class="val" id="gapMv">1.0×</span></label><input type="range" id="gapM" min="0.5" max="2.6" step="0.05" value="1.0"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="gapRun">▸ Deploy</button></div>
+        </div>
+        <div class="readout" id="gapReadout"></div>
+      </div>
+    </div>
+    <p>The aggressive gains are superb at mass 1.0× — the world they were tuned in — and disintegrate by 2×: the reality gap as an overshooting, ringing trace. The randomization-tuned gains are slightly slower at 1.0× (the conservatism tax, visible) and composed everywhere. Slide the mass back and forth in each mode; the whole sim-to-real literature is the struggle to shrink that tax while keeping that composure.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 10 ===================== -->
+  <section class="wrap chapter" id="ch10">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 10</div>
+      <h2>The Robot Stack</h2>
+    </div>
+    <p class="intro">Step back and wire everything into one machine.</p>
+
+    <h3 id="stack">10.1 · Putting it together — loops within loops</h3>
+    <svg class="svg-fig" viewBox="0 0 760 300" role="img" aria-label="robot software stack">
+      <defs><marker id="arr5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#474B66"/></marker></defs>
+      <rect x="18" y="20" width="724" height="50" rx="10" fill="#EEEEF8" stroke="#4338CA"/>
+      <text x="380" y="41" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#2A2090">task layer — VLM / VLA policy, behavior trees · ~1 Hz</text>
+      <text x="380" y="59" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">"clear the table" → subgoals · Layers 3–4–6</text>
+      <rect x="18" y="86" width="352" height="50" rx="10" fill="#FFF" stroke="#DBDDE8"/>
+      <text x="194" y="107" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#14162A">perception &amp; estimation · 10–100 Hz</text>
+      <text x="194" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">encoders+vision → Kalman / SLAM · Ch 6, L2–3</text>
+      <rect x="390" y="86" width="352" height="50" rx="10" fill="#FFF" stroke="#DBDDE8"/>
+      <text x="566" y="107" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#14162A">planning · 1–10 Hz</text>
+      <text x="566" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">C-space · A* / RRT · trajectories · Ch 7 (Nav2/MoveIt)</text>
+      <rect x="18" y="152" width="724" height="50" rx="10" fill="#FFF" stroke="#FF5C49" stroke-width="2"/>
+      <text x="380" y="173" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#E8412E">control · 100–1000 Hz</text>
+      <text x="380" y="191" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">PID / impedance, gravity comp, τ = JᵀF · Ch 4–5 (ros2_control)</text>
+      <rect x="18" y="218" width="724" height="50" rx="10" fill="#14162A"/>
+      <text x="380" y="239" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="700" fill="#fff">hardware — motors, gearboxes, sensors</text>
+      <text x="380" y="257" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#9A9DD0">Ch 1 · current loops in firmware at ~20 kHz</text>
+      <line x1="380" y1="70" x2="380" y2="84" stroke="#474B66" stroke-width="1.6" marker-end="url(#arr5)"/>
+      <line x1="380" y1="136" x2="380" y2="150" stroke="#474B66" stroke-width="1.6" marker-end="url(#arr5)"/>
+      <line x1="380" y1="202" x2="380" y2="216" stroke="#474B66" stroke-width="1.6" marker-end="url(#arr5)"/>
+      <line x1="752" y1="243" x2="758" y2="243" stroke="none"/>
+    </svg>
+    <p style="font-family:var(--mono);font-size:12.5px;color:var(--ink-faint);margin-top:10px">Loops within loops, each ~10× faster than the one above, all wired through ROS 2 topics. Slow layers think; fast layers protect.</p>
+    <p>The frequency hierarchy is the deepest design fact in robotics: each layer runs about an order of magnitude faster than the one above, and <em>faster loops backstop slower ones</em>. The 1 kHz controller keeps the arm stable while the 10 Hz planner thinks; the planner keeps motion sensible while the 1 Hz VLA deliberates. When Layer 6 inserts a learned policy, it slots into this hierarchy rather than replacing it — typically at 10–50 Hz, between perception and control, with the classical layers as its reflexes and its safety cage. A VLA without this stack is a brain in a jar; with it, the brain has a spine.</p>
+
+    <div class="box intuition">
+      <div class="box-label">The whole layer, in one paragraph</div>
+      <p><strong>The machine</strong> set the vocabulary — links, joints, configurations — and geometry fixed the workspace before any code ran. <strong>Forward kinematics</strong> was matrix composition; <strong>inverse kinematics</strong> its harder mirror, solved exactly by a triangle and generally by iteration. <strong>The Jacobian</strong> — one derivative — gave velocities, exposed singularities through its determinant, and by a one-line virtual-work duality gave forces too. <strong>Dynamics</strong> came from energy bookkeeping, and <strong>PID</strong> was derived term by term: the spring that droops, the damper that calms, the integrator that holds grudges until error dies. <strong>The Kalman filter</strong> was Bayes-with-Gaussians re-deriving its own trust each tick. <strong>Planning</strong> collapsed the robot to a point in configuration space, searched it with provably-optimal A*, escaped dimensionality with randomly grown trees, then put motion on a clock with a trapezoid. <strong>ROS 2</strong> wired it all into a living graph of decoupled nodes you can echo, record, and kill. And <strong>simulation</strong> closed the loop back to Layer 4 — hand-built world models with derivable flaws, bridged to reality by refusing to trust any single one of them. Classical robotics is not the opposite of learned robotics; it is its skeleton.</p>
+    </div>
+
+    <div class="box note">
+      <div class="box-label">Where this goes next</div>
+      <p>Layer 6 — <strong>VLA Systems</strong> — is the assembly: vision-language-action models trained on demonstration data (Layer 4), riding the perception of Layers 2–3, deployed as ROS nodes above ros2_control, simulated and randomized per this chapter, with the stack you just built as their nervous system. Every prerequisite is now in place.</p>
+    </div>
+
+    <div class="endcard">
+      <div class="eyebrow">You've finished Layer 5</div>
+      <h3>The body is built</h3>
+      <p>Mathematics (L1), learning machinery (L2), perception and language (L3), decision making (L4), and now the physical craft — kinematics through ROS 2. One layer remains: putting a foundation-model brain into this body, and the engineering that makes the combination trustworthy.</p>
+      <p style="margin-top:18px;font-family:var(--mono);font-size:13px;color:#9A9DD0">frames → poses · Jᵀ → feel · PID → steadiness · Bayes → belief · C-space → routes · ROS → a nervous system.</p>
+    </div>
+
+    <footer class="page">An interactive textbook for the Robotics &amp; VLA curriculum · Layer 5 of 6 · Built to be read with a pen in hand.</footer>
+  </section>
+
+</div><!-- /content -->
+
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  /* ---------- KaTeX (robust, polling) ---------- */
+  window.__doRender=function(el){
+    if(!window.renderMathInElement) return;
+    renderMathInElement(el||document.body,{
+      delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'\\[',right:'\\]',display:true},
+        {left:'$',right:'$',display:false},
+        {left:'\\(',right:'\\)',display:false}
+      ],
+      throwOnError:false,
+      macros:{"\\R":"\\mathbb{R}","\\E":"\\mathbb{E}"}
+    });
+  };
+  (function(){
+    if(window.renderMathInElement){ window.__doRender(); return; }
+    var tries=0, iv=setInterval(function(){
+      if(window.renderMathInElement){ clearInterval(iv); window.__doRender(); }
+      else if(++tries>200){ clearInterval(iv); }
+    },50);
+  })();
+
+  var C={ink:'#14162A',inkSoft:'#474B66',faint:'#878BA6',indigo:'#4338CA',indigoDeep:'#2A2090',
+         coral:'#FF5C49',coralDeep:'#E8412E',teal:'#0E9C92',line:'#DBDDE8',wash:'#EEEEF8',amber:'#C98314'};
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var DISP='600 13px "Space Grotesk",sans-serif', MONO='12px "JetBrains Mono",monospace';
+
+  var redraws=[];
+  function fit(cv,aspect){
+    var dpr=window.devicePixelRatio||1;
+    cv.style.width='100%';
+    var w=cv.clientWidth||cv.parentElement.clientWidth;
+    var h=Math.round(w/aspect);
+    cv.style.height=h+'px';
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+    var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {w:w,h:h,ctx:ctx};
+  }
+  function register(fn){ redraws.push(fn); fn(); }
+  window.addEventListener('resize',function(){clearTimeout(window._rt);window._rt=setTimeout(function(){redraws.forEach(function(f){f();});},160);});
+  function gauss(){var u1=Math.random()||1e-9,u2=Math.random();return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);}
+  function arrowSeg(ctx,x1,y1,x2,y2,col,wid){
+    ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=wid;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    var a=Math.atan2(y2-y1,x2-x1);
+    ctx.beginPath();ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-8*Math.cos(a-0.45),y2-8*Math.sin(a-0.45));
+    ctx.lineTo(x2-8*Math.cos(a+0.45),y2-8*Math.sin(a+0.45));
+    ctx.closePath();ctx.fill();
+  }
+
+  /* ---------- NAV ---------- */
+  var prog=document.getElementById('progress');
+  var chapLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .chap'));
+  var chapSecs=chapLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  var subLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .subs a'));
+  var subTargets=subLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  function onScroll(){
+    var st=window.scrollY||document.documentElement.scrollTop;
+    var docH=document.documentElement.scrollHeight-window.innerHeight;
+    prog.style.width=(docH>0?(st/docH*100):0)+'%';
+    var active=-1;
+    for(var i=0;i<chapSecs.length;i++){ if(chapSecs[i]&&chapSecs[i].offsetTop-140<=st) active=i; }
+    chapLinks.forEach(function(a,i){a.classList.toggle('active',i===active);});
+    var sa=-1;
+    for(var j=0;j<subTargets.length;j++){ if(subTargets[j]&&subTargets[j].offsetTop-160<=st) sa=j; }
+    subLinks.forEach(function(a,i){a.classList.toggle('active',i===sa);});
+  }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+  var sidebar=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),menuBtn=document.getElementById('menuBtn');
+  function closeMenu(){sidebar.classList.remove('open');scrim.classList.remove('show');}
+  menuBtn.addEventListener('click',function(){sidebar.classList.toggle('open');scrim.classList.toggle('show');});
+  scrim.addEventListener('click',closeMenu);
+  document.querySelectorAll('.toc a').forEach(function(a){a.addEventListener('click',closeMenu);});
+
+  /* ---------- HERO: 3-link arm tracing a path ---------- */
+  (function(){
+    var cv=document.getElementById('heroCanvas'); if(!cv) return;
+    var ctx,W,H,t=0,trail=[];
+    function build(){
+      var hdr=cv.parentElement,dpr=window.devicePixelRatio||1;
+      W=hdr.clientWidth;H=hdr.clientHeight;
+      cv.width=W*dpr;cv.height=H*dpr;ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+      trail=[];
+      ctx.fillStyle='#141234';ctx.fillRect(0,0,W,H);
+    }
+    function draw(){
+      ctx.fillStyle='rgba(20,18,52,0.10)';ctx.fillRect(0,0,W,H);
+      t+=0.012;
+      var ox=W*0.5,oy=H*0.94,U=Math.min(W,H)*0.42;
+      var a1=-1.15+0.55*Math.sin(t*0.7);
+      var a2=0.9+0.7*Math.sin(t*1.13+1.2);
+      var a3=0.5+0.6*Math.sin(t*1.62+0.4);
+      var x1=ox+U*0.45*Math.cos(a1), y1=oy+U*0.45*Math.sin(a1);
+      var x2=x1+U*0.36*Math.cos(a1+a2), y2=y1+U*0.36*Math.sin(a1+a2);
+      var x3=x2+U*0.24*Math.cos(a1+a2+a3), y3=y2+U*0.24*Math.sin(a1+a2+a3);
+      trail.push([x3,y3]); if(trail.length>240)trail.shift();
+      ctx.strokeStyle='rgba(255,120,104,0.65)';ctx.lineWidth=1.6;ctx.beginPath();
+      trail.forEach(function(p,i){if(i===0)ctx.moveTo(p[0],p[1]);else ctx.lineTo(p[0],p[1]);});
+      ctx.stroke();
+      function link(xa,ya,xb,yb,w2){
+        ctx.strokeStyle='rgba(160,162,235,0.85)';ctx.lineWidth=w2;ctx.lineCap='round';
+        ctx.beginPath();ctx.moveTo(xa,ya);ctx.lineTo(xb,yb);ctx.stroke();ctx.lineCap='butt';
+      }
+      link(ox,oy,x1,y1,7);link(x1,y1,x2,y2,5.5);link(x2,y2,x3,y3,4);
+      [[ox,oy],[x1,y1],[x2,y2]].forEach(function(p){
+        ctx.fillStyle='#141234';ctx.strokeStyle='rgba(190,192,245,0.9)';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(p[0],p[1],5.5,0,7);ctx.fill();ctx.stroke();
+      });
+      ctx.fillStyle='rgba(255,120,104,1)';
+      ctx.beginPath();ctx.arc(x3,y3,4.5,0,7);ctx.fill();
+    }
+    build();
+    if(REDUCE){for(var k=0;k<300;k++)draw();}
+    else{(function loop(){draw();requestAnimationFrame(loop);})();}
+    window.addEventListener('resize',function(){clearTimeout(window._hr);window._hr=setTimeout(build,160);});
+  })();
+
+  /* ================= 1. WORKSPACE ================= */
+  (function(){
+    var cv=document.getElementById('wsCanvas'); if(!cv) return;
+    var s1=document.getElementById('wsL1'),s2=document.getElementById('wsL2');
+    var v1=document.getElementById('wsL1v'),v2=document.getElementById('wsL2v'),rd=document.getElementById('wsReadout');
+    var W,H,ctx,S,t=0,anim=null;
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var L1=+s1.value,L2=+s2.value;
+      v1.textContent=L1.toFixed(2);v2.textContent=L2.toFixed(2);
+      var cx=W/2,cy=H/2,U=Math.min(W,H)*0.42/Math.max(1.0,(L1+L2));
+      var Ro=(L1+L2)*U,Ri=Math.abs(L1-L2)*U;
+      // annulus
+      ctx.fillStyle='rgba(67,56,202,0.12)';
+      ctx.beginPath();ctx.arc(cx,cy,Ro,0,7);ctx.arc(cx,cy,Ri,0,7,true);ctx.fill();
+      ctx.strokeStyle=C.indigo;ctx.lineWidth=1.6;
+      ctx.beginPath();ctx.arc(cx,cy,Ro,0,7);ctx.stroke();
+      if(Ri>1){ctx.strokeStyle=C.coralDeep;ctx.setLineDash([5,5]);
+        ctx.beginPath();ctx.arc(cx,cy,Ri,0,7);ctx.stroke();ctx.setLineDash([]);
+        ctx.fillStyle='rgba(232,65,46,0.07)';ctx.beginPath();ctx.arc(cx,cy,Ri,0,7);ctx.fill();}
+      // sweeping arm
+      var a1=t*0.7, a2=Math.PI*0.7*Math.sin(t*1.31);
+      var ex=cx+U*L1*Math.cos(a1),ey=cy+U*L1*Math.sin(a1);
+      var hx=ex+U*L2*Math.cos(a1+a2),hy=ey+U*L2*Math.sin(a1+a2);
+      ctx.strokeStyle=C.ink;ctx.lineWidth=5;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ex,ey);ctx.stroke();
+      ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(hx,hy);ctx.stroke();ctx.lineCap='butt';
+      ctx.fillStyle=C.coralDeep;ctx.beginPath();ctx.arc(hx,hy,5,0,7);ctx.fill();
+      ctx.fillStyle='#fff';ctx.strokeStyle=C.ink;ctx.lineWidth=2;
+      [[cx,cy],[ex,ey]].forEach(function(p){ctx.beginPath();ctx.arc(p[0],p[1],4.5,0,7);ctx.fill();ctx.stroke();});
+      ctx.font=MONO;ctx.fillStyle=C.indigo;ctx.fillText('reach: r ≤ L₁+L₂ = '+(L1+L2).toFixed(2),14,22);
+      ctx.fillStyle=C.coralDeep;ctx.fillText('dead zone: r < |L₁−L₂| = '+Math.abs(L1-L2).toFixed(2),14,40);
+      rd.innerHTML='Workspace ring: '+Math.abs(L1-L2).toFixed(2)+' ≤ r ≤ '+(L1+L2).toFixed(2)+'. '+(Math.abs(L1-L2)<0.02?'Equal links: the dead zone has closed — the arm can fold back and touch its own base.':'The coral disk is unreachable no matter what the controller does — a hardware fact software must plan around.');
+    }
+    function tick(){t+=0.016;draw();anim=requestAnimationFrame(tick);}
+    [s1,s2].forEach(function(s){s.addEventListener('input',function(){if(REDUCE)draw();});});
+    register(draw);
+    if(!REDUCE)tick();
+  })();
+
+  /* ---------- shared 2-link helpers ---------- */
+  function fk2(L1,L2,t1,t2){
+    var ex=L1*Math.cos(t1),ey=L1*Math.sin(t1);
+    return {ex:ex,ey:ey,hx:ex+L2*Math.cos(t1+t2),hy:ey+L2*Math.sin(t1+t2)};
+  }
+  function drawArm(ctx,cx,cy,U,L1,L2,t1,t2,opts){
+    opts=opts||{};
+    var f=fk2(L1,L2,t1,t2);
+    var ex=cx+U*f.ex,ey=cy-U*f.ey,hx=cx+U*f.hx,hy=cy-U*f.hy;
+    ctx.globalAlpha=opts.alpha||1;
+    ctx.strokeStyle=opts.col||C.ink;ctx.lineWidth=opts.w||5;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ex,ey);ctx.stroke();
+    ctx.lineWidth=(opts.w||5)*0.8;ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(hx,hy);ctx.stroke();
+    ctx.lineCap='butt';
+    ctx.fillStyle='#fff';ctx.strokeStyle=opts.col||C.ink;ctx.lineWidth=2;
+    [[cx,cy],[ex,ey]].forEach(function(p){ctx.beginPath();ctx.arc(p[0],p[1],4.5,0,7);ctx.fill();ctx.stroke();});
+    ctx.fillStyle=opts.tip||C.coralDeep;
+    ctx.beginPath();ctx.arc(hx,hy,5.5,0,7);ctx.fill();
+    ctx.globalAlpha=1;
+    return {ex:ex,ey:ey,hx:hx,hy:hy};
+  }
+
+  /* ================= 2. FK ================= */
+  (function(){
+    var cv=document.getElementById('fkCanvas'); if(!cv) return;
+    var s1=document.getElementById('fkT1'),s2=document.getElementById('fkT2');
+    var v1=document.getElementById('fkT1v'),v2=document.getElementById('fkT2v'),rd=document.getElementById('fkReadout');
+    var W,H,ctx,S,L1=0.6,L2=0.45;
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var t1=+s1.value*Math.PI/180,t2=+s2.value*Math.PI/180;
+      v1.textContent=s1.value+'°';v2.textContent=s2.value+'°';
+      var cx=W*0.42,cy=H*0.62,U=Math.min(W,H)*0.38;
+      // base axes
+      ctx.strokeStyle=C.line;ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(cx-U*1.1,cy);ctx.lineTo(cx+U*1.2,cy);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(cx,cy+U*0.6);ctx.lineTo(cx,cy-U*1.05);ctx.stroke();
+      var a=drawArm(ctx,cx,cy,U,L1,L2,t1,t2,{});
+      // frames at joints
+      function frame(x,y,ang,len){
+        arrowSeg(ctx,x,y,x+len*Math.cos(ang),y-len*Math.sin(ang),C.indigo,2);
+        arrowSeg(ctx,x,y,x+len*Math.cos(ang+Math.PI/2),y-len*Math.sin(ang+Math.PI/2),C.teal,2);
+      }
+      frame(cx,cy,t1,26);
+      frame(a.ex,a.ey,t1+t2,26);
+      // dashed projections to EE
+      var f=fk2(L1,L2,t1,t2);
+      ctx.strokeStyle=C.faint;ctx.setLineDash([4,4]);ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(a.hx,a.hy);ctx.lineTo(a.hx,cy);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(a.hx,a.hy);ctx.lineTo(cx,a.hy);ctx.stroke();ctx.setLineDash([]);
+      ctx.font=MONO;ctx.fillStyle=C.coralDeep;
+      ctx.fillText('(x, y) = ('+f.hx.toFixed(3)+', '+f.hy.toFixed(3)+')',a.hx+10,a.hy-8);
+      var c1=Math.cos(t1),c12=Math.cos(t1+t2),s1v=Math.sin(t1),s12=Math.sin(t1+t2);
+      rd.innerHTML='x = '+L1+'·cos('+s1.value+'°) + '+L2+'·cos('+(+s1.value + +s2.value)+'°) = '+(L1*c1).toFixed(3)+' + '+(L2*c12).toFixed(3)+' = <b>'+f.hx.toFixed(3)+'</b> &nbsp;·&nbsp; y = '+(L1*s1v).toFixed(3)+' + '+(L2*s12).toFixed(3)+' = <b>'+f.hy.toFixed(3)+'</b>. One cosine term per link; link 2\u2019s angle is θ₁+θ₂ because its frame rides on link 1.';
+    }
+    [s1,s2].forEach(function(s){s.addEventListener('input',draw);});
+    register(draw);
+  })();
+
+  /* ================= 3. IK ================= */
+  (function(){
+    var cv=document.getElementById('ikCanvas'); if(!cv) return;
+    var rd=document.getElementById('ikReadout');
+    var W,H,ctx,S,L1=0.6,L2=0.45,branch='down',tx=0.55,ty=0.45;
+    function solveIK(x,y,elbowUp){
+      var D=(x*x+y*y-L1*L1-L2*L2)/(2*L1*L2);
+      if(D>1||D<-1)return null;
+      var t2=(elbowUp?-1:1)*Math.atan2(Math.sqrt(Math.max(0,1-D*D)),D);
+      var t1=Math.atan2(y,x)-Math.atan2(L2*Math.sin(t2),L1+L2*Math.cos(t2));
+      return {t1:t1,t2:t2,D:D};
+    }
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var cx=W*0.46,cy=H*0.58,U=Math.min(W,H)*0.40;
+      // workspace ring
+      ctx.fillStyle='rgba(67,56,202,0.07)';
+      ctx.beginPath();ctx.arc(cx,cy,(L1+L2)*U,0,7);ctx.arc(cx,cy,Math.abs(L1-L2)*U,0,7,true);ctx.fill();
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.arc(cx,cy,(L1+L2)*U,0,7);ctx.stroke();
+      var r=Math.hypot(tx,ty);
+      var sol=solveIK(tx,ty,branch==='up');
+      var other=solveIK(tx,ty,branch!=='up');
+      var shown={x:tx,y:ty},clamped=false;
+      if(!sol){ // clamp to boundary
+        clamped=true;
+        var s=Math.min(L1+L2-1e-4,Math.max(Math.abs(L1-L2)+1e-4,r))/r;
+        shown={x:tx*s,y:ty*s};
+        sol=solveIK(shown.x,shown.y,branch==='up');
+        other=solveIK(shown.x,shown.y,branch!=='up');
+      }
+      if(other)drawArm(ctx,cx,cy,U,L1,L2,other.t1,other.t2,{alpha:0.22,col:C.inkSoft,tip:C.faint});
+      var nearSing=false;
+      if(sol){
+        nearSing=Math.abs(Math.sin(sol.t2))<0.12;
+        drawArm(ctx,cx,cy,U,L1,L2,sol.t1,sol.t2,{col:nearSing?C.coralDeep:C.ink});
+      }
+      // target
+      ctx.strokeStyle=C.teal;ctx.lineWidth=2;
+      var px=cx+U*tx,py=cy-U*ty;
+      ctx.beginPath();ctx.arc(px,py,9,0,7);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(px-13,py);ctx.lineTo(px+13,py);ctx.moveTo(px,py-13);ctx.lineTo(px,py+13);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText('drag the target',14,20);
+      var D=(tx*tx+ty*ty-L1*L1-L2*L2)/(2*L1*L2);
+      if(clamped){
+        rd.innerHTML='Target at r='+r.toFixed(2)+': <b style="color:'+C.coralDeep+'">unreachable</b> — D = '+D.toFixed(2)+', and |D| > 1 means the law-of-cosines triangle cannot close. The arm strains to the boundary; no software fixes geometry.';
+      }else if(sol){
+        rd.innerHTML='D = '+sol.D.toFixed(3)+' → θ₂ = '+(sol.t2*180/Math.PI).toFixed(1)+'°, θ₁ = '+(sol.t1*180/Math.PI).toFixed(1)+'° ('+branch+'). '+(nearSing?'<b style="color:'+C.coralDeep+'">Near singular</b> — sin θ₂ ≈ 0: the two branches are merging and the Jacobian (next chapter) is about to lose a direction.':'The ghost is the other elbow branch — same fingertip, different posture; planners pick whichever clears obstacles and joint limits.');
+      }
+    }
+    function setFromEvent(e){
+      var r2=cv.getBoundingClientRect();
+      var cx=W*0.46,cy=H*0.58,U=Math.min(W,H)*0.40;
+      tx=((e.clientX-r2.left)/r2.width*W-cx)/U;
+      ty=(cy-(e.clientY-r2.top)/r2.height*H)/U;
+      draw();
+    }
+    var dragging=false;
+    cv.addEventListener('pointerdown',function(e){dragging=true;cv.setPointerCapture(e.pointerId);setFromEvent(e);});
+    cv.addEventListener('pointermove',function(e){if(dragging)setFromEvent(e);});
+    cv.addEventListener('pointerup',function(){dragging=false;});
+    document.querySelectorAll('#ikSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#ikSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      branch=btn.dataset.b;draw();});});
+    register(draw);
+  })();
+
+  /* ================= 4. JACOBIAN ELLIPSE ================= */
+  (function(){
+    var cv=document.getElementById('jacCanvas'); if(!cv) return;
+    var s1=document.getElementById('jacT1'),s2=document.getElementById('jacT2');
+    var v1=document.getElementById('jacT1v'),v2=document.getElementById('jacT2v'),rd=document.getElementById('jacReadout');
+    var W,H,ctx,S,L1=0.6,L2=0.45;
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var t1=+s1.value*Math.PI/180,t2=+s2.value*Math.PI/180;
+      v1.textContent=s1.value+'°';v2.textContent=s2.value+'°';
+      var cx=W*0.40,cy=H*0.58,U=Math.min(W,H)*0.38;
+      var a=drawArm(ctx,cx,cy,U,L1,L2,t1,t2,{});
+      // Jacobian
+      var s1v=Math.sin(t1),c1=Math.cos(t1),s12=Math.sin(t1+t2),c12=Math.cos(t1+t2);
+      var J=[[-L1*s1v-L2*s12,-L2*s12],[L1*c1+L2*c12,L2*c12]];
+      var det=J[0][0]*J[1][1]-J[0][1]*J[1][0];
+      // JJ^T eigen for ellipse
+      var A=J[0][0]*J[0][0]+J[0][1]*J[0][1];
+      var B=J[0][0]*J[1][0]+J[0][1]*J[1][1];
+      var D2=J[1][0]*J[1][0]+J[1][1]*J[1][1];
+      var tr=A+D2,disc=Math.sqrt(Math.max(0,(A-D2)*(A-D2)/4+B*B));
+      var l1=tr/2+disc,l2=Math.max(0,tr/2-disc);
+      var ang=Math.atan2(l1-A,B||1e-9);
+      var sc=U*0.55;
+      // ellipse at hand (flip y for screen)
+      ctx.save();
+      ctx.translate(a.hx,a.hy);ctx.rotate(-ang);
+      ctx.strokeStyle=Math.abs(det)<0.05?C.coralDeep:C.indigo;
+      ctx.fillStyle=Math.abs(det)<0.05?'rgba(232,65,46,0.10)':'rgba(67,56,202,0.10)';
+      ctx.lineWidth=2;
+      ctx.beginPath();ctx.ellipse(0,0,Math.max(1.5,Math.sqrt(l1)*sc),Math.max(1.5,Math.sqrt(l2)*sc),0,0,7);
+      ctx.fill();ctx.stroke();
+      ctx.restore();
+      ctx.font=MONO;ctx.fillStyle=C.ink;
+      ctx.fillText('det J = L₁L₂ sin θ₂ = '+det.toFixed(3),14,22);
+      ctx.fillText('σ₁='+Math.sqrt(l1).toFixed(2)+'  σ₂='+Math.sqrt(l2).toFixed(2),14,40);
+      var ratio=Math.sqrt(l1/Math.max(l2,1e-6));
+      rd.innerHTML= Math.abs(Math.sin(t2))<0.1?
+        '<b style="color:'+C.coralDeep+'">Singular zone.</b> sin θ₂ ≈ 0 — the ellipse has collapsed to a needle: every combination of joint speeds moves the hand along one line only. The direction along the arm is unreachable at any joint speed.'
+        : 'Velocity ellipse axes σ₁:σ₂ = '+ratio.toFixed(1)+':1. '+(ratio<1.8?'A round, agile pose — the hand can move equally well in all directions; this is where you want to do precise work.':'Anisotropic: fast along the long axis, sluggish along the short one — the arm is part-way to a singularity.');
+    }
+    [s1,s2].forEach(function(s){s.addEventListener('input',draw);});
+    register(draw);
+  })();
+
+  /* ================= 5. PID ================= */
+  (function(){
+    var cv=document.getElementById('pidCanvas'); if(!cv) return;
+    var sp=document.getElementById('pidP'),si=document.getElementById('pidI'),sd=document.getElementById('pidD');
+    var pv=document.getElementById('pidPv'),iv=document.getElementById('pidIv'),dv=document.getElementById('pidDv');
+    var rd=document.getElementById('pidReadout');
+    var W,H,ctx,S,hist=[],anim=null,running=false,simT=0,th=0,om=0,integ=0;
+    var m=1,l=1,g=9.8,b=0.35,thd=Math.PI/3,DT=0.004,DUR=6;
+    function reset(){hist=[];simT=0;th=0;om=0;integ=0;}
+    function physics(Kp,Ki,Kd){
+      var e=thd-th;
+      integ+=e*DT; integ=Math.max(-3,Math.min(3,integ));
+      var tau=Kp*e+Ki*integ-Kd*om;
+      tau=Math.max(-30,Math.min(30,tau));
+      var al=(tau-m*g*l*Math.sin(th)-b*om)/(m*l*l);
+      om+=al*DT; th+=om*DT; simT+=DT;
+      hist.push([simT,th]);
+    }
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      pv.textContent=sp.value;iv.textContent=si.value;dv.textContent=(+sd.value).toFixed(1);
+      // left: arm
+      var cx=W*0.20,cy=H*0.42,U=Math.min(W,H)*0.30;
+      // target ghost
+      ctx.strokeStyle='rgba(14,156,146,0.5)';ctx.lineWidth=3;ctx.setLineDash([6,5]);
+      ctx.beginPath();ctx.moveTo(cx,cy);
+      ctx.lineTo(cx+U*Math.sin(thd),cy+U*Math.cos(thd));ctx.stroke();ctx.setLineDash([]);
+      ctx.strokeStyle=C.ink;ctx.lineWidth=6;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(cx,cy);
+      ctx.lineTo(cx+U*Math.sin(th),cy+U*Math.cos(th));ctx.stroke();ctx.lineCap='butt';
+      ctx.fillStyle=C.coralDeep;
+      ctx.beginPath();ctx.arc(cx+U*Math.sin(th),cy+U*Math.cos(th),9,0,7);ctx.fill();
+      ctx.fillStyle='#fff';ctx.strokeStyle=C.ink;ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(cx,cy,5,0,7);ctx.fill();ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.teal;ctx.fillText('target 60°',cx+U*Math.sin(thd)+8,cy+U*Math.cos(thd));
+      // right: response plot
+      var rx=W*0.42,rw=W-rx-16,r0=H-46,rh=H-86;
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(rx,r0);ctx.lineTo(rx+rw,r0);ctx.stroke();
+      var ty=r0-((thd)/(Math.PI*0.8))*rh;
+      ctx.strokeStyle='rgba(14,156,146,0.6)';ctx.setLineDash([5,5]);
+      ctx.beginPath();ctx.moveTo(rx,ty);ctx.lineTo(rx+rw,ty);ctx.stroke();ctx.setLineDash([]);
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText('θ(t)  ·  0 to '+DUR+' s',rx,20);
+      if(hist.length>1){
+        ctx.strokeStyle=C.indigo;ctx.lineWidth=2.2;ctx.beginPath();
+        hist.forEach(function(p,i){
+          var x=rx+(p[0]/DUR)*rw, y=r0-(Math.max(-0.3,Math.min(Math.PI*0.8,p[1]))/(Math.PI*0.8))*rh;
+          if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        });
+        ctx.stroke();
+      }
+      if(!running&&hist.length>10){
+        var peak=Math.max.apply(null,hist.map(function(p){return p[1];}));
+        var os=Math.max(0,(peak-thd)/thd*100);
+        var tail=hist.filter(function(p){return p[0]>DUR-0.5;});
+        var ss=tail.reduce(function(a2,p){return a2+p[1];},0)/tail.length;
+        var settle=DUR;
+        for(var i=hist.length-1;i>=0;i--){if(Math.abs(hist[i][1]-thd)>0.035){settle=hist[i][0];break;}}
+        rd.innerHTML='Overshoot <b>'+os.toFixed(1)+'%</b> · settling (±2°) <b>'+(settle>=DUR-0.05?'—':settle.toFixed(2)+' s')+'</b> · steady-state error <b>'+((thd-ss)*180/Math.PI).toFixed(2)+'°</b>. '+
+          ((+si.value===0&&Math.abs(thd-ss)>0.02)?'The P-only droop, exactly as derived: e = mgl·sinθ / Kp = '+((m*g*l*Math.sin(ss))/Math.max(1,+sp.value)*180/Math.PI).toFixed(2)+'° predicted.':
+           os>25?'Underdamped — raise K_d (more damping) or lower K_p.':
+           (settle>=DUR-0.05?'Not settled — too sluggish or still ringing.':'A respectable loop. Try to beat the settling time without overshooting.'));
+      }
+    }
+    function run(){
+      if(anim)cancelAnimationFrame(anim);
+      reset();running=true;
+      var Kp=+sp.value,Ki=+si.value,Kd=+sd.value;
+      function frame(){
+        for(var k=0;k<14&&simT<DUR;k++)physics(Kp,Ki,Kd);
+        draw();
+        if(simT<DUR)anim=requestAnimationFrame(frame);
+        else{running=false;draw();}
+      } frame();
+    }
+    [sp,si,sd].forEach(function(s){s.addEventListener('input',function(){pv.textContent=sp.value;iv.textContent=si.value;dv.textContent=(+sd.value).toFixed(1);});});
+    document.getElementById('pidRun').addEventListener('click',run);
+    register(draw);
+    rd.innerHTML='Defaults are P-heavy. Run, observe the droop below target, then add K_i. Then chase a fast, calm landing.';
+  })();
+
+  /* ================= 6. KALMAN ================= */
+  (function(){
+    var cv=document.getElementById('kfCanvas'); if(!cv) return;
+    var sq=document.getElementById('kfQ'),sr=document.getElementById('kfR');
+    var qv=document.getElementById('kfQv'),rv=document.getElementById('kfRv'),rd=document.getElementById('kfReadout');
+    var W,H,ctx,S,run=null;
+    function simulate(){
+      var q=+sq.value,r=+sr.value,T=140;
+      var truth=[],odom=[],meas=[],kf=[];
+      var x=0,xo=0,mu=0,sig2=0.01,bias=q*0.5*(Math.random()<0.5?-1:1);
+      for(var t=0;t<T;t++){
+        var v=0.5+0.35*Math.sin(t/14);
+        x+=v*0.1;
+        var vodo=v+bias+gauss()*q*2;
+        xo+=vodo*0.1;
+        // KF predict
+        mu+=vodo*0.1; sig2+=Math.pow(q*0.2,2);
+        var z=null;
+        if(t%4===0){z=x+gauss()*r;
+          var K=sig2/(sig2+r*r);
+          mu=mu+K*(z-mu); sig2=(1-K)*sig2;
+        }
+        truth.push(x);odom.push(xo);meas.push(z);kf.push(mu);
+      }
+      return {truth:truth,odom:odom,meas:meas,kf:kf};
+    }
+    function rmse(a,b){var s=0,n=0;for(var i=0;i<a.length;i++){if(b[i]===null)continue;s+=(a[i]-b[i])*(a[i]-b[i]);n++;}return Math.sqrt(s/n);}
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      qv.textContent=(+sq.value).toFixed(2);rv.textContent=(+sr.value).toFixed(2);
+      if(!run)run=simulate();
+      var T=run.truth.length,maxX=Math.max.apply(null,run.truth.concat(run.odom))*1.1+0.5;
+      function PX(t){return 40+t/(T-1)*(W-56);}
+      function PY(x){return (H-40)-x/maxX*(H-70);}
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(40,H-40);ctx.lineTo(W-16,H-40);ctx.stroke();
+      function plot(arr,col,wd,dash){
+        ctx.strokeStyle=col;ctx.lineWidth=wd;if(dash)ctx.setLineDash(dash);
+        ctx.beginPath();var first=true;
+        arr.forEach(function(v,i){if(v===null)return;
+          if(first){ctx.moveTo(PX(i),PY(v));first=false;}else ctx.lineTo(PX(i),PY(v));});
+        ctx.stroke();ctx.setLineDash([]);
+      }
+      plot(run.truth,'rgba(20,22,42,0.75)',1.8,[6,4]);
+      plot(run.odom,C.amber,2);
+      run.meas.forEach(function(z,i){if(z===null)return;
+        ctx.fillStyle='rgba(135,139,166,0.85)';ctx.beginPath();ctx.arc(PX(i),PY(z),2.6,0,7);ctx.fill();});
+      plot(run.kf,C.indigo,2.6);
+      ctx.font=MONO;
+      ctx.fillStyle=C.inkSoft;ctx.fillText('dashed = truth',14,20);
+      ctx.fillStyle=C.amber;ctx.fillText('odometry (drifts)',130,20);
+      ctx.fillStyle=C.faint;ctx.fillText('· measurements',280,20);
+      ctx.fillStyle=C.indigo;ctx.fillText('Kalman estimate',410,20);
+      var eo=rmse(run.truth,run.odom),ez=rmse(run.truth,run.meas),ek=rmse(run.truth,run.kf);
+      rd.innerHTML='RMSE — odometry: <b>'+eo.toFixed(3)+'</b> · raw measurements: <b>'+ez.toFixed(3)+'</b> · Kalman: <b style="color:'+C.indigoDeep+'">'+ek.toFixed(3)+'</b>. '+(ek<Math.min(eo,ez)?'The fusion beats both parents — smoothness borrowed from odometry, anchoring from the fixes, weights re-derived every tick from K = σ²/(σ²+r²).':'Adjust the noises and rerun — with sane settings the filter beats both inputs.');
+    }
+    [sq,sr].forEach(function(s){s.addEventListener('input',function(){run=null;draw();});});
+    document.getElementById('kfRun').addEventListener('click',function(){run=null;draw();});
+    register(draw);
+  })();
+
+  /* ================= 7a. C-SPACE ================= */
+  (function(){
+    var cv=document.getElementById('csCanvas'); if(!cv) return;
+    var sr=document.getElementById('csR'),rv=document.getElementById('csRv'),rd=document.getElementById('csReadout');
+    var W,H,ctx,S,L1=0.5,L2=0.4,obs={x:0.45,y:0.42},t1=0.6,t2=1.2,grid=null,GN=72;
+    function segCircleDist(ax,ay,bx,by,cx2,cy2){
+      var dx=bx-ax,dy=by-ay,L=dx*dx+dy*dy;
+      var t=L>0?Math.max(0,Math.min(1,((cx2-ax)*dx+(cy2-ay)*dy)/L)):0;
+      var px=ax+t*dx,py=ay+t*dy;
+      return Math.hypot(cx2-px,cy2-py);
+    }
+    function collides(a1,a2,R){
+      var f=fk2(L1,L2,a1,a2);
+      if(segCircleDist(0,0,f.ex,f.ey,obs.x,obs.y)<R)return true;
+      if(segCircleDist(f.ex,f.ey,f.hx,f.hy,obs.x,obs.y)<R)return true;
+      return false;
+    }
+    function buildGrid(){
+      var R=+sr.value;grid=[];
+      for(var i=0;i<GN;i++){grid.push([]);
+        for(var j=0;j<GN;j++){
+          var a1=-Math.PI+2*Math.PI*i/GN, a2=-Math.PI+2*Math.PI*j/GN;
+          grid[i].push(collides(a1,a2,R)?1:0);
+        }}
+    }
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      rv.textContent=(+sr.value).toFixed(2);
+      if(!grid)buildGrid();
+      var R=+sr.value;
+      // LEFT: workspace
+      var lw2=W*0.47, cx=lw2*0.5, cy=H*0.55, U=Math.min(lw2,H)*0.42;
+      ctx.strokeStyle=C.line;ctx.strokeRect(0.5,0.5,lw2,H-1);
+      ctx.fillStyle='rgba(232,65,46,0.18)';ctx.strokeStyle=C.coralDeep;ctx.lineWidth=1.6;
+      ctx.beginPath();ctx.arc(cx+U*obs.x,cy-U*obs.y,U*R,0,7);ctx.fill();ctx.stroke();
+      var hit=collides(t1,t2,R);
+      drawArm(ctx,cx,cy,U,L1,L2,t1,t2,{col:hit?C.coralDeep:C.ink});
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText('workspace',12,20);
+      // RIGHT: C-space
+      var rx=lw2+22, rw=W-rx-12, rhh=Math.min(H-44,rw);
+      var ox=rx,oy=(H-rhh)/2;
+      ctx.strokeStyle=C.line;ctx.strokeRect(ox+0.5,oy+0.5,rhh,rhh);
+      var cell=rhh/GN;
+      for(var i=0;i<GN;i++)for(var j=0;j<GN;j++){
+        if(grid[i][j]){ctx.fillStyle='rgba(232,65,46,0.45)';
+          ctx.fillRect(ox+i*cell,oy+(GN-1-j)*cell,cell+0.5,cell+0.5);}
+      }
+      // config dot
+      var di=(t1+Math.PI)/(2*Math.PI)*GN, dj=(t2+Math.PI)/(2*Math.PI)*GN;
+      ctx.fillStyle=hit?C.coralDeep:C.indigoDeep;
+      ctx.beginPath();ctx.arc(ox+di*cell,oy+(GN-dj)*cell,7,0,7);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('configuration space (θ₁ →, θ₂ ↑) — drag here',ox,oy-8);
+      rd.innerHTML=(hit?'<b style="color:'+C.coralDeep+'">In collision.</b> ':'Free. ')+'The coral continent is every (θ₁, θ₂) where ANY part of the arm touches the obstacle — one workspace circle becomes this curved C-obstacle. A safe motion is a path of the dot that never enters coral; that is the entire planning problem.';
+    }
+    function setFromEvent(e){
+      var r2=cv.getBoundingClientRect();
+      var x=(e.clientX-r2.left)/r2.width*W,y=(e.clientY-r2.top)/r2.height*H;
+      var lw2=W*0.47,rx=lw2+22,rw=W-rx-12,rhh=Math.min(H-44,rw),ox=rx,oy=(H-rhh)/2;
+      if(x<ox||x>ox+rhh||y<oy||y>oy+rhh)return;
+      t1=-Math.PI+2*Math.PI*(x-ox)/rhh;
+      t2=-Math.PI+2*Math.PI*(1-(y-oy)/rhh);
+      draw();
+    }
+    var dragging=false;
+    cv.addEventListener('pointerdown',function(e){dragging=true;cv.setPointerCapture(e.pointerId);setFromEvent(e);});
+    cv.addEventListener('pointermove',function(e){if(dragging)setFromEvent(e);});
+    cv.addEventListener('pointerup',function(){dragging=false;});
+    sr.addEventListener('input',function(){grid=null;draw();});
+    register(function(){grid=null;draw();});
+  })();
+
+  /* ================= 7b. A* / DIJKSTRA ================= */
+  (function(){
+    var cv=document.getElementById('asCanvas'); if(!cv) return;
+    var rd=document.getElementById('asReadout');
+    var W,H,ctx,S,CO=26,RO=15,walls={},mode='astar',anim=null;
+    var start=[7,2],goal=[7,23],result=null,lastCount={};
+    function key(r,c){return r+','+c;}
+    (function defaults(){for(var r=3;r<12;r++)walls[key(r,12)]=1;for(var c=5;c<13;c++)walls[key(3,c)]=1;})();
+    function search(){
+      var useH=mode==='astar';
+      var open=[{r:start[0],c:start[1],g:0,f:0}],g={},came={},closed=[],found=null;
+      g[key(start[0],start[1])]=0;
+      function h(r,c){return useH?Math.abs(r-goal[0])+Math.abs(c-goal[1]):0;}
+      open[0].f=h(start[0],start[1]);
+      var inOpen={}; inOpen[key(start[0],start[1])]=true;
+      while(open.length){
+        var bi=0;for(var i=1;i<open.length;i++)if(open[i].f<open[bi].f)bi=i;
+        var cur=open.splice(bi,1)[0];
+        var ck=key(cur.r,cur.c);
+        closed.push([cur.r,cur.c]);
+        if(cur.r===goal[0]&&cur.c===goal[1]){found=ck;break;}
+        [[1,0],[-1,0],[0,1],[0,-1]].forEach(function(d){
+          var nr=cur.r+d[0],nc=cur.c+d[1];
+          if(nr<0||nr>=RO||nc<0||nc>=CO)return;
+          var nk=key(nr,nc);
+          if(walls[nk])return;
+          var ng=cur.g+1;
+          if(g[nk]===undefined||ng<g[nk]){
+            g[nk]=ng;came[nk]=ck;
+            open.push({r:nr,c:nc,g:ng,f:ng+h(nr,nc)});
+          }
+        });
+      }
+      var path=[];
+      if(found){var k2=found;while(k2){path.push(k2.split(',').map(Number));k2=came[k2];}}
+      return {closed:closed,path:path.reverse(),found:!!found};
+    }
+    function draw(prog){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var cell=Math.min((W-16)/CO,(H-16)/RO),ox=(W-cell*CO)/2,oy=(H-cell*RO)/2;
+      for(var r=0;r<RO;r++)for(var c=0;c<CO;c++){
+        var x=ox+c*cell,y=oy+r*cell;
+        ctx.fillStyle=walls[key(r,c)]?'#474B66':'#FBFBFD';
+        ctx.fillRect(x,y,cell-1,cell-1);
+      }
+      if(result){
+        var n=prog===undefined?result.closed.length:Math.floor(prog*result.closed.length);
+        for(var i=0;i<n;i++){
+          var p=result.closed[i];
+          var a=0.10+0.30*(i/result.closed.length);
+          ctx.fillStyle='rgba(67,56,202,'+a+')';
+          ctx.fillRect(ox+p[1]*cell,oy+p[0]*cell,cell-1,cell-1);
+        }
+        if(prog===undefined&&result.found){
+          ctx.strokeStyle=C.indigoDeep;ctx.lineWidth=3;ctx.beginPath();
+          result.path.forEach(function(p,i){
+            var x=ox+p[1]*cell+cell/2,y=oy+p[0]*cell+cell/2;
+            if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+          });
+          ctx.stroke();
+        }
+      }
+      function mark(p,col,t){
+        ctx.fillStyle=col;ctx.fillRect(ox+p[1]*cell,oy+p[0]*cell,cell-1,cell-1);
+        ctx.fillStyle='#fff';ctx.font='600 '+(cell*0.5)+'px "Space Grotesk"';ctx.textAlign='center';
+        ctx.fillText(t,ox+p[1]*cell+cell/2,oy+p[0]*cell+cell*0.68);ctx.textAlign='left';
+      }
+      mark(start,C.teal,'S');mark(goal,C.coralDeep,'G');
+    }
+    function runSearch(){
+      if(anim)cancelAnimationFrame(anim);
+      result=search();
+      var t0=null;
+      function frame(ts){
+        if(!t0)t0=ts;
+        var p=Math.min(1,(ts-t0)/1400);
+        draw(p);
+        if(p<1)anim=requestAnimationFrame(frame);
+        else{draw();
+          lastCount[mode]=result.closed.length;
+          var other=mode==='astar'?'dij':'astar';
+          rd.innerHTML=(mode==='astar'?'A*':'Dijkstra')+' expanded <b>'+result.closed.length+'</b> nodes'+(result.found?(', path length '+(result.path.length-1)):' — <b>no path</b> (walled off)')+'.'+(lastCount[other]?' Compare: '+(other==='astar'?'A*':'Dijkstra')+' expanded '+lastCount[other]+' on this maze — same path length, different bill.':' Now run the other algorithm on the same maze.');
+        }
+      }
+      anim=requestAnimationFrame(frame);
+    }
+    cv.addEventListener('click',function(e){
+      var r2=cv.getBoundingClientRect();
+      var x=(e.clientX-r2.left)/r2.width*W,y=(e.clientY-r2.top)/r2.height*H;
+      var cell=Math.min((W-16)/CO,(H-16)/RO),ox=(W-cell*CO)/2,oy=(H-cell*RO)/2;
+      var c=Math.floor((x-ox)/cell),r=Math.floor((y-oy)/cell);
+      if(r<0||r>=RO||c<0||c>=CO)return;
+      if((r===start[0]&&c===start[1])||(r===goal[0]&&c===goal[1]))return;
+      var k2=key(r,c);
+      if(walls[k2])delete walls[k2];else walls[k2]=1;
+      result=null;lastCount={};draw();
+    });
+    document.getElementById('asClear').addEventListener('click',function(){walls={};result=null;lastCount={};draw();});
+    document.getElementById('asRun').addEventListener('click',runSearch);
+    document.querySelectorAll('#asSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#asSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      mode=btn.dataset.a;});});
+    register(function(){draw();});
+  })();
+
+  /* ================= 7c. RRT ================= */
+  (function(){
+    var cv=document.getElementById('rrtCanvas'); if(!cv) return;
+    var se=document.getElementById('rrtE'),ev=document.getElementById('rrtEv'),rd=document.getElementById('rrtReadout');
+    var W,H,ctx,S,nodes=[],anim=null,done=false;
+    var obsList=[{x:0.36,y:0.20,w:0.10,h:0.55},{x:0.62,y:0.45,w:0.10,h:0.55},{x:0.30,y:0.0,w:0.5,h:0.08}];
+    var startP={x:0.08,y:0.5},goalP={x:0.92,y:0.5};
+    function inObs(x,y){
+      for(var i=0;i<obsList.length;i++){var o=obsList[i];
+        if(x>o.x&&x<o.x+o.w&&y>o.y&&y<o.y+o.h)return true;}
+      return false;
+    }
+    function segFree(ax,ay,bx,by){
+      var n=Math.ceil(Math.hypot(bx-ax,by-ay)/0.01);
+      for(var i=1;i<=n;i++){var t=i/n;
+        if(inObs(ax+(bx-ax)*t,ay+(by-ay)*t))return false;}
+      return true;
+    }
+    function reset(){nodes=[{x:startP.x,y:startP.y,parent:-1}];done=false;}
+    reset();
+    function grow(){
+      var eps=+se.value/640;
+      var rx= Math.random()<0.06? goalP.x : Math.random();
+      var ry= Math.random()<0.06? goalP.y : Math.random();
+      var bi=0,bd=1e9;
+      for(var i=0;i<nodes.length;i++){
+        var d=Math.hypot(nodes[i].x-rx,nodes[i].y-ry);
+        if(d<bd){bd=d;bi=i;}
+      }
+      var n=nodes[bi];
+      var d2=Math.max(bd,1e-9);
+      var nx=n.x+(rx-n.x)/d2*Math.min(eps,d2);
+      var ny=n.y+(ry-n.y)/d2*Math.min(eps,d2);
+      if(nx<0||nx>1||ny<0||ny>1)return;
+      if(!segFree(n.x,n.y,nx,ny))return;
+      nodes.push({x:nx,y:ny,parent:bi});
+      if(Math.hypot(nx-goalP.x,ny-goalP.y)<0.035)done=true;
+    }
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      ctx.strokeStyle=C.line;ctx.strokeRect(0.5,0.5,W-1,H-1);
+      obsList.forEach(function(o){
+        ctx.fillStyle='rgba(71,75,102,0.85)';
+        ctx.fillRect(o.x*W,o.y*H,o.w*W,o.h*H);
+      });
+      // tree
+      ctx.strokeStyle='rgba(67,56,202,0.45)';ctx.lineWidth=1.2;
+      nodes.forEach(function(n){
+        if(n.parent<0)return;
+        var p=nodes[n.parent];
+        ctx.beginPath();ctx.moveTo(p.x*W,p.y*H);ctx.lineTo(n.x*W,n.y*H);ctx.stroke();
+      });
+      // path if done
+      if(done){
+        ctx.strokeStyle=C.coralDeep;ctx.lineWidth=3;
+        var i=nodes.length-1;
+        ctx.beginPath();ctx.moveTo(nodes[i].x*W,nodes[i].y*H);
+        while(nodes[i].parent>=0){i=nodes[i].parent;ctx.lineTo(nodes[i].x*W,nodes[i].y*H);}
+        ctx.stroke();
+      }
+      ctx.fillStyle=C.teal;ctx.beginPath();ctx.arc(startP.x*W,startP.y*H,7,0,7);ctx.fill();
+      ctx.fillStyle=C.coralDeep;ctx.beginPath();ctx.arc(goalP.x*W,goalP.y*H,8,0,7);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('nodes: '+nodes.length,12,20);
+    }
+    function run(){
+      if(anim)cancelAnimationFrame(anim);
+      ev.textContent=se.value;
+      function frame(){
+        for(var k=0;k<8&&!done&&nodes.length<2500;k++)grow();
+        draw();
+        if(!done&&nodes.length<2500)anim=requestAnimationFrame(frame);
+        else rd.innerHTML= done? '<b>Goal reached</b> with '+nodes.length+' nodes — the coral path walks parents back to the root. Re-run for a different tree, same success: probabilistic completeness in action. The jags are why real pipelines shortcut + time-parameterize next (§7.4).'
+          : 'Node budget exhausted without reaching the goal — rare, but possible on any single run; that\u2019s the "probabilistic" in probabilistically complete. Grow again.';
+      }
+      frame();
+    }
+    se.addEventListener('input',function(){ev.textContent=se.value;});
+    document.getElementById('rrtRun').addEventListener('click',run);
+    document.getElementById('rrtReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);reset();draw();rd.innerHTML='Tree reset to the start node. Press Grow.';});
+    register(draw);
+  })();
+
+  /* ================= 8. ROS GRAPH ================= */
+  (function(){
+    var cv=document.getElementById('rosCanvas'); if(!cv) return;
+    var rd=document.getElementById('rosReadout');
+    var W,H,ctx,S,t=0,sel=null,anim=null;
+    var N={cam:{x:0.10,y:0.22,label:'camera_driver',alive:true},
+           lid:{x:0.10,y:0.62,label:'lidar_driver',alive:true},
+           det:{x:0.38,y:0.22,label:'detector',alive:true},
+           slam:{x:0.38,y:0.62,label:'slam',alive:true},
+           plan:{x:0.64,y:0.42,label:'planner',alive:true},
+           drv:{x:0.88,y:0.42,label:'motor_driver',alive:true}};
+    var E=[{f:'cam',t:'det',topic:'/image',rate:'30 Hz',gen:function(){return 'header.stamp: '+t.toFixed(2)+'  data: [640x480 rgb]';}},
+           {f:'lid',t:'slam',topic:'/scan',rate:'10 Hz',gen:function(){return 'ranges[0..359]: '+(1.2+0.4*Math.sin(t*2)).toFixed(2)+' m ...';}},
+           {f:'det',t:'plan',topic:'/objects',rate:'15 Hz',gen:function(){return '[{cls:"cup", x:'+(0.8+0.05*Math.sin(t)).toFixed(2)+', y:0.31}]';}},
+           {f:'slam',t:'plan',topic:'/map · /odom',rate:'10 Hz',gen:function(){return 'pose: x='+(2.1+0.3*Math.sin(t*0.7)).toFixed(2)+' y=0.94 θ=0.12';}},
+           {f:'plan',t:'drv',topic:'/cmd_vel',rate:'20 Hz',gen:function(){return 'linear.x: '+(0.25+0.1*Math.sin(t*1.4)).toFixed(2)+'  angular.z: '+(0.1*Math.cos(t)).toFixed(2);}}];
+    function upstreamAlive(e){return N[e.f].alive && pathAlive(e.f);}
+    function pathAlive(id){
+      if(!N[id].alive)return false;
+      var ins=E.filter(function(e){return e.t===id;});
+      if(ins.length===0)return true;
+      return ins.some(function(e){return pathAlive(e.f);});
+    }
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      t+=0.02;
+      // edges
+      E.forEach(function(e,i){
+        var a=N[e.f],b=N[e.t];
+        var ax=a.x*W+52,ay=a.y*H+16,bx=b.x*W-6,by=b.y*H+16;
+        var flowing=N[e.f].alive&&pathAlive(e.f);
+        ctx.strokeStyle= flowing? 'rgba(67,56,202,0.5)':'rgba(135,139,166,0.3)';
+        ctx.lineWidth= sel===i?2.6:1.6;
+        ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+        // pulse
+        if(flowing){
+          var p=(t*0.7+i*0.23)%1;
+          var px=ax+(bx-ax)*p,py=ay+(by-ay)*p;
+          ctx.fillStyle=C.coral;ctx.beginPath();ctx.arc(px,py,3.4,0,7);ctx.fill();
+        }
+        // topic pill
+        var mx=(ax+bx)/2,my=(ay+by)/2;
+        var tw=ctx.measureText(e.topic).width+18;
+        ctx.fillStyle= sel===i? C.coral : (flowing?'#fff':'#EFEFF4');
+        ctx.strokeStyle= sel===i? C.coralDeep : C.line;
+        ctx.lineWidth=1.2;
+        ctx.fillRect(mx-tw/2,my-11,tw,22);ctx.strokeRect(mx-tw/2,my-11,tw,22);
+        ctx.font='600 10.5px "JetBrains Mono"';
+        ctx.fillStyle= sel===i? '#fff' : (flowing?C.indigoDeep:C.faint);
+        ctx.textAlign='center';ctx.fillText(e.topic,mx,my+4);ctx.textAlign='left';
+        e._pill={x:mx-tw/2,y:my-11,w:tw,h:22};
+      });
+      // nodes
+      Object.keys(N).forEach(function(id){
+        var n=N[id],x=n.x*W,y=n.y*H;
+        var ok=n.alive&&pathAlive(id);
+        ctx.fillStyle= !n.alive? '#C8CAD8' : (ok?'#14162A':'#6A6E8E');
+        ctx.fillRect(x-6,y,108,34);
+        ctx.font='600 11px "Space Grotesk"';ctx.fillStyle='#fff';
+        ctx.fillText(n.label,x+4,y+21);
+        if(!n.alive){ctx.fillStyle=C.coralDeep;ctx.font='700 12px "Space Grotesk"';ctx.fillText('✕ dead',x+4,y-5);}
+        n._box={x:x-6,y:y,w:108,h:34};
+      });
+      // echo panel
+      if(sel!==null){
+        var e=E[sel];
+        ctx.fillStyle='#14162A';ctx.fillRect(12,H-66,W-24,54);
+        ctx.font='11px "JetBrains Mono"';
+        ctx.fillStyle='#8C90B8';ctx.fillText('$ ros2 topic echo '+e.topic.split(' ')[0]+'   ('+e.rate+')',24,H-46);
+        var flowing=N[e.f].alive&&pathAlive(e.f);
+        ctx.fillStyle= flowing? '#6FD3C7' : '#FF8C7E';
+        ctx.fillText(flowing? e.gen() : '(no messages — publisher chain is down)',24,H-26);
+      }
+      if(!REDUCE)anim=requestAnimationFrame(draw);
+    }
+    cv.addEventListener('click',function(ev2){
+      var r2=cv.getBoundingClientRect();
+      var x=(ev2.clientX-r2.left)/r2.width*W,y=(ev2.clientY-r2.top)/r2.height*H;
+      for(var i=0;i<E.length;i++){var p=E[i]._pill;
+        if(p&&x>=p.x&&x<=p.x+p.w&&y>=p.y&&y<=p.y+p.h){
+          sel= sel===i? null : i;
+          rd.innerHTML= sel===null? 'Echo closed.' : 'Echoing <b>'+E[i].topic+'</b> — exactly what ros2 topic echo shows: typed message fields, streaming. Neither publisher nor subscriber was modified to allow this tap; pub/sub makes the wire public.';
+          return;
+        }}
+      for(var id in N){var b=N[id]._box;
+        if(b&&x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){
+          N[id].alive=!N[id].alive;
+          rd.innerHTML= N[id].alive? '<b>'+N[id].label+'</b> restarted — DDS rediscovers it, subscriptions reconnect, flow resumes. No other node was touched.'
+            : '<b>'+N[id].label+'</b> killed. Watch: its downstream topics go silent and dependents starve — but unrelated branches keep running. Decoupling means partial failure, not total failure.';
+          return;
+        }}
+    });
+    register(function(){S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;});
+    if(REDUCE){S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;draw();}
+    else draw();
+    rd.innerHTML='A living ROS 2 graph. Try echoing /cmd_vel, then kill the planner and echo it again.';
+  })();
+
+  /* ================= 9a. INTEGRATORS ================= */
+  (function(){
+    var cv=document.getElementById('dtCanvas'); if(!cv) return;
+    var sd2=document.getElementById('dtS'),dv2=document.getElementById('dtV'),rd=document.getElementById('dtReadout');
+    var W,H,ctx,S;
+    function simulate(method,dt,T){
+      var th=1.0,om=0,out=[[0,th]];
+      var g=9.8,l=1;
+      function acc(x){return -g/l*Math.sin(x);}
+      var steps=Math.floor(T/dt);
+      for(var i=1;i<=steps;i++){
+        if(method==='ee'){var a=acc(th);th+=dt*om;om+=dt*a;}
+        else if(method==='se'){om+=dt*acc(th);th+=dt*om;}
+        else{ // rk4
+          var k1t=om,k1o=acc(th);
+          var k2t=om+dt/2*k1o,k2o=acc(th+dt/2*k1t);
+          var k3t=om+dt/2*k2o,k3o=acc(th+dt/2*k2t);
+          var k4t=om+dt*k3o,k4o=acc(th+dt*k3t);
+          th+=dt/6*(k1t+2*k2t+2*k3t+k4t);
+          om+=dt/6*(k1o+2*k2o+2*k3o+k4o);
+        }
+        out.push([i*dt,th]);
+        if(Math.abs(th)>40)break;
+      }
+      var E0=0.5*0*0+9.8*(1-Math.cos(1.0));
+      var E1=0.5*om*om+9.8*(1-Math.cos(th));
+      return {tr:out,drift:(E1-E0)/E0*100};
+    }
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var dt=+sd2.value;dv2.textContent=dt.toFixed(3);
+      var T=12;
+      var ee=simulate('ee',dt,T),se=simulate('se',dt,T),rk=simulate('rk4',dt,T);
+      var pad=40,r0=H/2,rh=H*0.40;
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(pad,r0);ctx.lineTo(W-14,r0);ctx.stroke();
+      function plot(res,col,wd){
+        ctx.strokeStyle=col;ctx.lineWidth=wd;ctx.beginPath();var first=true;
+        res.tr.forEach(function(p){
+          var x=pad+p[0]/T*(W-pad-14);
+          var y=r0-Math.max(-1.05,Math.min(1.05,p[1]/2.5))*rh;
+          if(first){ctx.moveTo(x,y);first=false;}else ctx.lineTo(x,y);
+        });
+        ctx.stroke();
+      }
+      plot(ee,C.coralDeep,2);plot(se,C.indigo,2);plot(rk,C.teal,1.8);
+      ctx.font=MONO;
+      ctx.fillStyle=C.coralDeep;ctx.fillText('explicit Euler  (energy '+(ee.drift>500?'+∞':(ee.drift>=0?'+':'')+ee.drift.toFixed(0)+'%')+')',pad,20);
+      ctx.fillStyle=C.indigo;ctx.fillText('semi-implicit  ('+(se.drift>=0?'+':'')+se.drift.toFixed(1)+'%)',pad+260,20);
+      ctx.fillStyle=C.teal;ctx.fillText('RK4  ('+(rk.drift>=0?'+':'')+rk.drift.toFixed(2)+'%)',pad+440,20);
+      rd.innerHTML='12 s of a frictionless pendulum at Δt = '+dt.toFixed(3)+' s. Explicit Euler\u2019s amplitude grows by the derived factor (1+ω²Δt²) per step — energy '+(ee.drift>500?'has exploded':'is up '+ee.drift.toFixed(0)+'%')+'; semi-implicit oscillates within a bounded band forever; RK4 tracks truth to '+Math.abs(rk.drift).toFixed(2)+'%. Same physics, three integrators, three different worlds.';
+    }
+    sd2.addEventListener('input',draw);
+    register(draw);
+  })();
+
+  /* ================= 9b. REALITY GAP ================= */
+  (function(){
+    var cv=document.getElementById('gapCanvas'); if(!cv) return;
+    var sm=document.getElementById('gapM'),mv=document.getElementById('gapMv'),rd=document.getElementById('gapReadout');
+    var W,H,ctx,S,mode='sim',hist=[],anim=null;
+    var GAINS={sim:{Kp:90,Kd:5,label:'aggressive (tuned at 1.0×)'},dr:{Kp:38,Kd:11,label:'robust (randomized 0.5–2.5×)'}};
+    function simulate(){
+      var m=+sm.value,g2=GAINS[mode];
+      var th=0,om=0,thd=Math.PI/3,dt=0.004,out=[];
+      for(var i=0;i*dt<5;i++){
+        var tau=g2.Kp*(thd-th)-g2.Kd*om;
+        tau=Math.max(-40,Math.min(40,tau));
+        var al=(tau-m*9.8*Math.sin(th)-0.3*om)/(m*1);
+        om+=al*dt;th+=om*dt;
+        out.push([i*dt,th]);
+        if(Math.abs(th)>6)break;
+      }
+      return out;
+    }
+    function draw(){
+      S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      mv.textContent=(+sm.value).toFixed(2)+'×';
+      var pad=40,r0=H-40,rh=H-80,T=5,thd=Math.PI/3;
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(pad,r0);ctx.lineTo(W-14,r0);ctx.stroke();
+      var ty=r0-(thd/2.4)*rh;
+      ctx.strokeStyle='rgba(14,156,146,0.6)';ctx.setLineDash([5,5]);
+      ctx.beginPath();ctx.moveTo(pad,ty);ctx.lineTo(W-14,ty);ctx.stroke();ctx.setLineDash([]);
+      if(hist.length>1){
+        ctx.strokeStyle=C.indigo;ctx.lineWidth=2.4;ctx.beginPath();
+        hist.forEach(function(p,i){
+          var x=pad+p[0]/T*(W-pad-14);
+          var y=r0-Math.max(-0.2,Math.min(2.4,p[1]))/2.4*rh;
+          if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        });
+        ctx.stroke();
+      }
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('gains: '+GAINS[mode].label+'  ·  deployed on mass '+(+sm.value).toFixed(2)+'×',pad,20);
+    }
+    function run(){
+      if(anim)cancelAnimationFrame(anim);
+      var full=simulate(),i=0;hist=[];
+      function frame(){
+        for(var k=0;k<20&&i<full.length;k++,i++)hist.push(full[i]);
+        draw();
+        if(i<full.length)anim=requestAnimationFrame(frame);
+        else{
+          var peak=Math.max.apply(null,hist.map(function(p){return p[1];}));
+          var os=(peak-Math.PI/3)/(Math.PI/3)*100;
+          var unstable=peak>2.2||Math.abs(hist[hist.length-1][1]-Math.PI/3)>0.4;
+          rd.innerHTML= unstable? '<b style="color:'+C.coralDeep+'">Unstable on this reality.</b> The gains assumed a lighter arm; on '+(+sm.value).toFixed(2)+'× mass each correction arrives late and large — the reality gap as a control failure. Try the randomized gains on the same mass.'
+            : 'Overshoot '+Math.max(0,os).toFixed(1)+'%. '+(mode==='sim'?'Crisp here — this is the world it was tuned in. Now raise the mass and redeploy.':'Slower than the aggressive gains at 1.0× (the conservatism tax) — but slide the mass anywhere in 0.5–2.5× and it stays composed: robustness bought with performance.');
+        }
+      } frame();
+    }
+    sm.addEventListener('input',function(){mv.textContent=(+sm.value).toFixed(2)+'×';});
+    document.querySelectorAll('#gapSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#gapSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      mode=btn.dataset.m;});});
+    document.getElementById('gapRun').addEventListener('click',run);
+    register(draw);
+    rd.innerHTML='Deploy at 1.0× with aggressive gains, then slide the mass to 2× and deploy again. Then switch gain sets.';
+  })();
+
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Learning Core — Layer 2 Interactive Textbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="window.__katexReady=true;if(window.__doRender)window.__doRender();"></script>
+<style>
+/* ============================================================
+   DESIGN SYSTEM — "Signal & Field"
+   A computational-textbook identity: cool paper, deep indigo
+   ink, an electric coral reserved EXCLUSIVELY for things you
+   can touch (the signature), teal as the secondary data hue.
+   ============================================================ */
+:root{
+  --paper:#F4F5F8;
+  --surface:#FFFFFF;
+  --ink:#14162A;
+  --ink-soft:#474B66;
+  --ink-faint:#878BA6;
+  --indigo:#4338CA;
+  --indigo-deep:#2A2090;
+  --indigo-wash:#EEEEF8;
+  --coral:#FF5C49;
+  --coral-deep:#E8412E;
+  --teal:#0E9C92;
+  --teal-wash:#E4F3F1;
+  --amber:#C98314;
+  --amber-wash:#FBF1DC;
+  --tint:#EDEEF7;
+  --line:#DBDDE8;
+  --line-soft:#E7E8F0;
+  --code-bg:#191B30;
+  --code-ink:#E8E9F2;
+  --shadow:0 1px 2px rgba(20,22,42,.04),0 8px 30px rgba(20,22,42,.06);
+  --shadow-lg:0 4px 12px rgba(20,22,42,.08),0 20px 50px rgba(20,22,42,.10);
+  --serif:"Newsreader",Georgia,serif;
+  --display:"Space Grotesk",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --reading:760px;
+  --wide:1000px;
+  --sidebar:280px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:19px;
+  line-height:1.72;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+::selection{background:var(--coral);color:#fff}
+
+/* ---------- reading progress ---------- */
+#progress{
+  position:fixed;top:0;left:0;height:3px;width:0%;
+  background:linear-gradient(90deg,var(--indigo),var(--coral));
+  z-index:120;transition:width .12s linear;
+}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);
+  background:var(--surface);border-right:1px solid var(--line);
+  padding:30px 0 40px;overflow-y:auto;z-index:100;
+}
+.sidebar-brand{padding:0 26px 22px;border-bottom:1px solid var(--line-soft);margin-bottom:18px}
+.sidebar-brand .eyebrow{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--coral);font-weight:500;
+}
+.sidebar-brand h1{
+  font-family:var(--display);font-weight:700;font-size:22px;
+  line-height:1.12;margin-top:8px;letter-spacing:-.01em;color:var(--ink);
+}
+.sidebar-brand .sub{font-size:13px;color:var(--ink-faint);margin-top:7px;font-family:var(--display);font-weight:400}
+.toc{list-style:none;font-family:var(--display);font-size:14px}
+.toc>li{margin:1px 0}
+.toc .chap{
+  display:flex;gap:11px;align-items:baseline;padding:8px 26px;
+  color:var(--ink-soft);text-decoration:none;font-weight:500;
+  border-left:3px solid transparent;transition:all .15s;
+}
+.toc .chap .num{font-family:var(--mono);font-size:11px;color:var(--ink-faint);min-width:18px}
+.toc .chap:hover{background:var(--indigo-wash);color:var(--indigo)}
+.toc .chap.active{color:var(--indigo);border-left-color:var(--coral);background:var(--indigo-wash)}
+.toc .chap.active .num{color:var(--coral)}
+.toc .subs{list-style:none;padding:2px 0 6px}
+.toc .subs a{
+  display:block;padding:4px 26px 4px 55px;font-size:12.5px;
+  color:var(--ink-faint);text-decoration:none;border-left:3px solid transparent;
+}
+.toc .subs a:hover{color:var(--indigo)}
+.toc .subs a.active{color:var(--ink);border-left-color:var(--line)}
+
+/* ---------- mobile menu ---------- */
+.menu-btn{
+  display:none;position:fixed;top:14px;left:14px;z-index:130;
+  background:var(--ink);color:#fff;border:none;border-radius:9px;
+  width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:var(--shadow);
+}
+.scrim{display:none;position:fixed;inset:0;background:rgba(20,22,42,.4);z-index:99}
+
+/* ---------- main layout ---------- */
+.content{margin-left:var(--sidebar);padding:0 0 120px}
+.wrap{max-width:var(--reading);margin:0 auto;padding:0 28px}
+.wrap-wide{max-width:var(--wide);margin:0 auto;padding:0 28px}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;height:clamp(440px,72vh,640px);
+  display:flex;align-items:center;overflow:hidden;
+  background:linear-gradient(165deg,#15172E 0%,#221C6B 55%,#3A2D9E 100%);
+  margin-bottom:70px;
+}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;opacity:.9}
+.hero-inner{position:relative;z-index:2;max-width:var(--wide);margin:0 auto;padding:0 48px;width:100%}
+.hero .eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  color:#FF8C7E;font-weight:500;margin-bottom:20px;
+}
+.hero h1{
+  font-family:var(--display);font-weight:700;color:#fff;
+  font-size:clamp(40px,7vw,76px);line-height:.98;letter-spacing:-.03em;
+}
+.hero h1 em{font-style:normal;color:#B9B2FF}
+.hero .lead{
+  font-family:var(--serif);color:#C9CCE8;font-size:clamp(17px,2.2vw,21px);
+  max-width:620px;margin-top:26px;line-height:1.6;
+}
+.hero .scroll-cue{
+  margin-top:38px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:#9A9DD0;display:flex;align-items:center;gap:10px;
+}
+.hero .scroll-cue::before{content:"";width:34px;height:1px;background:#6E72B8}
+
+/* ---------- typography in body ---------- */
+.chapter{padding-top:34px;margin-top:34px}
+.chapter-head{margin-bottom:14px}
+.chapter-head .kicker{
+  font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:12px;
+}
+.chapter-head .kicker::after{content:"";flex:1;height:1px;background:var(--line)}
+.chapter-head h2{
+  font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,42px);
+  line-height:1.06;letter-spacing:-.02em;margin-top:14px;color:var(--ink);
+}
+h3{
+  font-family:var(--display);font-weight:600;font-size:25px;line-height:1.2;
+  margin:46px 0 4px;letter-spacing:-.01em;color:var(--ink);
+}
+h4{
+  font-family:var(--display);font-weight:500;font-size:18px;
+  margin:30px 0 2px;color:var(--indigo-deep);letter-spacing:-.005em;
+}
+.content p{margin:16px 0;color:var(--ink)}
+.content p.intro{font-size:21px;line-height:1.66;color:var(--ink-soft)}
+.content a{color:var(--indigo);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.content a:hover{text-decoration-color:var(--coral)}
+strong{font-weight:600;color:var(--ink)}
+em{font-style:italic}
+.term{font-weight:600;color:var(--indigo-deep);font-style:normal}
+code{font-family:var(--mono);font-size:.84em;background:var(--tint);padding:.12em .4em;border-radius:5px;color:var(--indigo-deep)}
+ul,ol{margin:16px 0 16px 4px;padding-left:26px}
+li{margin:8px 0;padding-left:4px}
+li::marker{color:var(--coral)}
+hr{border:none;border-top:1px solid var(--line);margin:54px 0}
+
+/* ---------- callout boxes ---------- */
+.box{border-radius:14px;padding:22px 26px;margin:28px 0;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
+.box .box-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.box .box-label::before{content:"";width:7px;height:7px;border-radius:50%}
+.box p:first-of-type,.box .box-label+p{margin-top:0}
+.box p:last-child{margin-bottom:0}
+
+.def{background:var(--indigo-wash);border-color:#D6D7F0}
+.def .box-label{color:var(--indigo)}
+.def .box-label::before{background:var(--indigo)}
+
+.intuition{background:var(--teal-wash);border-color:#C4E4E0}
+.intuition .box-label{color:var(--teal)}
+.intuition .box-label::before{background:var(--teal)}
+
+.note{background:var(--amber-wash);border-color:#EAD9AE}
+.note .box-label{color:var(--amber)}
+.note .box-label::before{background:var(--amber)}
+
+.derivation{background:var(--surface);border-color:var(--line);border-left:4px solid var(--ink)}
+.derivation .box-label{color:var(--ink)}
+.derivation .box-label::before{background:var(--ink)}
+.derivation .step{display:flex;gap:14px;margin:14px 0;align-items:flex-start}
+.derivation .step .s-num{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;background:var(--ink);
+  min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  margin-top:4px;flex-shrink:0;
+}
+.derivation .step .s-body{flex:1}
+.derivation .step .s-body p{margin:0 0 4px}
+
+/* ---------- math display ---------- */
+.katex-display{margin:20px 0!important;overflow-x:auto;overflow-y:hidden;padding:4px 0}
+.eqn{position:relative}
+.content .katex{font-size:1.04em}
+
+/* ---------- figures & demos ---------- */
+figure{margin:34px 0;text-align:center}
+figcaption{font-family:var(--display);font-size:13.5px;color:var(--ink-faint);margin-top:14px;line-height:1.5}
+figcaption b{color:var(--ink-soft);font-weight:600}
+.svg-fig{width:100%;height:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+
+.demo{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  margin:34px 0;box-shadow:var(--shadow-lg);overflow:hidden;
+}
+.demo-head{padding:18px 24px 16px;border-bottom:1px solid var(--line-soft);background:linear-gradient(180deg,#FFF,#FCFCFE)}
+.demo-head .tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:8px;
+}
+.demo-head .tag::before{content:"▶";font-size:8px}
+.demo-head h4{font-family:var(--display);font-weight:600;font-size:18px;color:var(--ink);margin:7px 0 0}
+.demo-body{padding:22px 24px}
+.demo canvas{display:block;max-width:100%;border-radius:10px;background:#FBFBFD;border:1px solid var(--line-soft)}
+.demo-controls{display:flex;flex-wrap:wrap;gap:18px 28px;margin-top:18px;align-items:flex-end}
+.ctrl{display:flex;flex-direction:column;gap:6px;min-width:150px;flex:1}
+.ctrl label{font-family:var(--display);font-size:12.5px;font-weight:500;color:var(--ink-soft);display:flex;justify-content:space-between;gap:10px}
+.ctrl label .val{font-family:var(--mono);color:var(--coral);font-weight:700}
+.demo .readout{font-family:var(--mono);font-size:13px;color:var(--ink-soft);background:var(--tint);padding:10px 14px;border-radius:8px;margin-top:14px;line-height:1.6}
+.demo .readout b{color:var(--indigo-deep)}
+
+/* coral = interactive (the signature) */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;
+  background:var(--line);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;border:none;
+}
+.btn{
+  font-family:var(--display);font-weight:500;font-size:13.5px;cursor:pointer;
+  background:var(--coral);color:#fff;border:none;padding:9px 18px;border-radius:9px;
+  transition:transform .1s,background .15s;
+}
+.btn:hover{background:var(--coral-deep)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--indigo);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--indigo-wash);color:var(--indigo)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{
+  font-family:var(--display);font-size:12.5px;font-weight:500;background:var(--surface);
+  border:none;padding:8px 14px;cursor:pointer;color:var(--ink-soft);border-right:1px solid var(--line);
+}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--indigo);color:#fff}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto;margin:30px 0}
+table{border-collapse:collapse;width:100%;font-size:15.5px;font-family:var(--display)}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-soft)}
+th{font-weight:600;color:var(--indigo-deep);border-bottom:2px solid var(--line);font-size:13px;letter-spacing:.02em}
+td{color:var(--ink-soft)}
+tr:hover td{background:var(--indigo-wash)}
+td code{font-size:.9em}
+
+/* ---------- pill / chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.chip{font-family:var(--mono);font-size:11px;background:var(--tint);color:var(--indigo-deep);padding:5px 11px;border-radius:20px;border:1px solid var(--line)}
+
+/* ---------- footer ---------- */
+.endcard{
+  background:linear-gradient(165deg,#15172E,#2A2090);color:#fff;border-radius:18px;
+  padding:44px;margin:60px 0 0;box-shadow:var(--shadow-lg);
+}
+.endcard .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#FF8C7E}
+.endcard h3{color:#fff;margin-top:10px}
+.endcard p{color:#C9CCE8}
+.endcard a{color:#B9B2FF}
+
+footer.page{padding:40px 0 0;color:var(--ink-faint);font-family:var(--display);font-size:13px;text-align:center}
+
+/* ---------- responsive ---------- */
+@media(max-width:1080px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .25s;width:300px;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-btn{display:block}
+  .scrim.show{display:block}
+  .content{margin-left:0}
+  .hero-inner{padding:0 26px}
+  .wrap,.wrap-wide{padding:0 22px}
+}
+@media(max-width:640px){
+  body{font-size:17.5px}
+  .content p.intro{font-size:18.5px}
+  .demo-controls{gap:14px}
+  .ctrl{min-width:120px}
+  .endcard{padding:28px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<button class="menu-btn" id="menuBtn" aria-label="Open contents">☰</button>
+<div class="scrim" id="scrim"></div>
+
+<!-- ===================== SIDEBAR ===================== -->
+<nav class="sidebar" id="sidebar" aria-label="Table of contents">
+  <div class="sidebar-brand">
+    <div class="eyebrow">Robotics &amp; VLA Curriculum</div>
+    <h1>Deep Learning Core</h1>
+    <div class="sub">Layer 2 · Interactive Textbook</div>
+  </div>
+  <ul class="toc" id="toc">
+    <li><a class="chap" href="#ch1"><span class="num">01</span><span>Neural Network Fundamentals</span></a>
+      <ul class="subs">
+        <li><a href="#neuron">The artificial neuron</a></li>
+        <li><a href="#mlp">Layers &amp; the MLP</a></li>
+        <li><a href="#activations">Activation functions</a></li>
+        <li><a href="#losses">Loss functions</a></li>
+        <li><a href="#backprop">Backpropagation</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch2"><span class="num">02</span><span>Training Dynamics</span></a>
+      <ul class="subs">
+        <li><a href="#gd">Gradient descent</a></li>
+        <li><a href="#optimizers">Momentum &amp; Adam</a></li>
+        <li><a href="#init">Initialization</a></li>
+        <li><a href="#norm">Normalization</a></li>
+        <li><a href="#reg">Regularization</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch3"><span class="num">03</span><span>Convolutional Networks</span></a>
+      <ul class="subs">
+        <li><a href="#conv">The convolution</a></li>
+        <li><a href="#convdetails">Stride, padding, pooling</a></li>
+        <li><a href="#resnet">Residual networks</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch4"><span class="num">04</span><span>Sequence Models</span></a>
+      <ul class="subs">
+        <li><a href="#rnn">Recurrent networks</a></li>
+        <li><a href="#lstm">LSTM &amp; GRU</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch5"><span class="num">05</span><span>Transformers &amp; Attention</span></a>
+      <ul class="subs">
+        <li><a href="#attn">Scaled dot-product attention</a></li>
+        <li><a href="#mha">Multi-head attention</a></li>
+        <li><a href="#posenc">Positional encoding</a></li>
+        <li><a href="#block">The Transformer block</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch6"><span class="num">06</span><span>Representations &amp; Embeddings</span></a>
+      <ul class="subs">
+        <li><a href="#repr">Distributed representations</a></li>
+        <li><a href="#word2vec">Word2Vec</a></li>
+        <li><a href="#transfer">Transfer learning</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch7"><span class="num">07</span><span>Generative Models</span></a>
+      <ul class="subs">
+        <li><a href="#ae">Autoencoders</a></li>
+        <li><a href="#vae">Variational autoencoders</a></li>
+        <li><a href="#gan">GANs</a></li>
+        <li><a href="#diffusion">Diffusion &amp; flow matching</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch8"><span class="num">08</span><span>Self-Supervised Learning</span></a>
+      <ul class="subs">
+        <li><a href="#contrastive">Contrastive learning</a></li>
+        <li><a href="#clip">CLIP</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch9"><span class="num">09</span><span>Vision-Language-Action</span></a>
+      <ul class="subs">
+        <li><a href="#vla-from-attention">From attention to VLA</a></li>
+        <li><a href="#vla-anatomy">Anatomy of a VLA</a></li>
+        <li><a href="#vla-systems">Fast &amp; slow systems</a></li>
+        <li><a href="#vla-data">Data &amp; generalization</a></li>
+      </ul></li>
+  </ul>
+</nav>
+
+<!-- ===================== MAIN ===================== -->
+<div class="content" id="content">
+
+  <!-- HERO -->
+  <header class="hero">
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero-inner">
+      <div class="eyebrow">Layer 2 of the Roadmap</div>
+      <h1>The machinery of<br><em>deep learning.</em></h1>
+      <p class="lead">From a single neuron to the Transformer — every core idea you need before touching vision-language-action models, derived from first principles, with math you can see and touch.</p>
+      <div class="scroll-cue">Scroll to begin · 9 chapters</div>
+    </div>
+  </header>
+
+  <!-- PREFACE -->
+  <section class="wrap">
+    <p class="intro">This is the engine room. Everything above it in the curriculum — vision backbones, language models, the action heads inside a VLA — is built from the components on this page. We will move slowly and formally: every important result is <em>derived</em>, not merely stated, and wherever a picture beats a paragraph you'll find a live widget you can manipulate. You need comfort with vectors, matrices, partial derivatives, and the chain rule; everything else is built up from there.</p>
+    <div class="box note">
+      <div class="box-label">How to read this</div>
+      <p>Blue panels are <span class="term">definitions</span> — the precise statement of an idea. Green panels build <span style="color:var(--teal);font-weight:600">intuition</span>. Black-edged panels are <strong>step-by-step derivations</strong>; read them with a pen. Coral controls are <strong style="color:var(--coral)">interactive</strong> — every coral element on the page is something you can drag, toggle, or run.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 1 ===================== -->
+  <section class="wrap chapter" id="ch1">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 01</div>
+      <h2>Neural Network Fundamentals</h2>
+    </div>
+    <p class="intro">A neural network is a function. A large, flexible, parameterized function that we bend into shape by showing it data. To understand the whole, we start with its atom: the neuron.</p>
+
+    <h3 id="neuron">1.1 · The artificial neuron</h3>
+    <p>The biological metaphor is loose but useful. A neuron receives signals on its dendrites, sums them, and "fires" if the total exceeds a threshold. The artificial version keeps exactly this skeleton: take a vector of inputs, form a <em>weighted sum</em>, add a bias, and pass the result through a nonlinear <em>activation</em>.</p>
+
+    <div class="box def">
+      <div class="box-label">Definition — the neuron</div>
+      <p>Given an input vector $\mathbf{x}\in\mathbb{R}^{n}$, weights $\mathbf{w}\in\mathbb{R}^{n}$, and a bias $b\in\mathbb{R}$, a neuron computes a <em>pre-activation</em> (or logit) $z$ and an <em>activation</em> $a$:</p>
+      $$z=\mathbf{w}^{\top}\mathbf{x}+b=\sum_{i=1}^{n}w_i x_i + b,\qquad a=\phi(z)$$
+      <p>where $\phi:\mathbb{R}\to\mathbb{R}$ is a fixed nonlinear function. The weights and bias are the <em>learnable parameters</em>.</p>
+    </div>
+
+    <p>The weighted sum $\mathbf{w}^{\top}\mathbf{x}$ is a projection: it measures how strongly the input aligns with the direction $\mathbf{w}$. The bias shifts the threshold. Geometrically, the set of points where $z=0$ is a <span class="term">hyperplane</span> — a flat $(n{-}1)$-dimensional surface slicing the input space in two. Everything a single neuron can "decide" lives on one side of that plane or the other.</p>
+
+    <h4>The perceptron and the limits of linearity</h4>
+    <p>The earliest model, the <span class="term">perceptron</span> (Rosenblatt, 1958), used a step activation: fire ($a=1$) if $z\ge 0$, else $a=0$. It can perfectly classify any dataset that is <em>linearly separable</em> — one where a single hyperplane cleanly divides the classes. The famous wall it hits is the <strong>XOR problem</strong>: there is no single straight line that separates the points $\{(0,0),(1,1)\}$ from $\{(0,1),(1,0)\}$. A lone neuron, no matter how its weights are tuned, cannot solve it. The escape is <em>depth</em>: stack neurons so that later ones operate on features computed by earlier ones.</p>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>A single neuron's decision boundary</h4></div>
+      <div class="demo-body">
+        <canvas id="neuronCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>weight $w_1$ <span class="val" id="w1v">1.0</span></label><input type="range" id="w1" min="-3" max="3" step="0.05" value="1"></div>
+          <div class="ctrl"><label>weight $w_2$ <span class="val" id="w2v">1.0</span></label><input type="range" id="w2" min="-3" max="3" step="0.05" value="1"></div>
+          <div class="ctrl"><label>bias $b$ <span class="val" id="bv">-1.0</span></label><input type="range" id="bb" min="-4" max="4" step="0.05" value="-1"></div>
+          <div class="ctrl" style="flex:0"><label>dataset</label><div class="seg" id="dataSeg"><button class="on" data-d="and">AND</button><button data-d="or">OR</button><button data-d="xor">XOR</button></div></div>
+        </div>
+        <div class="readout" id="neuronReadout"></div>
+      </div>
+    </div>
+    <p>Drag the weights and bias to rotate and shift the dividing line. <strong>AND</strong> and <strong>OR</strong> can both be solved — they are linearly separable. <strong>XOR</strong> cannot: no setting of three numbers makes the line correct. This single failure is, historically, why we needed multilayer networks.</p>
+
+    <h3 id="mlp">1.2 · Layers and the multilayer perceptron</h3>
+    <p>Stack neurons side by side and you get a <span class="term">layer</span>; the weighted sums become a matrix–vector product. Stack layers in sequence and you get a <span class="term">multilayer perceptron (MLP)</span>, also called a fully-connected or dense network.</p>
+
+    <div class="box def">
+      <div class="box-label">Definition — a feedforward layer</div>
+      <p>Layer $\ell$ with $m$ outputs and $n$ inputs has a weight matrix $W^{(\ell)}\in\mathbb{R}^{m\times n}$ and bias $\mathbf{b}^{(\ell)}\in\mathbb{R}^{m}$. Writing the previous layer's activations as $\mathbf{a}^{(\ell-1)}$:</p>
+      $$\mathbf{z}^{(\ell)}=W^{(\ell)}\mathbf{a}^{(\ell-1)}+\mathbf{b}^{(\ell)},\qquad \mathbf{a}^{(\ell)}=\phi\!\big(\mathbf{z}^{(\ell)}\big)$$
+      <p>with $\mathbf{a}^{(0)}=\mathbf{x}$ the input and $\phi$ applied element-wise. An $L$-layer network is the composition $f(\mathbf{x})=\phi^{(L)}\!\circ\cdots\circ\phi^{(1)}(\mathbf{x})$.</p>
+    </div>
+
+    <p>Why does the nonlinearity matter so much? Because without it the whole tower collapses. If every $\phi$ were the identity, then $\mathbf{a}^{(L)}=W^{(L)}\cdots W^{(1)}\mathbf{x}+(\text{const})$, and the product of matrices is just another matrix. A hundred linear layers would be exactly as expressive as one. <strong>The nonlinearity is the only reason depth buys you anything.</strong></p>
+
+    <div class="box intuition">
+      <div class="box-label">Intuition — why depth works</div>
+      <p>Each layer warps space. A nonlinear $\phi$ lets a layer bend, fold, and stretch its input space so that the next layer sees a representation in which the problem is <em>easier</em> — ideally, eventually, linearly separable. Early layers learn simple features; later layers compose them into complex ones. Depth is compositional reuse.</p>
+    </div>
+
+    <div class="box note">
+      <div class="box-label">Theorem — universal approximation</div>
+      <p>A feedforward network with a single hidden layer containing a finite number of neurons and a non-polynomial activation can approximate any continuous function on a compact domain to arbitrary accuracy (Cybenko 1989; Hornik 1991). The theorem promises that a solution <em>exists</em> — it says nothing about how wide the layer must be, or whether gradient descent will <em>find</em> it. In practice, <em>deep</em> narrow networks represent many functions far more efficiently than <em>shallow</em> wide ones.</p>
+    </div>
+
+    <h3 id="activations">1.3 · Activation functions</h3>
+    <p>The activation $\phi$ is where nonlinearity enters. Different choices have very different gradients, and the gradient is what learning rides on. Here are the workhorses, each with its derivative — which you will need the moment we reach backpropagation.</p>
+
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Name</th><th>$\phi(z)$</th><th>$\phi'(z)$</th><th>Range</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Sigmoid</td><td>$\sigma(z)=\dfrac{1}{1+e^{-z}}$</td><td>$\sigma(z)\big(1-\sigma(z)\big)$</td><td>$(0,1)$</td><td>Saturates; gradient vanishes for large $|z|$</td></tr>
+        <tr><td>Tanh</td><td>$\dfrac{e^{z}-e^{-z}}{e^{z}+e^{-z}}$</td><td>$1-\tanh^2(z)$</td><td>$(-1,1)$</td><td>Zero-centred; still saturates</td></tr>
+        <tr><td>ReLU</td><td>$\max(0,z)$</td><td>$\mathbb{1}[z>0]$</td><td>$[0,\infty)$</td><td>Cheap, no saturation for $z>0$; "dead" units possible</td></tr>
+        <tr><td>Leaky ReLU</td><td>$\max(\alpha z,z)$</td><td>$1$ if $z>0$ else $\alpha$</td><td>$\mathbb{R}$</td><td>Small slope $\alpha$ keeps units alive</td></tr>
+        <tr><td>GELU</td><td>$z\,\Phi(z)$</td><td>$\Phi(z)+z\,\varphi(z)$</td><td>$\approx\mathbb{R}$</td><td>Smooth; default in Transformers ($\Phi$ = normal CDF)</td></tr>
+      </tbody>
+    </table></div>
+
+    <p>The <span class="term">sigmoid derivative</span> deserves a quick derivation because the trick recurs everywhere:</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the sigmoid's derivative</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Write $\sigma(z)=(1+e^{-z})^{-1}$ and differentiate with the chain rule:</p>$$\sigma'(z)=-(1+e^{-z})^{-2}\cdot(-e^{-z})=\frac{e^{-z}}{(1+e^{-z})^{2}}$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Split the fraction and recognise the pieces:</p>$$\sigma'(z)=\frac{1}{1+e^{-z}}\cdot\frac{e^{-z}}{1+e^{-z}}=\sigma(z)\cdot\big(1-\sigma(z)\big)$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The derivative is expressible in the output itself. Its maximum is $0.25$ at $z=0$, and it decays toward $0$ as $|z|\to\infty$ — the seed of the <strong>vanishing gradient problem</strong> we will meet in deep and recurrent networks.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Activation explorer — function and its gradient</h4></div>
+      <div class="demo-body">
+        <canvas id="actCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>function</label><div class="seg" id="actSeg"><button class="on" data-f="sigmoid">σ</button><button data-f="tanh">tanh</button><button data-f="relu">ReLU</button><button data-f="leaky">Leaky</button><button data-f="gelu">GELU</button></div></div>
+          <div class="ctrl"><label>evaluate at $z=$ <span class="val" id="zv">1.50</span></label><input type="range" id="zpt" min="-6" max="6" step="0.05" value="1.5"></div>
+        </div>
+        <div class="readout" id="actReadout"></div>
+      </div>
+    </div>
+    <p>Notice how the <strong>gradient curve</strong> (coral) for sigmoid and tanh flattens to near-zero in the tails. When activations saturate, the gradient that flows back through them is multiplied by almost nothing — and a product of many small numbers vanishes. ReLU's gradient is a clean $1$ wherever it is active, which is the single biggest reason it unlocked very deep networks.</p>
+
+    <h3 id="losses">1.4 · The mathematics of loss functions</h3>
+    <p>Learning needs a target to minimise: a scalar <span class="term">loss</span> measuring how wrong the network's prediction $\hat{\mathbf{y}}$ is versus the truth $\mathbf{y}$. The choice of loss is not folklore — each standard loss is the <em>negative log-likelihood</em> of a specific probabilistic assumption about the data. Maximising the likelihood of what we observed is the same as minimising the loss. Let us derive the two workhorses from that single principle.</p>
+
+    <h4>Regression — mean squared error from Gaussian noise</h4>
+    <div class="box derivation">
+      <div class="box-label">Derivation — MSE is Gaussian maximum likelihood</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Assume each target is the model's prediction plus zero-mean Gaussian noise of variance $\sigma^2$: $y_i=\hat{y}_i+\varepsilon_i$, with $\varepsilon_i\sim\mathcal{N}(0,\sigma^2)$. The likelihood of one observation is the Gaussian density:</p>$$p(y_i\mid\hat{y}_i)=\frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\left(-\frac{(y_i-\hat{y}_i)^2}{2\sigma^2}\right)$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Take the log-likelihood over $N$ independent examples (the log turns the product into a sum):</p>$$\log p(\mathbf{y}\mid\hat{\mathbf{y}})=-\frac{1}{2\sigma^2}\sum_{i=1}^{N}(y_i-\hat{y}_i)^2-\frac{N}{2}\log(2\pi\sigma^2)$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The second term is constant in the parameters. Maximising the log-likelihood is therefore <em>minimising</em> the sum of squared errors — which, averaged, is exactly MSE:</p>$$\mathcal{L}_{\text{MSE}}=\frac{1}{N}\sum_{i=1}^{N}\big(\hat{y}_i-y_i\big)^2$$<p>So "minimise squared error" literally means "assume Gaussian noise and maximise likelihood." Its gradient with respect to a prediction is beautifully simple: $\partial\mathcal{L}/\partial\hat{y}_i=\tfrac{2}{N}(\hat{y}_i-y_i)$ — proportional to the error itself.</p></div></div>
+    </div>
+
+    <h4>Classification — cross-entropy from maximum likelihood</h4>
+    <p>For classification the network outputs a probability distribution over classes via the <span class="term">softmax</span>, and we score it with <span class="term">cross-entropy</span>.</p>
+    <div class="box def">
+      <div class="box-label">Definition — softmax &amp; cross-entropy</div>
+      <p>For logits $\mathbf{z}\in\mathbb{R}^{K}$, the softmax produces a distribution; cross-entropy compares it to the one-hot truth $\mathbf{y}$:</p>
+      $$\hat{y}_k=\operatorname{softmax}(\mathbf{z})_k=\frac{e^{z_k}}{\sum_{j=1}^{K}e^{z_j}},\qquad \mathcal{L}_{\text{CE}}=-\sum_{k=1}^{K}y_k\log \hat{y}_k$$
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why this exact form, three ways</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><strong>As maximum likelihood.</strong> The model says the probability of the true class $c$ is $\hat{y}_c$. The likelihood of the whole dataset is $\prod_i \hat{y}_{c_i}$. Maximising its log is minimising $-\sum_i\log\hat{y}_{c_i}$ — and since $\mathbf{y}$ is one-hot, $-\sum_k y_k\log\hat{y}_k=-\log\hat{y}_c$. Cross-entropy <em>is</em> the negative log-likelihood of the correct class.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>As KL divergence.</strong> The distance from the true distribution $\mathbf{y}$ to the predicted $\hat{\mathbf{y}}$ is the Kullback–Leibler divergence, which splits into entropy plus cross-entropy:</p>$$D_{\mathrm{KL}}(\mathbf{y}\,\|\,\hat{\mathbf{y}})=\underbrace{\sum_k y_k\log y_k}_{-\,\text{entropy of }\mathbf{y}\text{ (constant)}}-\sum_k y_k\log\hat{y}_k$$<p>The truth's entropy is fixed, so minimising KL divergence is exactly minimising cross-entropy.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Binary case.</strong> With one output probability $\hat{y}=\sigma(z)$ and label $y\in\{0,1\}$, the same logic gives <em>binary cross-entropy</em>:</p>$$\mathcal{L}_{\text{BCE}}=-\big[y\log\hat{y}+(1-y)\log(1-\hat{y})\big]$$<p>Notice the penalty diverges to $+\infty$ as a confident prediction turns out wrong ($\hat{y}\to0$ when $y=1$) — cross-entropy punishes confident mistakes far more harshly than MSE would.</p></div></div>
+    </div>
+
+    <figure>
+      <svg class="svg-fig" viewBox="0 0 700 230" role="img" aria-label="Loss as a function of predicted probability for the true class">
+        <defs><marker id="lah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#878BA6"/></marker></defs>
+        <line x1="60" y1="190" x2="660" y2="190" stroke="#878BA6" stroke-width="1.2" marker-end="url(#lah)"/>
+        <line x1="60" y1="190" x2="60" y2="20" stroke="#878BA6" stroke-width="1.2" marker-end="url(#lah)"/>
+        <text x="360" y="218" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#474B66">predicted probability of the true class  ŷ →</text>
+        <text x="22" y="105" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#474B66" transform="rotate(-90 22 105)">loss →</text>
+        <path id="cePath" fill="none" stroke="#4338CA" stroke-width="2.5"/>
+        <path id="msePath" fill="none" stroke="#0E9C92" stroke-width="2.5" stroke-dasharray="6 4"/>
+        <text x="120" y="45" font-family="Space Grotesk" font-size="13" fill="#4338CA" font-weight="600">cross-entropy  −log ŷ</text>
+        <text x="430" y="150" font-family="Space Grotesk" font-size="13" fill="#0E9C92" font-weight="600">squared error  (1−ŷ)²</text>
+      </svg>
+      <figcaption><b>Why cross-entropy for classification.</b> As the predicted probability of the right answer falls toward zero, cross-entropy (indigo) shoots to infinity while squared error (teal) stays bounded. That steep penalty produces strong, well-scaled gradients exactly when the model is confidently wrong.</figcaption>
+    </figure>
+
+    <h3 id="backprop">1.5 · Backpropagation</h3>
+    <p>We can measure error and we can compute the network's output. The missing piece is: how should each of the millions of weights change to reduce the loss? The answer is the gradient $\partial\mathcal{L}/\partial W^{(\ell)}$ for every layer — and <span class="term">backpropagation</span> is simply the chain rule, organised so that we compute all of these gradients in a single backward sweep, reusing work.</p>
+
+    <div class="box intuition">
+      <div class="box-label">Intuition — credit assignment</div>
+      <p>A deep network is a long chain of operations. To know how the loss responds to a weight buried in layer 2, we must trace how a nudge there ripples forward through every later layer to the output. The chain rule does this, but a naive computation would repeat the same sub-products for every weight. Backprop computes one quantity per layer — the sensitivity of the loss to that layer's pre-activations — and reuses it. That turns an exponential cost into a linear one.</p>
+    </div>
+
+    <p>Define the central quantity, the <span class="term">error signal</span> of layer $\ell$, as the gradient of the loss with respect to that layer's pre-activations:</p>
+    $$\boldsymbol{\delta}^{(\ell)}\;\equiv\;\frac{\partial \mathcal{L}}{\partial \mathbf{z}^{(\ell)}}$$
+
+    <div class="box derivation">
+      <div class="box-label">Derivation — the four equations of backprop</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><strong>Output layer error.</strong> By the chain rule, the loss depends on $\mathbf{z}^{(L)}$ through the activation $\mathbf{a}^{(L)}=\phi(\mathbf{z}^{(L)})$:</p>$$\boldsymbol{\delta}^{(L)}=\frac{\partial\mathcal{L}}{\partial\mathbf{a}^{(L)}}\odot\phi'\!\big(\mathbf{z}^{(L)}\big)$$<p>where $\odot$ is the element-wise (Hadamard) product.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>Recursion — propagate the error backward.</strong> The pre-activations of layer $\ell$ influence the loss only through layer $\ell{+}1$, whose pre-activations are $\mathbf{z}^{(\ell+1)}=W^{(\ell+1)}\phi(\mathbf{z}^{(\ell)})+\mathbf{b}^{(\ell+1)}$. Applying the chain rule:</p>$$\boldsymbol{\delta}^{(\ell)}=\Big(\big(W^{(\ell+1)}\big)^{\top}\boldsymbol{\delta}^{(\ell+1)}\Big)\odot\phi'\!\big(\mathbf{z}^{(\ell)}\big)$$<p>The error flows backward through the <em>transpose</em> of the forward weight matrix — multiplication in reverse — then is gated by the local activation slope.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Weight gradient.</strong> Since $z^{(\ell)}_i=\sum_j W^{(\ell)}_{ij}a^{(\ell-1)}_j+b^{(\ell)}_i$, we have $\partial z^{(\ell)}_i/\partial W^{(\ell)}_{ij}=a^{(\ell-1)}_j$, so:</p>$$\frac{\partial\mathcal{L}}{\partial W^{(\ell)}}=\boldsymbol{\delta}^{(\ell)}\big(\mathbf{a}^{(\ell-1)}\big)^{\top}$$<p>an outer product: the error at the output side times the activation at the input side.</p></div></div>
+      <div class="step"><div class="s-num">4</div><div class="s-body"><p><strong>Bias gradient.</strong> Because $\partial z^{(\ell)}_i/\partial b^{(\ell)}_i=1$:</p>$$\frac{\partial\mathcal{L}}{\partial \mathbf{b}^{(\ell)}}=\boldsymbol{\delta}^{(\ell)}$$</div></div>
+    </div>
+
+    <p>That is the entire algorithm. Run the input forward, caching every $\mathbf{z}^{(\ell)}$ and $\mathbf{a}^{(\ell)}$; compute $\boldsymbol{\delta}^{(L)}$ at the top; sweep backward with equation&nbsp;2 to get every $\boldsymbol{\delta}^{(\ell)}$; read off the gradients with equations 3 and 4. Modern frameworks (PyTorch, JAX) do this automatically via <span class="term">reverse-mode automatic differentiation</span>, which is exactly this idea generalised to arbitrary computational graphs.</p>
+
+    <h4>A beautiful simplification</h4>
+    <p>When softmax is paired with cross-entropy — the standard classification setup — the output error collapses to something stunningly simple.</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — softmax + cross-entropy gradient</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>With $\mathcal{L}=-\sum_k y_k\log\hat{y}_k$ and $\hat{y}_k=e^{z_k}/\sum_j e^{z_j}$, compute $\partial\mathcal{L}/\partial z_i$. First the derivative of softmax itself:</p>$$\frac{\partial \hat{y}_k}{\partial z_i}=\hat{y}_k\big(\mathbb{1}[k=i]-\hat{y}_i\big)$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Substitute into the chain rule $\dfrac{\partial\mathcal{L}}{\partial z_i}=-\sum_k \dfrac{y_k}{\hat{y}_k}\dfrac{\partial \hat{y}_k}{\partial z_i}$:</p>$$\frac{\partial\mathcal{L}}{\partial z_i}=-\sum_k \frac{y_k}{\hat{y}_k}\,\hat{y}_k\big(\mathbb{1}[k=i]-\hat{y}_i\big)=-\sum_k y_k\big(\mathbb{1}[k=i]-\hat{y}_i\big)$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Distribute and use $\sum_k y_k=1$ (one-hot truth):</p>$$\frac{\partial\mathcal{L}}{\partial z_i}=-y_i+\hat{y}_i\sum_k y_k=\hat{y}_i-y_i$$</div></div>
+      <div class="step"><div class="s-num">4</div><div class="s-body"><p>In vector form, the output error is just <strong>prediction minus truth</strong>:</p>$$\boldsymbol{\delta}^{(L)}=\hat{\mathbf{y}}-\mathbf{y}$$<p>No activation derivative, no softmax Jacobian survives. This clean signal is one reason the softmax–cross-entropy pairing is universal in classification.</p></div></div>
+    </div>
+
+    <h4>Watch it run, one step at a time</h4>
+    <p>Equations are easier to trust once you see the numbers move. Below is a tiny network — two inputs, two hidden units, one output — that you can drive through a full training step. Press <strong>Next step</strong> to advance: first the signal flows <em>forward</em> (green) computing every activation, then the error flows <em>backward</em> (coral) computing every gradient, and finally the weights update. Each step is narrated with the exact equation it is applying.</p>
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Backpropagation, step by step</h4></div>
+      <div class="demo-body">
+        <canvas id="bpCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0;justify-content:flex-end">
+            <button class="btn" id="bpNext">▸ Next step</button>
+            <button class="btn ghost" id="bpAuto">Auto-run</button>
+            <button class="btn ghost" id="bpReset">Reset</button>
+          </div>
+        </div>
+        <div class="readout" id="bpReadout"></div>
+      </div>
+    </div>
+    <p>The forward pass caches every activation; the backward pass reuses them. Notice that the gradient arriving at a hidden unit is the downstream error multiplied by the connecting weight, then gated by that unit's activation slope — equations 2 and 3 made visible. One forward sweep and one backward sweep produce <em>every</em> gradient in the network.</p>
+
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 2 ===================== -->
+  <section class="wrap chapter" id="ch2">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 02</div>
+      <h2>Training Dynamics</h2>
+    </div>
+    <p class="intro">We have a loss and we have its gradient. Learning is the act of using that gradient to walk the parameters downhill. How we take that walk — the step size, the memory, the bookkeeping — is the difference between a model that trains in an hour and one that never converges at all.</p>
+
+    <h3 id="gd">2.1 · Gradient descent</h3>
+    <p>The loss is a scalar function of all the parameters $\boldsymbol{\theta}$ (every weight and bias gathered into one giant vector). Its gradient $\nabla_{\boldsymbol{\theta}}\mathcal{L}$ points in the direction of <em>steepest ascent</em>. To descend, we step the opposite way.</p>
+    <div class="box def">
+      <div class="box-label">Definition — the gradient descent update</div>
+      <p>With learning rate $\eta>0$, each step updates every parameter:</p>
+      $$\boldsymbol{\theta}_{t+1}=\boldsymbol{\theta}_{t}-\eta\,\nabla_{\boldsymbol{\theta}}\mathcal{L}(\boldsymbol{\theta}_t)$$
+    </div>
+    <p>Computing the gradient over the <em>entire</em> dataset (<span class="term">batch gradient descent</span>) is accurate but slow. Using one example at a time (<span class="term">stochastic gradient descent, SGD</span>) is noisy but fast. The practical compromise is the <span class="term">mini-batch</span>: average the gradient over a small random subset (say 32–512 examples) each step. The noise from mini-batching is not purely a nuisance — it helps the optimizer escape sharp, brittle minima and tends to find flatter ones that generalise better.</p>
+
+    <div class="box note">
+      <div class="box-label">The learning rate is the master dial</div>
+      <p>Too small and training crawls, possibly stalling in a poor region. Too large and each step overshoots the valley floor, the loss oscillates or explodes, and the parameters diverge to infinity. There is a critical rate above which descent becomes ascent — you can watch it happen in the widget below.</p>
+    </div>
+
+    <h3 id="optimizers">2.2 · Momentum, RMSProp, and Adam</h3>
+    <p>Plain SGD struggles in <em>ravines</em> — loss surfaces that are steep in one direction and shallow in another. It bounces across the steep walls while creeping along the gentle floor. The fix is to give the update <em>memory</em>.</p>
+
+    <h4>Momentum</h4>
+    <p>Accumulate an exponentially-decaying running average of past gradients — a "velocity" — and step along it. Oscillations in the steep direction cancel out; consistent progress in the shallow direction accumulates.</p>
+    $$\mathbf{v}_{t}=\beta\,\mathbf{v}_{t-1}+(1-\beta)\nabla\mathcal{L}(\boldsymbol{\theta}_t),\qquad \boldsymbol{\theta}_{t+1}=\boldsymbol{\theta}_t-\eta\,\mathbf{v}_t$$
+    <p>with $\beta\approx0.9$. <span class="term">Nesterov</span> momentum sharpens this by evaluating the gradient at the look-ahead point $\boldsymbol{\theta}_t-\eta\beta\mathbf{v}_{t-1}$ rather than at $\boldsymbol{\theta}_t$.</p>
+
+    <h4>Adaptive rates and Adam</h4>
+    <p>Different parameters may need different step sizes. <span class="term">AdaGrad</span> and <span class="term">RMSProp</span> scale each parameter's step by a running estimate of its gradient magnitude, so rarely-updated parameters take bigger steps. <span class="term">Adam</span> (Kingma &amp; Ba, 2014) combines this idea with momentum and is the default optimizer for most deep learning today.</p>
+    <div class="box def">
+      <div class="box-label">Definition — Adam</div>
+      <p>Maintain a first moment $\mathbf{m}$ (mean of gradients) and second moment $\mathbf{v}$ (mean of squared gradients), with $g_t=\nabla\mathcal{L}(\boldsymbol{\theta}_t)$:</p>
+      $$\mathbf{m}_t=\beta_1\mathbf{m}_{t-1}+(1-\beta_1)g_t,\qquad \mathbf{v}_t=\beta_2\mathbf{v}_{t-1}+(1-\beta_2)g_t^{2}$$
+      <p>Because $\mathbf{m},\mathbf{v}$ start at zero they are biased toward zero early on; correct it:</p>
+      $$\hat{\mathbf{m}}_t=\frac{\mathbf{m}_t}{1-\beta_1^{\,t}},\qquad \hat{\mathbf{v}}_t=\frac{\mathbf{v}_t}{1-\beta_2^{\,t}}$$
+      <p>then take the adaptive step ($\epsilon\approx10^{-8}$ guards against division by zero):</p>
+      $$\boldsymbol{\theta}_{t+1}=\boldsymbol{\theta}_t-\eta\,\frac{\hat{\mathbf{m}}_t}{\sqrt{\hat{\mathbf{v}}_t}+\epsilon}$$
+      <p>Typical defaults: $\beta_1=0.9,\ \beta_2=0.999$.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why bias correction is needed</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Unrolling the first-moment recursion from $\mathbf{m}_0=0$ gives a weighted sum of past gradients:</p>$$\mathbf{m}_t=(1-\beta_1)\sum_{i=1}^{t}\beta_1^{\,t-i}g_i$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>If gradients were drawn from a stationary distribution with mean $\mathbb{E}[g]$, take expectations. The geometric series of weights sums to $1-\beta_1^{\,t}$:</p>$$\mathbb{E}[\mathbf{m}_t]\approx \mathbb{E}[g]\,(1-\beta_1)\sum_{i=1}^{t}\beta_1^{\,t-i}=\mathbb{E}[g]\,(1-\beta_1^{\,t})$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>So $\mathbf{m}_t$ underestimates the true mean by the factor $(1-\beta_1^{\,t})$, badly so when $t$ is small (at $t=1$ with $\beta_1=0.9$ it is a $10\times$ underestimate). Dividing by $(1-\beta_1^{\,t})$ removes the bias exactly. The same argument fixes $\mathbf{v}_t$.</p></div></div>
+    </div>
+
+    <h4>AdamW — decoupled weight decay</h4>
+    <p>A subtle but important fix. Adding L2 regularization through the gradient interacts badly with Adam's per-parameter scaling. <span class="term">AdamW</span> instead applies the weight decay <em>directly</em> to the parameters, separate from the adaptive step: $\boldsymbol{\theta}_{t+1}=\boldsymbol{\theta}_t-\eta(\hat{\mathbf{m}}_t/(\sqrt{\hat{\mathbf{v}}_t}+\epsilon)+\lambda\boldsymbol{\theta}_t)$. This is the standard optimizer for training Transformers.</p>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Optimizer playground — descend a loss landscape</h4></div>
+      <div class="demo-body">
+        <canvas id="optCanvas" width="640" height="420"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>optimizer</label><div class="seg" id="optSeg"><button class="on" data-o="sgd">SGD</button><button data-o="momentum">Momentum</button><button data-o="adam">Adam</button></div></div>
+          <div class="ctrl"><label>learning rate $\eta$ <span class="val" id="lrv">0.05</span></label><input type="range" id="lr" min="0.005" max="0.6" step="0.005" value="0.05"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="optRun">▸ Run</button> <button class="btn ghost" id="optReset">Reset</button></div>
+        </div>
+        <div class="readout" id="optReadout">Click anywhere on the surface to drop a starting point, then press Run.</div>
+      </div>
+    </div>
+    <p>This is a curved "ravine" loss. With plain SGD, crank the learning rate up and watch it diverge — the steps overshoot and the path spirals outward. Switch to Momentum and the path smooths out, gliding along the valley. Adam adapts its step per-direction and reaches the minimum from almost anywhere.</p>
+
+    <h3 id="init">2.3 · Weight initialization</h3>
+    <p>Before the first gradient step, every weight has to start <em>somewhere</em>. The choice is not cosmetic. Initialize too large and activations explode as they pass through layers; too small and they shrink to zero — in both cases the gradients that come back are unusable. The goal is to keep the <em>variance</em> of activations (and gradients) roughly constant across layers.</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — Xavier/Glorot &amp; He initialization</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Consider one pre-activation $z=\sum_{i=1}^{n_{\text{in}}}w_i x_i$ with weights and inputs independent, zero-mean. The variance of a sum of independent zero-mean products is:</p>$$\operatorname{Var}(z)=n_{\text{in}}\operatorname{Var}(w)\operatorname{Var}(x)$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>To keep $\operatorname{Var}(z)=\operatorname{Var}(x)$ — signal neither growing nor shrinking — we need $n_{\text{in}}\operatorname{Var}(w)=1$, i.e. $\operatorname{Var}(w)=1/n_{\text{in}}$. Accounting for the backward pass too, Glorot averages fan-in and fan-out:</p>$$\operatorname{Var}(w)=\frac{2}{n_{\text{in}}+n_{\text{out}}}\quad\text{(Xavier/Glorot)}$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>ReLU zeroes half its inputs, halving the variance. <strong>He initialization</strong> compensates with an extra factor of 2 — the right default for ReLU networks:</p>$$\operatorname{Var}(w)=\frac{2}{n_{\text{in}}}\quad\text{(He)}$$</div></div>
+    </div>
+
+    <h3 id="norm">2.4 · Normalization layers</h3>
+    <p>Even with good initialization, the distribution of each layer's inputs <em>shifts</em> as training progresses (training the layers below changes what the layer above sees). Normalization layers actively re-center and re-scale activations so the network trains faster and more stably.</p>
+    <div class="box def">
+      <div class="box-label">Definition — Batch &amp; Layer Normalization</div>
+      <p>Both compute a mean $\mu$ and variance $\sigma^2$ over some set of values, standardise, then apply a learnable scale $\gamma$ and shift $\beta$:</p>
+      $$\hat{x}=\frac{x-\mu}{\sqrt{\sigma^2+\epsilon}},\qquad y=\gamma\hat{x}+\beta$$
+      <p><strong>BatchNorm</strong> computes $\mu,\sigma^2$ across the <em>batch</em> dimension (per feature) — so it depends on other examples in the batch, and keeps running averages for inference. <strong>LayerNorm</strong> computes them across the <em>feature</em> dimension of a single example — independent of batch size, which is why it is the normalization of choice inside Transformers and RNNs.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — why it helps</div>
+      <p>Normalization smooths the loss landscape: it decouples the scale of a layer's output from the layers below, so each layer can be optimized more independently. The learnable $\gamma,\beta$ ensure the network can still represent any scale it needs — normalization restricts nothing, it only re-parameterizes.</p>
+    </div>
+
+    <h3 id="reg">2.5 · Regularization &amp; gradient control</h3>
+    <p>A model with millions of parameters can memorize its training data and fail on anything new — <span class="term">overfitting</span>. Regularization is the family of techniques that trade a little training accuracy for much better generalization.</p>
+    <ul>
+      <li><strong>L2 / weight decay.</strong> Add $\frac{\lambda}{2}\lVert\boldsymbol{\theta}\rVert^2$ to the loss. This pulls weights toward zero, preferring simpler, smoother functions. Its gradient contribution is just $\lambda\boldsymbol{\theta}$.</li>
+      <li><strong>L1.</strong> Penalize $\lambda\lVert\boldsymbol{\theta}\rVert_1$ instead; this drives many weights to exactly zero, yielding <em>sparse</em> models.</li>
+      <li><strong>Dropout.</strong> During training, randomly zero each activation with probability $p$, then scale survivors by $1/(1-p)$ so the expected sum is unchanged (<em>inverted dropout</em>). Each forward pass trains a different thinned sub-network; at test time the full network behaves like an ensemble average. It is a remarkably cheap and effective regularizer.</li>
+      <li><strong>Early stopping.</strong> Monitor a held-out validation loss and stop when it begins to rise, even if training loss is still falling.</li>
+      <li><strong>Gradient clipping.</strong> When a gradient's norm exceeds a threshold $\tau$, rescale it: $g\leftarrow g\cdot\tau/\lVert g\rVert$. This is the standard guard against <span class="term">exploding gradients</span>, especially in recurrent networks.</li>
+    </ul>
+    <p>Underlying all of this is the <span class="term">bias–variance tradeoff</span> from classical ML: too little capacity (or too much regularization) underfits — high bias; too much capacity unchecked overfits — high variance. The art of training is finding the sweet spot, and validation curves are your map.</p>
+
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 3 ===================== -->
+  <section class="wrap chapter" id="ch3">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 03</div>
+      <h2>Convolutional Networks</h2>
+    </div>
+    <p class="intro">An image has structure that a dense layer ignores: nearby pixels are related, and a cat is a cat wherever it appears. Convolutional networks bake these two facts — locality and translation — directly into the architecture.</p>
+
+    <h3 id="conv">3.1 · The convolution</h3>
+    <p>A dense layer connecting a modest 224×224×3 image to a 1000-unit layer needs over 150 million weights — and it would have to re-learn what an edge looks like separately for every position. A <span class="term">convolutional layer</span> instead slides a small <em>kernel</em> (a tiny weight matrix) across the image, computing a weighted sum at each location. The same kernel is reused everywhere — <span class="term">weight sharing</span> — so it learns one position-independent feature detector with a handful of parameters.</p>
+
+    <div class="box def">
+      <div class="box-label">Definition — 2D convolution (cross-correlation)</div>
+      <p>For an input $X$ and a $k\times k$ kernel $K$, the output feature map $S$ at position $(i,j)$ is:</p>
+      $$S(i,j)=\sum_{m=0}^{k-1}\sum_{n=0}^{k-1}X(i+m,\,j+n)\,K(m,n)$$
+      <p>(Deep learning libraries implement cross-correlation and call it convolution; the only difference from the textbook convolution is a kernel flip, which is immaterial since $K$ is learned.)</p>
+    </div>
+
+    <div class="box intuition">
+      <div class="box-label">Intuition — what a kernel "sees"</div>
+      <p>A kernel responds most strongly where the local image patch matches its pattern. A vertical-edge kernel lights up along vertical edges; a blob kernel lights up on blobs. Stack convolutional layers and the receptive field grows: early layers detect edges, the next combine edges into corners and textures, deeper ones assemble parts into objects. This hierarchy is learned, not designed.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Convolution in motion — kernel, input, feature map</h4></div>
+      <div class="demo-body">
+        <canvas id="convCanvas" width="640" height="300"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>kernel</label><div class="seg" id="kernSeg"><button class="on" data-k="edgev">Vert. edge</button><button data-k="edgeh">Horiz. edge</button><button data-k="blur">Blur</button><button data-k="sharp">Sharpen</button></div></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="convStep">▸ Step</button> <button class="btn ghost" id="convAuto">Auto</button></div>
+        </div>
+        <div class="readout" id="convReadout"></div>
+      </div>
+    </div>
+    <p>The highlighted window on the input (left) is multiplied element-wise by the kernel (centre) and summed into one cell of the feature map (right). Watch how the vertical-edge kernel produces a strong response precisely along the vertical boundary in the input.</p>
+
+    <h3 id="convdetails">3.2 · Stride, padding, and pooling</h3>
+    <p>Three knobs control the geometry. <strong>Stride</strong> $s$ is how far the kernel jumps each step — stride 2 halves the output resolution. <strong>Padding</strong> $p$ adds a border of zeros so that output size can match input size and edge pixels aren't under-counted. <strong>Dilation</strong> spreads the kernel's taps apart to enlarge the receptive field cheaply. The output spatial size follows a single formula:</p>
+    $$o=\left\lfloor\frac{n+2p-k}{s}\right\rfloor+1$$
+    <p><span class="term">Pooling</span> downsamples a feature map by summarizing each small region — <em>max pooling</em> takes the largest value (keeping the strongest activation), <em>average pooling</em> the mean. Pooling grants a little translation invariance and shrinks computation. A convolutional layer typically also has many <span class="term">channels</span>: it applies a whole bank of kernels, each producing one feature map, and stacks them into a multi-channel output that the next layer consumes.</p>
+
+    <h3 id="resnet">3.3 · Residual networks</h3>
+    <p>Stacking many convolutional layers should help — but beyond a point, very deep plain networks got <em>worse</em>, even on training data. The culprit was optimization: gradients degraded over dozens of layers. The <span class="term">residual connection</span> (He et al., 2015) fixed this with one idea: let each block learn a <em>correction</em> to its input rather than a fresh transformation.</p>
+    $$\mathbf{y}=\mathcal{F}(\mathbf{x})+\mathbf{x}$$
+    <p>The extra additive path is a gradient highway: during backprop, the $+\mathbf{x}$ term passes the gradient straight through unchanged, so even hundred-layer networks train cleanly. This single trick — a skip connection that adds the input back — is so effective that it reappears, unchanged, inside every Transformer block in the next chapter.</p>
+
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 4 ===================== -->
+  <section class="wrap chapter" id="ch4">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 04</div>
+      <h2>Sequence Models</h2>
+    </div>
+    <p class="intro">Language, sensor streams, and robot trajectories are sequences: order matters and length varies. Recurrent networks process them one step at a time, carrying a memory forward. Their strengths and — more importantly — their weaknesses are exactly what motivated the Transformer.</p>
+
+    <h3 id="rnn">4.1 · Recurrent neural networks</h3>
+    <p>A <span class="term">recurrent neural network (RNN)</span> maintains a hidden state $\mathbf{h}_t$ that it updates at each timestep from the current input and the previous state. Crucially, the <em>same</em> weights are applied at every step — parameter sharing across time, the temporal cousin of weight sharing in CNNs.</p>
+    <div class="box def">
+      <div class="box-label">Definition — the vanilla RNN</div>
+      $$\mathbf{h}_t=\tanh\!\big(W_{hh}\mathbf{h}_{t-1}+W_{xh}\mathbf{x}_t+\mathbf{b}\big),\qquad \mathbf{y}_t=W_{hy}\mathbf{h}_t$$
+      <p>The hidden state is a running summary of everything seen so far. Training "unrolls" the recurrence across time and applies backprop to the unrolled graph — <span class="term">backpropagation through time (BPTT)</span>.</p>
+    </div>
+
+    <div class="box derivation">
+      <div class="box-label">Derivation — why gradients vanish through time</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>The gradient of a loss at step $t$ with respect to an early state $\mathbf{h}_\tau$ must travel back through every intermediate step. By the chain rule it is a <em>product</em> of Jacobians:</p>$$\frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_\tau}=\prod_{s=\tau+1}^{t}\frac{\partial \mathbf{h}_s}{\partial \mathbf{h}_{s-1}}=\prod_{s=\tau+1}^{t}\operatorname{diag}\!\big(\tanh'\big)\,W_{hh}$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>This is a repeated matrix product. If the largest singular value of $W_{hh}$ (times the activation slope) is below 1, the product shrinks geometrically toward zero; if above 1, it explodes. Over long sequences one of the two almost always happens.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Consequence:</strong> the network cannot learn dependencies more than a handful of steps apart — the gradient carrying that information has either vanished or blown up. Exploding gradients are patched with clipping; <em>vanishing</em> gradients need an architectural fix.</p></div></div>
+    </div>
+
+    <h3 id="lstm">4.2 · LSTM and GRU</h3>
+    <p>The <span class="term">Long Short-Term Memory</span> network (Hochreiter &amp; Schmidhuber, 1997) introduces a separate <em>cell state</em> $\mathbf{c}_t$ that information can travel along almost untouched, regulated by multiplicative <span class="term">gates</span> — small sigmoid networks that learn what to forget, what to write, and what to read.</p>
+    <div class="box def">
+      <div class="box-label">Definition — the LSTM cell</div>
+      <p>With $\sigma$ the sigmoid and $[\,\mathbf{h}_{t-1},\mathbf{x}_t\,]$ the concatenation of previous state and current input:</p>
+      $$\mathbf{f}_t=\sigma(W_f[\mathbf{h}_{t-1},\mathbf{x}_t]+\mathbf{b}_f)\quad\text{(forget)}$$
+      $$\mathbf{i}_t=\sigma(W_i[\cdots]+\mathbf{b}_i),\quad \mathbf{o}_t=\sigma(W_o[\cdots]+\mathbf{b}_o)\quad\text{(input, output)}$$
+      $$\tilde{\mathbf{c}}_t=\tanh(W_c[\cdots]+\mathbf{b}_c)\quad\text{(candidate)}$$
+      $$\mathbf{c}_t=\mathbf{f}_t\odot\mathbf{c}_{t-1}+\mathbf{i}_t\odot\tilde{\mathbf{c}}_t,\qquad \mathbf{h}_t=\mathbf{o}_t\odot\tanh(\mathbf{c}_t)$$
+    </div>
+    <p>The key line is the cell update. The path from $\mathbf{c}_{t-1}$ to $\mathbf{c}_t$ is <em>additive</em>, gated by $\mathbf{f}_t$ — when the forget gate stays near 1, the gradient flows back through the cell state nearly undiminished. That additive, gated highway is precisely what the bare RNN lacked. The <span class="term">GRU</span> is a streamlined cousin with two gates instead of three and no separate cell state; it often matches the LSTM with fewer parameters.</p>
+
+    <div class="box intuition">
+      <div class="box-label">Why this chapter is a bridge, not a destination</div>
+      <p>RNNs are inherently <em>sequential</em>: step $t$ cannot be computed until step $t{-}1$ finishes, so they cannot exploit modern parallel hardware over the time axis. And even LSTMs strain over very long contexts. Both problems — limited parallelism and limited range — are solved at a stroke by a mechanism that looks at the entire sequence at once and lets every position attend directly to every other. That mechanism is <strong>attention</strong>, and it is the subject of the next chapter.</p>
+    </div>
+
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 5 ===================== -->
+  <section class="wrap chapter" id="ch5">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 05 · The keystone</div>
+      <h2>Transformers &amp; Attention</h2>
+    </div>
+    <p class="intro">If you learn one architecture deeply, make it this one. The Transformer powers large language models, modern vision backbones, and the vision-language-action models this curriculum builds toward. Its engine is a single, elegant operation: attention.</p>
+
+    <h3 id="attn">5.1 · Attention from first principles</h3>
+    <p>Imagine each position in a sequence asking a question and every position offering an answer. Attention is a <em>soft, differentiable dictionary lookup</em>: a position's <span class="term">query</span> is compared against every position's <span class="term">key</span>; the better a key matches the query, the more that position's <span class="term">value</span> contributes to the output. Nothing is sequential — every position consults every other in parallel.</p>
+
+    <div class="box def">
+      <div class="box-label">Definition — queries, keys, values</div>
+      <p>From input vectors $X\in\mathbb{R}^{n\times d}$ ($n$ tokens, dimension $d$), three learned linear maps produce queries, keys, and values:</p>
+      $$Q=XW^Q,\qquad K=XW^K,\qquad V=XW^V$$
+      <p>with $W^Q,W^K\in\mathbb{R}^{d\times d_k}$ and $W^V\in\mathbb{R}^{d\times d_v}$. Each row of $Q,K,V$ is one token's query, key, and value vector.</p>
+    </div>
+
+    <div class="box def">
+      <div class="box-label">Definition — scaled dot-product attention</div>
+      <p>The attention output is a weighted average of value vectors, with weights from a softmax over scaled query–key similarities:</p>
+      $$\operatorname{Attention}(Q,K,V)=\operatorname{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right)V$$
+      <p>The matrix $A=\operatorname{softmax}(QK^\top/\sqrt{d_k})\in\mathbb{R}^{n\times n}$ holds the <em>attention weights</em>: $A_{ij}$ is how much token $i$ attends to token $j$, and every row sums to 1.</p>
+    </div>
+
+    <p>Read it left to right. $QK^\top$ is an $n\times n$ matrix of dot products — raw similarity scores between every query and every key. The softmax turns each row into a probability distribution over positions. Multiplying by $V$ then blends the value vectors according to those probabilities. The result, for each token, is a fresh representation gathered from wherever in the sequence is most relevant.</p>
+
+    <h4>Why divide by $\sqrt{d_k}$?</h4>
+    <p>That scaling factor is not cosmetic — without it, training breaks at high dimension. Here is the reason.</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the scaling factor</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Suppose the components of a query $\mathbf{q}$ and key $\mathbf{k}$ are independent, mean 0, variance 1. Their dot product is $\mathbf{q}\cdot\mathbf{k}=\sum_{i=1}^{d_k}q_i k_i$.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Each term $q_i k_i$ has mean 0 and variance 1 (variance of a product of independent unit-variance, zero-mean variables). Summing $d_k$ independent such terms:</p>$$\mathbb{E}[\mathbf{q}\cdot\mathbf{k}]=0,\qquad \operatorname{Var}(\mathbf{q}\cdot\mathbf{k})=d_k$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>So the dot products have standard deviation $\sqrt{d_k}$, which grows with dimension. Large scores push the softmax into its saturated corners, where one weight is ≈1 and the rest ≈0 — and there its gradient is almost zero. Learning stalls.</p></div></div>
+      <div class="step"><div class="s-num">4</div><div class="s-body"><p>Dividing by $\sqrt{d_k}$ rescales the scores back to unit variance, keeping the softmax in its responsive regime regardless of $d_k$. That is the whole justification.</p></div></div>
+    </div>
+
+    <h4>Seeing attention as information flow</h4>
+    <p>The formula is a pipeline. The animation below runs it end to end for one query token: the query is compared against every key to make raw <em>scores</em>, the scores are scaled and pushed through softmax into <em>weights</em>, and those weights pull a blend of the <em>value</em> vectors into the output. Pick which token is "asking," then play it through.</p>
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Attention flow — query · keys · softmax · values</h4></div>
+      <div class="demo-body">
+        <canvas id="aflowCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>query token ("who is asking?")</label><div class="seg" id="aflowSeg"><button data-q="0">The</button><button data-q="1">animal</button><button class="on" data-q="2">didn't</button><button data-q="3">cross</button><button data-q="4">it</button></div></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="aflowPlay">▸ Play flow</button></div>
+        </div>
+        <div class="readout" id="aflowReadout"></div>
+      </div>
+    </div>
+    <p>This is the famous coreference example: the query <em>"it"</em> learns to attend most strongly to <em>"animal"</em> — attention resolves what the pronoun refers to. Each head in a real Transformer runs this same pipeline with different learned projections, so different heads specialise in different relationships. Below, the static heatmap shows the full all-pairs weight matrix at once.</p>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Self-attention — watch the weight matrix form</h4></div>
+      <div class="demo-body">
+        <canvas id="attnCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>sentence</label><div class="seg" id="sentSeg"><button class="on" data-s="0">"the cat sat"</button><button data-s="1">"it ate food"</button></div></div>
+          <div class="ctrl"><label>softmax temperature / scale $\sqrt{d_k}$ <span class="val" id="tempv">2.0</span></label><input type="range" id="temp" min="0.4" max="6" step="0.1" value="2"></div>
+        </div>
+        <div class="readout" id="attnReadout"></div>
+      </div>
+    </div>
+    <p>Each cell shows how much the row token attends to the column token — darker is stronger, and every row sums to 1. Lower the scale (small $\sqrt{d_k}$) and the weights sharpen toward a hard, one-hot lookup; raise it and they flatten toward a uniform average. This single knob is exactly what the $\sqrt{d_k}$ derivation above is controlling.</p>
+
+    <h4>Self-attention vs. cross-attention</h4>
+    <p>When $Q,K,V$ all come from the <em>same</em> sequence, it is <span class="term">self-attention</span> — every token relating to its own context. When the queries come from one sequence and the keys/values from another, it is <span class="term">cross-attention</span> — the mechanism by which, say, a language decoder reads from an image encoder. Cross-attention is the literal seam where vision meets language inside a VLM.</p>
+
+    <h3 id="mha">5.2 · Multi-head attention</h3>
+    <p>One attention operation can only express one kind of relationship at a time. <span class="term">Multi-head attention</span> runs several attention operations in parallel — each with its own learned $W^Q,W^K,W^V$ — so different heads can specialise: one tracks syntax, another long-range coreference, another local adjacency.</p>
+    <div class="box def">
+      <div class="box-label">Definition — multi-head attention</div>
+      <p>With $h$ heads, each of dimension $d_k=d/h$:</p>
+      $$\text{head}_i=\operatorname{Attention}(XW_i^Q,\,XW_i^K,\,XW_i^V)$$
+      $$\operatorname{MultiHead}(X)=\operatorname{Concat}(\text{head}_1,\dots,\text{head}_h)\,W^O$$
+      <p>The heads' outputs are concatenated and mixed by a final projection $W^O\in\mathbb{R}^{d\times d}$. Splitting into $h$ heads of size $d/h$ keeps the total computation the same as a single full-size head.</p>
+    </div>
+
+    <h3 id="posenc">5.3 · Positional encoding</h3>
+    <p>Attention is <em>permutation-equivariant</em>: shuffle the input tokens and the outputs shuffle the same way — the operation itself has no notion of order. For language or trajectories, order is everything. We inject it by adding a <span class="term">positional encoding</span> to each token's embedding.</p>
+    <div class="box def">
+      <div class="box-label">Definition — sinusoidal positional encoding</div>
+      <p>For position $\text{pos}$ and embedding dimension index $i$:</p>
+      $$PE_{(\text{pos},2i)}=\sin\!\left(\frac{\text{pos}}{10000^{2i/d}}\right),\qquad PE_{(\text{pos},2i+1)}=\cos\!\left(\frac{\text{pos}}{10000^{2i/d}}\right)$$
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why sinusoids encode relative position</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Each dimension is a sinusoid of a different frequency, from very fast (small $i$) to very slow (large $i$) — like the hands and gears of a clock, together giving every position a unique fingerprint.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>The defining property: for any fixed offset $k$, the encoding at $\text{pos}+k$ is a <em>linear function</em> of the encoding at $\text{pos}$. Using the angle-addition identities,</p>$$\sin(\omega(\text{pos}+k))=\sin(\omega\,\text{pos})\cos(\omega k)+\cos(\omega\,\text{pos})\sin(\omega k)$$<p>which is a fixed rotation by angle $\omega k$ that does not depend on $\text{pos}$.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>So the model can attend to "three tokens back" with a single learned linear map applied to positional encodings — relative position becomes easy to express. This relational view is taken further by modern schemes like <strong>RoPE</strong> (rotary embeddings), which rotate the query and key vectors themselves by position-dependent angles.</p></div></div>
+    </div>
+
+    <h3 id="block">5.4 · The Transformer block</h3>
+    <p>Now assemble the parts. A Transformer block wraps multi-head attention and a position-wise feedforward network, each in a residual connection with layer normalization — exactly the residual highway from Chapter 3 and the LayerNorm from Chapter 2, reused.</p>
+    <div class="box def">
+      <div class="box-label">Definition — a (pre-norm) Transformer block</div>
+      $$\mathbf{z}=\mathbf{x}+\operatorname{MultiHead}(\operatorname{LN}(\mathbf{x}))$$
+      $$\mathbf{y}=\mathbf{z}+\operatorname{FFN}(\operatorname{LN}(\mathbf{z})),\qquad \operatorname{FFN}(\mathbf{u})=W_2\,\phi(W_1\mathbf{u}+\mathbf{b}_1)+\mathbf{b}_2$$
+      <p>The FFN expands to a wider hidden dimension (typically $4d$), applies a nonlinearity $\phi$ (usually GELU), and projects back. Attention <em>mixes information across tokens</em>; the FFN <em>processes each token independently</em>. Alternating the two, block after block, is the whole network.</p>
+    </div>
+
+    <figure>
+      <svg class="svg-fig" viewBox="0 0 720 300" role="img" aria-label="Diagram of a Transformer block">
+        <defs>
+          <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#474B66"/></marker>
+        </defs>
+        <rect x="20" y="120" width="86" height="56" rx="10" fill="#EEEEF8" stroke="#4338CA"/>
+        <text x="63" y="145" text-anchor="middle" font-family="Space Grotesk" font-size="13" fill="#2A2090">Token</text>
+        <text x="63" y="161" text-anchor="middle" font-family="Space Grotesk" font-size="13" fill="#2A2090">embed</text>
+        <rect x="150" y="120" width="74" height="56" rx="10" fill="#E4F3F1" stroke="#0E9C92"/>
+        <text x="187" y="143" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#0E9C92">+ pos.</text>
+        <text x="187" y="159" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#0E9C92">encode</text>
+        <rect x="270" y="40" width="170" height="220" rx="14" fill="none" stroke="#DBDDE8" stroke-dasharray="5 4"/>
+        <text x="355" y="32" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#878BA6">×N blocks</text>
+        <rect x="290" y="70" width="130" height="48" rx="10" fill="#FF5C49" opacity="0.12" stroke="#FF5C49"/>
+        <text x="355" y="91" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#E8412E">Multi-Head</text>
+        <text x="355" y="106" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#E8412E">Attention</text>
+        <text x="355" y="138" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#878BA6">⊕ residual + LN</text>
+        <rect x="290" y="155" width="130" height="48" rx="10" fill="#4338CA" opacity="0.12" stroke="#4338CA"/>
+        <text x="355" y="176" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#2A2090">Feedforward</text>
+        <text x="355" y="191" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#2A2090">(GELU)</text>
+        <text x="355" y="223" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#878BA6">⊕ residual + LN</text>
+        <rect x="490" y="120" width="86" height="56" rx="10" fill="#EEEEF8" stroke="#4338CA"/>
+        <text x="533" y="145" text-anchor="middle" font-family="Space Grotesk" font-size="13" fill="#2A2090">Output</text>
+        <text x="533" y="161" text-anchor="middle" font-family="Space Grotesk" font-size="13" fill="#2A2090">head</text>
+        <line x1="106" y1="148" x2="146" y2="148" stroke="#474B66" stroke-width="1.5" marker-end="url(#ah)"/>
+        <line x1="224" y1="148" x2="286" y2="148" stroke="#474B66" stroke-width="1.5" marker-end="url(#ah)"/>
+        <line x1="424" y1="148" x2="486" y2="148" stroke="#474B66" stroke-width="1.5" marker-end="url(#ah)"/>
+      </svg>
+      <figcaption><b>The Transformer.</b> Tokens are embedded, given positional information, then refined by a stack of identical blocks — each alternating cross-token mixing (attention) with per-token processing (feedforward), every sub-layer in a residual + LayerNorm wrapper.</figcaption>
+    </figure>
+
+    <h4>Encoders, decoders, and masking</h4>
+    <p>An <span class="term">encoder</span> uses full self-attention — every token sees every other — ideal for understanding a complete input (the basis of BERT and of vision Transformers). A <span class="term">decoder</span> generates one token at a time and must not peek at the future, so it uses <span class="term">masked (causal) self-attention</span>: before the softmax, all scores above the diagonal are set to $-\infty$, forcing each position to attend only to itself and earlier positions. This is the basis of GPT-style language models.</p>
+
+    <div class="box note">
+      <div class="box-label">The cost, and why it still won</div>
+      <p>Attention compares every token with every other, so its compute and memory scale as $O(n^2 d)$ in sequence length $n$ — the central bottleneck for long contexts, and the target of a huge body of "efficient attention" research. Yet Transformers dominate because they parallelize fully over the sequence, capture arbitrarily long-range relationships in one hop, and — most importantly — keep improving predictably as you scale data and parameters. That scaling behavior is what makes the large pretrained models of Layer 3 possible.</p>
+    </div>
+
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 6 ===================== -->
+  <section class="wrap chapter" id="ch6">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 06</div>
+      <h2>Representations &amp; Embeddings</h2>
+    </div>
+    <p class="intro">Networks do not operate on words, pixels, or robot joints — they operate on vectors. How raw symbols become meaningful vectors, and what structure those vectors acquire, is one of the deepest ideas in the field. It is also the common language that lets a single model fuse vision, text, and action.</p>
+
+    <h3 id="repr">6.1 · Distributed representations</h3>
+    <p>The naive way to feed a word to a network is a <span class="term">one-hot vector</span>: a length-$V$ vector (vocabulary size $V$) that is 1 at the word's index and 0 everywhere else. It is wasteful — enormous and sparse — and worse, it is <em>meaningless</em>: every pair of words is equally distant, so "cat" is no closer to "dog" than to "thermodynamics".</p>
+    <p>A <span class="term">distributed representation</span> instead maps each symbol to a dense, low-dimensional vector — an <span class="term">embedding</span> — where meaning is spread across all coordinates and similar things land near each other. These vectors are <em>learned</em>: an embedding layer is simply a lookup table $E\in\mathbb{R}^{V\times d}$ whose rows are trained by gradient descent like any other weights.</p>
+    <div class="box def">
+      <div class="box-label">Definition — an embedding layer</div>
+      <p>For a token with index $k$, its embedding is row $k$ of the matrix $E$:</p>
+      $$\mathbf{e}_k=E_{k,:}=\text{one-hot}(k)^{\top}E\;\in\mathbb{R}^d$$
+      <p>Equivalently it is the matrix product of a one-hot vector with $E$ — which is why an embedding lookup is just a (very efficient) linear layer.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — the manifold hypothesis</div>
+      <p>Real data of interest — natural images, sentences, sensor readings — does not fill its high-dimensional space uniformly. It clusters on a much lower-dimensional curved surface, a <em>manifold</em>. Good representation learning discovers coordinates <em>on</em> that manifold, so that moving smoothly in the learned space corresponds to smooth, meaningful changes in the data (a face slowly turning, a sentence's sentiment shifting).</p>
+    </div>
+
+    <h3 id="word2vec">6.2 · Word2Vec and the geometry of meaning</h3>
+    <p>The <span class="term">distributional hypothesis</span> states that words appearing in similar contexts have similar meanings — "you shall know a word by the company it keeps." <span class="term">Word2Vec</span> (Mikolov et al., 2013) turns this into a precise learning problem. Every word $w$ gets <em>two</em> learned vectors: a "center" vector $\mathbf{v}_w$ and a "context" vector $\mathbf{u}_w$. In the <em>skip-gram</em> variant the model uses a center word to predict the words around it (CBOW does the reverse).</p>
+
+    <div class="box def">
+      <div class="box-label">Definition — the skip-gram objective</div>
+      <p>The probability that word $o$ appears in the context of center word $c$ is a softmax over the whole vocabulary $V$, using the dot product of context and center vectors as the score:</p>
+      $$p(o\mid c)=\frac{\exp(\mathbf{u}_o^{\top}\mathbf{v}_c)}{\sum_{w=1}^{V}\exp(\mathbf{u}_w^{\top}\mathbf{v}_c)}$$
+      <p>Training maximises the log-probability of the true context words across the corpus — equivalently, minimises $-\sum\log p(o\mid c)$.</p>
+    </div>
+    <p>The dot product $\mathbf{u}_o^{\top}\mathbf{v}_c$ is the similarity knob: pushing it up for words that co-occur, down for those that do not, is what arranges the geometry. But that denominator sums over the <em>entire vocabulary</em> — hundreds of thousands of words — for every single training pair. It is hopelessly expensive. <span class="term">Negative sampling</span> replaces the giant softmax with a cheap binary problem.</p>
+
+    <div class="box derivation">
+      <div class="box-label">Derivation — negative sampling</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Reframe: instead of "which of all words is the context?", ask "is this <em>pair</em> real or fake?" Label real (center, context) pairs as 1 and randomly drawn pairs as 0, and model the probability a pair is real with a sigmoid of the dot product:</p>$$P(\text{real}\mid c,o)=\sigma(\mathbf{u}_o^{\top}\mathbf{v}_c)$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>For each true pair, draw $K$ "negative" words $w_j$ from a noise distribution $P_n$ (a smoothed unigram frequency). Maximise the probability the real pair is real <em>and</em> the $K$ fakes are fake. Taking negative log gives the per-pair loss:</p>$$\mathcal{L}=-\log\sigma(\mathbf{u}_o^{\top}\mathbf{v}_c)-\sum_{j=1}^{K}\log\sigma(-\mathbf{u}_{w_j}^{\top}\mathbf{v}_c)$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Now each step touches only $K{+}1$ vectors instead of $V$. The gradient for the center vector is intuitive — using $\sigma'=\sigma(1-\sigma)$, the update for the positive term is</p>$$\frac{\partial\mathcal{L}}{\partial\mathbf{v}_c}=\big(\sigma(\mathbf{u}_o^{\top}\mathbf{v}_c)-1\big)\mathbf{u}_o+\sum_{j=1}^{K}\sigma(\mathbf{u}_{w_j}^{\top}\mathbf{v}_c)\,\mathbf{u}_{w_j}$$<p>Read it: the factor $(\sigma(\cdot)-1)$ is negative for a true pair, so the step <em>pulls</em> $\mathbf{v}_c$ toward $\mathbf{u}_o$; each negative term <em>pushes</em> it away from a random word. Co-occurring words drift together, unrelated words drift apart.</p></div></div>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Why straight-line analogies fall out</div>
+      <p>Because similarity is measured by a dot product, the objective is satisfied when words sharing a context have aligned vectors. A relation like gender or pluralization shows up in roughly the <em>same</em> contexts regardless of the base word, so the displacement encoding that relation becomes a nearly constant vector. The offset "king→queen" ends up parallel to "man→woman," which is precisely why subtraction and addition of vectors recovers analogies.</p>
+    </div>
+    <p>The famous payoff: relationships become directions you can add and subtract.</p>
+    $$\mathbf{v}_{\text{king}}-\mathbf{v}_{\text{man}}+\mathbf{v}_{\text{woman}}\;\approx\;\mathbf{v}_{\text{queen}}$$
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Word arithmetic in embedding space</h4></div>
+      <div class="demo-body">
+        <canvas id="embedCanvas" width="640" height="400"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>analogy</label><div class="seg" id="analogySeg"><button class="on" data-a="0">king−man+woman</button><button data-a="1">paris−france+italy</button><button data-a="2">walk−present+past</button></div></div>
+        </div>
+        <div class="readout" id="embedReadout"></div>
+      </div>
+    </div>
+    <p>The arrows show the analogy as <em>vector addition</em> in a 2D projection of the embedding space. Subtracting one word and adding another moves you along a consistent semantic direction — gender, capital-of, or verb tense — and lands you near the answer. Closeness is usually measured by <span class="term">cosine similarity</span>, $\cos\theta=\frac{\mathbf{a}\cdot\mathbf{b}}{\lVert\mathbf{a}\rVert\lVert\mathbf{b}\rVert}$, which compares direction while ignoring magnitude.</p>
+
+    <h3 id="transfer">6.3 · Transfer learning &amp; pretrained representations</h3>
+    <p>Here is the lever that makes modern AI economical. A network trained on a huge generic task learns representations in its hidden layers that are broadly useful — edge and texture detectors in vision, syntactic and semantic features in language. <span class="term">Transfer learning</span> reuses those features for a new task with far less data:</p>
+    <ul>
+      <li><strong>Feature extraction:</strong> freeze the pretrained network, train only a small new head on top.</li>
+      <li><strong>Fine-tuning:</strong> continue training some or all of the pretrained weights on the new task, usually at a low learning rate.</li>
+      <li><strong>Parameter-efficient fine-tuning (LoRA, adapters):</strong> freeze the giant model and train only a tiny set of injected weights — the practical way to adapt billion-parameter models, and exactly how a pretrained VLM is turned into a robot policy.</li>
+    </ul>
+
+    <div class="box intuition">
+      <div class="box-label">Why this chapter matters for VLA</div>
+      <p>Embeddings are a <em>universal interface</em>. A patch of an image becomes a vector; a word becomes a vector; a robot's joint configuration becomes a vector; even a chunk of future actions can be tokenized into vectors. Once everything is a vector in a shared space, a single Transformer can attend across all of them at once. That is the architectural trick at the heart of vision-language-action models — and it only works because representation learning gives every modality a common currency.</p>
+    </div>
+
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 7 ===================== -->
+  <section class="wrap chapter" id="ch7">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 07</div>
+      <h2>Generative Models</h2>
+    </div>
+    <p class="intro">A discriminative model learns a boundary, $p(y\mid x)$. A generative model learns the data itself, $p(x)$ — enough to dream up new samples. This is not a side quest: the action decoder inside today's leading robot policies is a generative model, so the ideas here flow directly into the VLA chapters ahead.</p>
+
+    <h3 id="ae">7.1 · Autoencoders</h3>
+    <p>The simplest generative idea is compression. An <span class="term">autoencoder</span> is two networks back to back: an <em>encoder</em> $f$ squeezes input $\mathbf{x}$ into a low-dimensional <span class="term">latent code</span> $\mathbf{z}$, and a <em>decoder</em> $g$ reconstructs the input from it. Train both to minimise reconstruction error:</p>
+    $$\mathbf{z}=f(\mathbf{x}),\quad \hat{\mathbf{x}}=g(\mathbf{z}),\qquad \mathcal{L}=\lVert\mathbf{x}-\hat{\mathbf{x}}\rVert^2$$
+    <p>The bottleneck forces the network to keep only what matters, learning a compact representation. But a plain autoencoder's latent space has holes and discontinuities — sample a random $\mathbf{z}$ and the decoder usually produces garbage. To <em>generate</em>, we need the latent space to be well-behaved. That is what the VAE provides.</p>
+
+    <h3 id="vae">7.2 · Variational autoencoders</h3>
+    <p>A <span class="term">variational autoencoder (VAE)</span> treats generation as a probabilistic model: a latent $\mathbf{z}$ is drawn from a simple prior $p(\mathbf{z})=\mathcal{N}(0,I)$, and a decoder network defines $p_\theta(\mathbf{x}\mid\mathbf{z})$. We would like to maximise the data likelihood $p_\theta(\mathbf{x})=\int p_\theta(\mathbf{x}\mid\mathbf{z})p(\mathbf{z})\,d\mathbf{z}$ — but that integral is intractable. The way around it is one of the most important derivations in deep learning: the <span class="term">evidence lower bound (ELBO)</span>.</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the ELBO</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Introduce an <em>approximate posterior</em> $q_\phi(\mathbf{z}\mid\mathbf{x})$ — the encoder, outputting a distribution over latents. Start from the log-likelihood and insert $q_\phi$:</p>$$\log p_\theta(\mathbf{x})=\log\int p_\theta(\mathbf{x},\mathbf{z})\,d\mathbf{z}=\log\,\mathbb{E}_{q_\phi}\!\left[\frac{p_\theta(\mathbf{x},\mathbf{z})}{q_\phi(\mathbf{z}\mid\mathbf{x})}\right]$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Apply Jensen's inequality ($\log$ is concave, so $\log\mathbb{E}[\cdot]\ge\mathbb{E}[\log\cdot]$):</p>$$\log p_\theta(\mathbf{x})\;\ge\;\mathbb{E}_{q_\phi}\!\left[\log\frac{p_\theta(\mathbf{x},\mathbf{z})}{q_\phi(\mathbf{z}\mid\mathbf{x})}\right]\;\equiv\;\mathcal{L}_{\text{ELBO}}$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Expand $p_\theta(\mathbf{x},\mathbf{z})=p_\theta(\mathbf{x}\mid\mathbf{z})p(\mathbf{z})$ and split the log into two interpretable terms:</p>$$\mathcal{L}_{\text{ELBO}}=\underbrace{\mathbb{E}_{q_\phi}\!\big[\log p_\theta(\mathbf{x}\mid\mathbf{z})\big]}_{\text{reconstruction}}-\underbrace{D_{\mathrm{KL}}\!\big(q_\phi(\mathbf{z}\mid\mathbf{x})\,\|\,p(\mathbf{z})\big)}_{\text{regularizer}}$$</div></div>
+      <div class="step"><div class="s-num">4</div><div class="s-body"><p>Maximising the ELBO does two things at once: <strong>reconstruct</strong> the input well, and keep the encoder's latent distribution <strong>close to the prior</strong> so the space stays smooth and samplable. The KL term has a closed form when both are Gaussian, making it cheap to compute.</p></div></div>
+    </div>
+    <div class="box note">
+      <div class="box-label">The reparameterization trick</div>
+      <p>We need to backpropagate through the random sampling $\mathbf{z}\sim q_\phi$. The trick: instead of sampling $\mathbf{z}$ directly, sample noise $\boldsymbol{\epsilon}\sim\mathcal{N}(0,I)$ and compute $\mathbf{z}=\boldsymbol{\mu}_\phi(\mathbf{x})+\boldsymbol{\sigma}_\phi(\mathbf{x})\odot\boldsymbol{\epsilon}$. Now the randomness is an external input and the gradient flows cleanly through $\boldsymbol{\mu}$ and $\boldsymbol{\sigma}$.</p>
+    </div>
+
+    <h3 id="gan">7.3 · Generative adversarial networks</h3>
+    <p>A <span class="term">GAN</span> (Goodfellow et al., 2014) skips likelihoods entirely and stages a contest. A <em>generator</em> $G$ maps noise to fake samples; a <em>discriminator</em> $D$ tries to tell real data from fakes. They train against each other in a minimax game:</p>
+    $$\min_G\max_D\;\mathbb{E}_{\mathbf{x}\sim p_{\text{data}}}[\log D(\mathbf{x})]+\mathbb{E}_{\mathbf{z}\sim p_z}[\log(1-D(G(\mathbf{z})))]$$
+    <div class="box derivation">
+      <div class="box-label">Derivation — the optimal discriminator</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>For a fixed generator $G$, find the $D$ maximising the objective. Writing $p_g$ for the generator's distribution, the integrand at each point $\mathbf{x}$ is $p_{\text{data}}(\mathbf{x})\log D+p_g(\mathbf{x})\log(1-D)$.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Set the derivative with respect to $D$ to zero: $\frac{p_{\text{data}}}{D}-\frac{p_g}{1-D}=0$, which solves to</p>$$D^*(\mathbf{x})=\frac{p_{\text{data}}(\mathbf{x})}{p_{\text{data}}(\mathbf{x})+p_g(\mathbf{x})}$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Substituting $D^*$ back, the generator's objective reduces to the <em>Jensen–Shannon divergence</em> between $p_{\text{data}}$ and $p_g$, minimised exactly when $p_g=p_{\text{data}}$ — the generator has perfectly matched the data. In practice the game is delicate: it can <strong>oscillate</strong>, or suffer <strong>mode collapse</strong> where $G$ produces only a few sample types. GANs make razor-sharp images but are notoriously hard to train — which is part of why the field shifted toward diffusion.</p></div></div>
+    </div>
+
+    <h3 id="diffusion">7.4 · Diffusion models</h3>
+    <p>Diffusion models — behind most state-of-the-art image generation and the action experts in modern robot policies — turn generation into <em>iterative denoising</em>. The idea is disarmingly simple: gradually destroy data by adding noise (the easy <em>forward</em> direction), then train a network to reverse it step by step.</p>
+    <div class="box def">
+      <div class="box-label">Definition — the forward (noising) process</div>
+      <p>Start from clean data $\mathbf{x}_0$ and add Gaussian noise over $T$ steps with a schedule $\beta_t$:</p>
+      $$q(\mathbf{x}_t\mid\mathbf{x}_{t-1})=\mathcal{N}\!\big(\mathbf{x}_t;\sqrt{1-\beta_t}\,\mathbf{x}_{t-1},\,\beta_t I\big)$$
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — closed form for any timestep</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Let $\alpha_t=1-\beta_t$ and $\bar{\alpha}_t=\prod_{s=1}^{t}\alpha_s$. Because the sum of independent Gaussians is Gaussian, the many small noising steps compose into a single one — we can jump straight to step $t$ without iterating:</p>$$q(\mathbf{x}_t\mid\mathbf{x}_0)=\mathcal{N}\!\big(\mathbf{x}_t;\sqrt{\bar{\alpha}_t}\,\mathbf{x}_0,\,(1-\bar{\alpha}_t)I\big)$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Equivalently, with $\boldsymbol{\epsilon}\sim\mathcal{N}(0,I)$:</p>$$\mathbf{x}_t=\sqrt{\bar{\alpha}_t}\,\mathbf{x}_0+\sqrt{1-\bar{\alpha}_t}\,\boldsymbol{\epsilon}$$<p>As $t\to T$, $\bar{\alpha}_t\to0$ and $\mathbf{x}_T$ becomes pure noise. This closed form is what makes training efficient — we can sample any noise level in one shot.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>A network $\boldsymbol{\epsilon}_\theta(\mathbf{x}_t,t)$ is trained to <em>predict the noise</em> that was added. The objective, remarkably, simplifies to a plain mean-squared error:</p>$$\mathcal{L}=\mathbb{E}_{\mathbf{x}_0,\boldsymbol{\epsilon},t}\Big[\big\lVert\boldsymbol{\epsilon}-\boldsymbol{\epsilon}_\theta(\sqrt{\bar{\alpha}_t}\,\mathbf{x}_0+\sqrt{1-\bar{\alpha}_t}\,\boldsymbol{\epsilon},\,t)\big\rVert^2\Big]$$</div></div>
+      <div class="step"><div class="s-num">4</div><div class="s-body"><p><strong>Sampling:</strong> start from pure noise $\mathbf{x}_T\sim\mathcal{N}(0,I)$ and iteratively subtract the predicted noise, denoising from $t=T$ down to $0$, to arrive at a fresh sample. Predicting the noise is equivalent to estimating the <em>score</em> $\nabla_{\mathbf{x}}\log p(\mathbf{x})$ — the gradient field that points toward higher-density (more realistic) regions.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Diffusion — noise a distribution, then denoise it back</h4></div>
+      <div class="demo-body">
+        <canvas id="diffCanvas" width="640" height="320"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>noise level $t$ (← clean · noisy →) <span class="val" id="diffv">0</span></label><input type="range" id="difft" min="0" max="100" step="1" value="0"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="diffDenoise">▸ Denoise</button> <button class="btn ghost" id="diffReset">Reset</button></div>
+        </div>
+        <div class="readout" id="diffReadout"></div>
+      </div>
+    </div>
+    <p>Drag the slider to push the structured data (the spiral) toward formless Gaussian noise — that is the forward process, $\mathbf{x}_t=\sqrt{\bar\alpha_t}\mathbf{x}_0+\sqrt{1-\bar\alpha_t}\boldsymbol\epsilon$. Then press <strong>Denoise</strong> to watch a learned reverse process pull the noise back toward the data manifold, step by step.</p>
+
+    <h4>The same process, on a real picture</h4>
+    <p>A spiral is just 2D points; a photo is the same idea with thousands of pixel-dimensions. Here is a small picture of a dog. The forward process adds Gaussian noise to <em>every pixel</em> until the image dissolves into static; the learned reverse process predicts and removes that noise step by step until a clean dog reappears. Generation is nothing more than starting from pure static and running the reverse process.</p>
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Noise &amp; denoise an image</h4></div>
+      <div class="demo-body">
+        <canvas id="dogCanvas" width="640" height="300"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>noise level $t$ (← clean · static →) <span class="val" id="dogv">0</span></label><input type="range" id="dogt" min="0" max="100" step="1" value="0"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="dogDenoise">▸ Generate (denoise)</button> <button class="btn ghost" id="dogReset">Reset</button></div>
+        </div>
+        <div class="readout" id="dogReadout"></div>
+      </div>
+    </div>
+
+    <div class="box intuition">
+      <div class="box-label">Why more — and more varied — dog photos make better dogs</div>
+      <p>The reverse process can only undo noise toward images it has <em>seen the shape of</em> during training. Each training photo is one sample from the true distribution of "dog images," $p_{\text{data}}(\text{dog})$. The network's job is to learn the <em>score</em> — at any noisy point, which direction leads back toward realistic dogs. With only a handful of photos, it learns a spiky, overfit estimate: it can essentially only reproduce those few dogs, and noise denoises toward blurry averages or copies. Feed it thousands of <em>diverse</em> dogs — different breeds, poses, lighting — and the learned manifold fills in continuously. Now the reverse process can flow toward dogs it never saw, because it has learned the general <em>region</em> of image-space where dogs live, not just a few isolated points.</p>
+    </div>
+    <p>The demo below makes this concrete in 2D. Each dot is one dog image, reduced to two coordinates; the shaded region is the model's estimate of where "dog" lives. Increase the number of training samples and watch the estimate sharpen onto the true manifold — then generate a new sample and see whether it lands on a realistic dog or in empty space.</p>
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>More samples → a better learned distribution</h4></div>
+      <div class="demo-body">
+        <canvas id="sampCanvas" width="640" height="340"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>number of training images <span class="val" id="sampv">12</span></label><input type="range" id="sampN" min="6" max="400" step="1" value="12"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="sampGen">▸ Generate a new dog</button></div>
+        </div>
+        <div class="readout" id="sampReadout"></div>
+      </div>
+    </div>
+    <p>With few samples the density estimate is lumpy and full of gaps, so a generated point easily lands "off-manifold" — an unrealistic dog. As samples grow, the estimate converges to the smooth true distribution and generated points reliably look like real, <em>novel</em> dogs. This is the data-hunger of generative models in one picture: quality and diversity of output are bounded by the quality and diversity of what the model was shown.</p>
+
+    <h4>Flow matching — the modern successor</h4>
+    <p><span class="term">Flow matching</span> generalises the idea: instead of a fixed noising chain, learn a continuous <em>velocity field</em> that transports samples from a simple noise distribution to the data distribution along smooth paths (an ordinary differential equation). It trains more stably and samples in fewer steps than diffusion, which is why it is the action-generation method inside frontier robot policies such as π0. When you reach the VLA chapters, the "action expert" producing a robot's continuous motions is doing exactly this — flow matching over action trajectories, conditioned on what the robot sees and is told.</p>
+
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Family</th><th>Models</th><th>Strength</th><th>Weakness</th></tr></thead>
+      <tbody>
+        <tr><td>Autoencoder / VAE</td><td>$p(x)$ via latent + decoder</td><td>Stable, principled latent space</td><td>Blurrier samples</td></tr>
+        <tr><td>GAN</td><td>Adversarial $G$ vs $D$</td><td>Sharp, fast sampling</td><td>Unstable; mode collapse</td></tr>
+        <tr><td>Diffusion</td><td>Iterative denoising</td><td>High quality, stable training</td><td>Many sampling steps (slow)</td></tr>
+        <tr><td>Flow matching</td><td>Learned velocity field / ODE</td><td>Stable, few-step sampling</td><td>Newer, less tooling</td></tr>
+      </tbody>
+    </table></div>
+
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 8 ===================== -->
+  <section class="wrap chapter" id="ch8">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 08</div>
+      <h2>Self-Supervised Learning</h2>
+    </div>
+    <p class="intro">Labels are scarce and expensive; raw data is infinite and free. Self-supervised learning extracts a training signal from the structure of the data itself — and it produced CLIP, the model that taught machines to connect images and language, and the visual backbone beneath today's vision-language-action systems.</p>
+
+    <h3>8.1 · Learning without labels</h3>
+    <p>The core move is to invent a <span class="term">pretext task</span> whose "labels" come for free from the data. Hide part of the input and predict it from the rest. Two landmark examples define entire modeling families:</p>
+    <ul>
+      <li><strong>Masked language modeling (BERT):</strong> blank out random words in a sentence and train the model to fill them in. Predicting the missing word forces a deep understanding of context — and the labels are simply the original words.</li>
+      <li><strong>Masked image modeling (MAE):</strong> hide most patches of an image and reconstruct them. The model must learn what objects and scenes look like to inpaint the gaps.</li>
+    </ul>
+    <p>After pretraining on a mountain of unlabeled data, the learned representations transfer (Chapter 6) to downstream tasks with only a small labeled set — the recipe behind nearly every large model today.</p>
+
+    <h3 id="contrastive">8.2 · Contrastive learning</h3>
+    <p>A second family learns by <em>comparison</em>. Pull representations of related things together; push unrelated things apart. Two augmented views of the same image should map to nearby vectors (a <span class="term">positive pair</span>); views of different images should map far apart (<span class="term">negatives</span>). The standard objective is <span class="term">InfoNCE</span>.</p>
+    <div class="box def">
+      <div class="box-label">Definition — the InfoNCE loss</div>
+      <p>For an anchor $\mathbf{z}_i$ with one positive $\mathbf{z}_j$ among $N$ candidates, using similarity $\text{sim}$ (cosine) and temperature $\tau$:</p>
+      $$\mathcal{L}_{i}=-\log\frac{\exp(\text{sim}(\mathbf{z}_i,\mathbf{z}_j)/\tau)}{\sum_{k=1}^{N}\exp(\text{sim}(\mathbf{z}_i,\mathbf{z}_k)/\tau)}$$
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — it's a softmax classifier in disguise</div>
+      <p>Look closely: InfoNCE is exactly cross-entropy over a softmax (Chapter 1) whose "classes" are the candidate items, with the true class being the positive. Minimising it means: among all candidates, assign the highest similarity to the genuine match. The temperature $\tau$ controls how sharply it concentrates on the hardest negatives. <strong>SimCLR</strong> applied this to images using aggressive data augmentations to manufacture positive pairs, and matched supervised performance with no labels.</p>
+    </div>
+
+    <h3 id="clip">8.3 · CLIP — bridging vision and language</h3>
+    <p><span class="term">CLIP</span> (Radford et al., 2021) applies contrastive learning <em>across modalities</em>. Train an image encoder and a text encoder jointly on hundreds of millions of (image, caption) pairs scraped from the web. The objective: the embedding of an image and the embedding of its true caption should be close, while mismatched pairs are pushed apart — a symmetric InfoNCE over a batch, contrasting images against texts and texts against images.</p>
+    <p>The result is a <strong>shared embedding space</strong> where a picture of a dog and the words "a photo of a dog" land in nearly the same place. This unlocks <span class="term">zero-shot classification</span>: to classify an image among arbitrary categories, embed the candidate labels as text, embed the image, and pick the nearest — no task-specific training required.</p>
+
+    <div class="box note">
+      <div class="box-label">The thread that ties the curriculum together</div>
+      <p>CLIP-style training gives vision and language a <em>common coordinate system</em>. A vision-language model (your next layer) is built on exactly this: a visual encoder whose patches live in the same space the language model reasons over. A vision-language-<em>action</em> model adds a third axis — actions, tokenized or generated by the diffusion/flow-matching decoder of Chapter 7 — into that same shared space, so a single Transformer can read pixels, parse an instruction, and emit motor commands in one forward pass. Every idea on this page reappears there: attention fuses the modalities, embeddings are the currency, contrastive pretraining builds the perception, and a generative head produces the actions.</p>
+    </div>
+
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 9 ===================== -->
+  <section class="wrap chapter" id="ch9">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 09 · Where it all converges</div>
+      <h2>Vision-Language-Action Models</h2>
+    </div>
+    <p class="intro">Everything on this page was a means to an end. A <span class="term">vision-language-action (VLA)</span> model is a single neural network that looks at the world through cameras, reads a natural-language instruction, and outputs motor commands for a robot. It is the most complete demonstration of why the Transformer matters — and it is built, almost entirely, from the parts you have just studied.</p>
+
+    <h3 id="vla-from-attention">9.1 · How VLA descends from attention</h3>
+    <p>The conceptual leap that made VLAs possible is the one from Chapter 5: <strong>attention does not care what its tokens represent.</strong> Self-attention is a general mechanism for letting a set of vectors exchange information based on content. It was invented for words, but nothing about it is linguistic. If you can turn something — an image patch, a word, a robot's joint angles, a chunk of future motion — into a vector, attention can relate it to everything else in the sequence.</p>
+    <div class="box intuition">
+      <div class="box-label">The single idea behind VLA</div>
+      <p>Tokenize every modality into the <em>same</em> embedding space (Chapter 6), concatenate them into one sequence, and let a Transformer's attention (Chapter 5) fuse them. Vision tokens, language tokens, and action tokens sit side by side; every layer of attention lets the instruction reshape how the model reads the image, and lets the image ground what the instruction means. "Pick up the <em>red</em> block" works because the word "red" can attend to the red pixels. That cross-modal attention — the same operation, now spanning senses — <em>is</em> the VLA.</p>
+    </div>
+    <p>This is why VLAs arrived on the heels of large language models rather than before them. The recipe is: take a <span class="term">vision-language model (VLM)</span> already pretrained on internet-scale image–text data — which gives it broad visual and semantic knowledge via exactly the contrastive and self-supervised methods of Chapter 8 — and teach it a new "language": actions. RT-2 (2023) made the point vividly by transferring web knowledge directly into robotic control, so a robot could act on concepts it had only ever read about.</p>
+
+    <h3 id="vla-anatomy">9.2 · Anatomy of a VLA</h3>
+    <p>Formally, a VLA is a policy $\pi_\theta(\mathbf{a}\mid o,\ell)$ that maps an observation $o$ (one or more camera images, sometimes proprioceptive state) and a language instruction $\ell$ to an action $\mathbf{a}$ — usually an <em>action chunk</em>, a short sequence of future control steps predicted at once for smoother motion. Three components, each a direct lift from earlier chapters:</p>
+
+    <figure>
+      <svg class="svg-fig" viewBox="0 0 720 300" role="img" aria-label="VLA architecture pipeline">
+        <defs><marker id="vah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#474B66"/></marker></defs>
+        <!-- inputs -->
+        <rect x="16" y="36" width="120" height="48" rx="9" fill="#E4F3F1" stroke="#0E9C92"/><text x="76" y="56" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#0E9C92">camera image</text><text x="76" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#0E9C92">→ ViT / CLIP</text>
+        <rect x="16" y="126" width="120" height="48" rx="9" fill="#EEEEF8" stroke="#4338CA"/><text x="76" y="146" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#2A2090">instruction</text><text x="76" y="162" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#2A2090">→ tokenizer</text>
+        <rect x="16" y="216" width="120" height="48" rx="9" fill="#FBF1DC" stroke="#C98314"/><text x="76" y="236" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#9a6a12">robot state</text><text x="76" y="252" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#9a6a12">→ embed</text>
+        <!-- shared token sequence -->
+        <rect x="190" y="96" width="120" height="108" rx="9" fill="#fff" stroke="#DBDDE8" stroke-dasharray="5 4"/><text x="250" y="86" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#878BA6">one token sequence</text>
+        <g font-family="JetBrains Mono" font-size="10" fill="#474B66" text-anchor="middle">
+          <rect x="202" y="110" width="40" height="16" rx="3" fill="#E4F3F1"/><text x="222" y="122">img</text>
+          <rect x="246" y="110" width="40" height="16" rx="3" fill="#E4F3F1"/><text x="266" y="122">img</text>
+          <rect x="202" y="132" width="40" height="16" rx="3" fill="#EEEEF8"/><text x="222" y="144">"red"</text>
+          <rect x="246" y="132" width="40" height="16" rx="3" fill="#EEEEF8"/><text x="266" y="144">"block"</text>
+          <rect x="224" y="154" width="40" height="16" rx="3" fill="#FBF1DC"/><text x="244" y="166">state</text>
+        </g>
+        <rect x="360" y="96" width="130" height="108" rx="12" fill="#FF5C49" opacity="0.12" stroke="#FF5C49"/><text x="425" y="142" text-anchor="middle" font-family="Space Grotesk" font-size="13" fill="#E8412E" font-weight="600">Transformer</text><text x="425" y="160" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#E8412E">attention fuses</text>
+        <rect x="540" y="96" width="120" height="108" rx="12" fill="#4338CA" opacity="0.12" stroke="#4338CA"/><text x="600" y="138" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#2A2090">action expert</text><text x="600" y="156" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#2A2090">diffusion / flow</text>
+        <text x="600" y="232" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#474B66">→ action chunk → robot</text>
+        <line x1="136" y1="60" x2="186" y2="120" stroke="#474B66" stroke-width="1.3" marker-end="url(#vah)"/>
+        <line x1="136" y1="150" x2="186" y2="150" stroke="#474B66" stroke-width="1.3" marker-end="url(#vah)"/>
+        <line x1="136" y1="240" x2="186" y2="180" stroke="#474B66" stroke-width="1.3" marker-end="url(#vah)"/>
+        <line x1="310" y1="150" x2="356" y2="150" stroke="#474B66" stroke-width="1.5" marker-end="url(#vah)"/>
+        <line x1="490" y1="150" x2="536" y2="150" stroke="#474B66" stroke-width="1.5" marker-end="url(#vah)"/>
+        <line x1="600" y1="204" x2="600" y2="216" stroke="#474B66" stroke-width="1.5" marker-end="url(#vah)"/>
+      </svg>
+      <figcaption><b>One forward pass.</b> Images become patch tokens (a Vision Transformer / CLIP encoder), the instruction becomes word tokens, robot state becomes a token — all in a shared space. A Transformer fuses them with attention, and an action decoder turns the result into continuous motor commands.</figcaption>
+    </figure>
+
+    <ul>
+      <li><strong>The vision encoder</strong> — a Vision Transformer or CLIP-style backbone (Chapters 5, 8) cuts each image into patches and embeds them as tokens. Pretraining gave it rich, transferable visual features (Chapter 6).</li>
+      <li><strong>The language model</strong> — a Transformer (Chapter 5) that reads the instruction and reasons over the fused sequence. This is where the model's "common sense" lives.</li>
+      <li><strong>The action decoder</strong> — turns the fused representation into actions, in one of two ways below.</li>
+    </ul>
+
+    <h4>Two ways to speak "action"</h4>
+    <p>How do you make a Transformer output a continuous motor command? Two families, both straight from this course:</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Approach</th><th>How actions are produced</th><th>Roots in Layer 2</th><th>Models</th></tr></thead>
+      <tbody>
+        <tr><td>Discrete action tokens</td><td>Bin each continuous dimension into a vocabulary of "action words"; predict them autoregressively like text</td><td>Softmax + cross-entropy (Ch 1); next-token Transformer (Ch 5)</td><td>RT-2, OpenVLA</td></tr>
+        <tr><td>Continuous action expert</td><td>A diffusion/flow-matching head generates the action chunk conditioned on the fused tokens</td><td>Diffusion &amp; flow matching (Ch 7)</td><td>Octo, π0, GR00T&nbsp;N1, SmolVLA</td></tr>
+      </tbody>
+    </table></div>
+    <p>The continuous route has become dominant for dexterous control because flow matching (Chapter 7) produces smooth, high-frequency trajectories. In a model like π0, a pretrained VLM does the seeing and understanding while a flow-matching "action expert" generates the motion — the exact generative machinery you met denoising a spiral and a dog, now denoising <em>action trajectories</em> conditioned on pixels and words.</p>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>A VLA forward pass — "pick up the red block"</h4></div>
+      <div class="demo-body">
+        <canvas id="vlaCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="vlaPlay">▸ Run the policy</button> <button class="btn ghost" id="vlaReset">Reset</button></div>
+        </div>
+        <div class="readout" id="vlaReadout"></div>
+      </div>
+    </div>
+    <p>Watch the instruction token "red" send strong attention to the red patches of the image, the fused representation flow into the action expert, and a smooth action chunk emerge as the gripper's path. Every arrow in this animation is an operation defined earlier in this textbook.</p>
+
+    <h3 id="vla-systems">9.3 · Fast and slow: dual-system designs</h3>
+    <p>A robot must react in milliseconds, but a big VLM that reasons about "the red block, behind the cup, that I was asked to move" is slow. The leading designs borrow the <em>System 1 / System 2</em> idea from cognitive science: a large, slow vision-language model (System 2) sets intent at low frequency, while a small, fast policy (System 1) produces high-frequency motor commands. Figure's Helix splits a ~7B-parameter reasoning VLM from a fast action head; π0-style hierarchies and NVIDIA's GR00T N1 pair a ~2B VLM with a high-rate diffusion action expert. The constraint is real: on-device, real-time control forces the action-producing part to stay small — which is why so much VLA research is about <em>efficiency</em>, not just capability.</p>
+
+    <h3 id="vla-data">9.4 · Data, generalization, and the road on</h3>
+    <p>VLAs are trained by <span class="term">imitation learning</span> — behavior cloning from teleoperated demonstrations — typically on large cross-robot datasets such as <span class="term">Open X-Embodiment</span>, which pools demonstrations across many robot types so one policy can transfer across embodiments. Crucially, models are often <em>co-trained</em> on ordinary web image–text data alongside robot data, so they retain the semantic breadth of a VLM instead of forgetting it. This is the same transfer-learning logic from Chapter 6: start from broad pretrained knowledge, then adapt with parameter-efficient fine-tuning.</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Milestone</th><th>Year</th><th>Contribution</th></tr></thead>
+      <tbody>
+        <tr><td>RT-1</td><td>2022</td><td>Robotics Transformer — tokenized control at scale</td></tr>
+        <tr><td>PaLM-E / RT-2</td><td>2023</td><td>Fuse a large VLM with control; web knowledge transfers to robots</td></tr>
+        <tr><td>Octo / OpenVLA</td><td>2024</td><td>Open generalist policies; diffusion heads and open weights</td></tr>
+        <tr><td>π0, π0.5</td><td>2024–25</td><td>Flow-matching action expert; open-world generalization</td></tr>
+        <tr><td>GR00T N1, Helix</td><td>2025</td><td>Humanoid foundation models; fast/slow dual-system control</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="box intuition">
+      <div class="box-label">The whole textbook, in one sentence</div>
+      <p>A VLA tokenizes images, words, and actions into a shared embedding space (<strong>Ch 6</strong>), built on visual and linguistic features learned by self-supervised and contrastive pretraining (<strong>Ch 8</strong>) using convolutional and Transformer encoders (<strong>Ch 3, 5</strong>); a Transformer fuses them with attention (<strong>Ch 5</strong>); a diffusion or flow-matching head generates the motion (<strong>Ch 7</strong>); and the entire thing is trained by gradient descent and backpropagation of a likelihood-based loss (<strong>Ch 1, 2</strong>). Nothing in a frontier robot policy is outside what you now understand.</p>
+    </div>
+
+    <div class="endcard">
+      <div class="eyebrow">You've finished Layer 2</div>
+      <h3>Where this goes next</h3>
+      <p>You now hold every primitive the rest of the roadmap assumes. <strong>Layer 3</strong> stacks these into vision backbones (ViT, DINO), large language models, and the vision-language models that fuse them. <strong>Layer 4</strong> adds decision-making — reinforcement and imitation learning. <strong>Layers 5–6</strong> bring in robotics fundamentals and the full VLA systems sketched in this chapter, where attention, embeddings, diffusion, and contrastive pretraining converge into a single policy that sees, understands, and acts.</p>
+      <p style="margin-top:18px;font-family:var(--mono);font-size:13px;color:#9A9DD0">Attention → understanding · Embeddings → the shared interface · Generative heads → action.</p>
+    </div>
+
+    <footer class="page">An interactive textbook for the Robotics &amp; VLA curriculum · Layer 2 of 6 · Built to be read with a pen in hand.</footer>
+  </section>
+
+</div><!-- /content -->
+
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  /* ---------- KaTeX (robust) ---------- */
+  window.__doRender=function(el){
+    if(!window.renderMathInElement) return;
+    renderMathInElement(el||document.body,{
+      delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'\\[',right:'\\]',display:true},
+        {left:'$',right:'$',display:false},
+        {left:'\\(',right:'\\)',display:false}
+      ],
+      throwOnError:false,
+      macros:{"\\R":"\\mathbb{R}","\\E":"\\mathbb{E}"}
+    });
+  };
+  // Render now if KaTeX already loaded; otherwise the script onload will trigger it.
+  if(window.renderMathInElement){ window.__doRender(); } else { window.__doRender_pending=true; }
+
+  var C={ink:'#14162A',inkSoft:'#474B66',faint:'#878BA6',indigo:'#4338CA',indigoDeep:'#2A2090',
+         coral:'#FF5C49',coralDeep:'#E8412E',teal:'#0E9C92',line:'#DBDDE8',wash:'#EEEEF8',paper:'#FBFBFD'};
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var DISP='600 13px "Space Grotesk",sans-serif', MONO='12px "JetBrains Mono",monospace';
+
+  /* ---------- responsive canvas helper ---------- */
+  var redraws=[];
+  function fit(cv,aspect){
+    var dpr=window.devicePixelRatio||1;
+    cv.style.width='100%';
+    var w=cv.clientWidth||cv.parentElement.clientWidth;
+    var h=Math.round(w/aspect);
+    cv.style.height=h+'px';
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+    var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {w:w,h:h,ctx:ctx};
+  }
+  function register(fn){ redraws.push(fn); fn(); }
+  window.addEventListener('resize',function(){clearTimeout(window._rt);window._rt=setTimeout(function(){redraws.forEach(function(f){f();});},160);});
+
+  /* ================= NAV: progress, scrollspy, mobile ================= */
+  var prog=document.getElementById('progress');
+  var chapLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .chap'));
+  var chapSecs=chapLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  var subLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .subs a'));
+  var subTargets=subLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  function onScroll(){
+    var st=window.scrollY||document.documentElement.scrollTop;
+    var docH=document.documentElement.scrollHeight-window.innerHeight;
+    prog.style.width=(docH>0?(st/docH*100):0)+'%';
+    var active=-1;
+    for(var i=0;i<chapSecs.length;i++){ if(chapSecs[i]&&chapSecs[i].offsetTop-140<=st) active=i; }
+    chapLinks.forEach(function(a,i){a.classList.toggle('active',i===active);});
+    var sa=-1;
+    for(var j=0;j<subTargets.length;j++){ if(subTargets[j]&&subTargets[j].offsetTop-160<=st) sa=j; }
+    subLinks.forEach(function(a,i){a.classList.toggle('active',i===sa);});
+  }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+
+  var sidebar=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),menuBtn=document.getElementById('menuBtn');
+  function closeMenu(){sidebar.classList.remove('open');scrim.classList.remove('show');}
+  menuBtn.addEventListener('click',function(){sidebar.classList.toggle('open');scrim.classList.toggle('show');});
+  scrim.addEventListener('click',closeMenu);
+  document.querySelectorAll('.toc a').forEach(function(a){a.addEventListener('click',closeMenu);});
+
+  /* ================= HERO animation ================= */
+  (function(){
+    var cv=document.getElementById('heroCanvas'); if(!cv) return;
+    var ctx,W,H;
+    var layers=[4,6,6,3], nodes=[], pulses=[];
+    function build(){
+      var hdr=cv.parentElement, dpr=window.devicePixelRatio||1;
+      W=hdr.clientWidth; H=hdr.clientHeight;
+      cv.width=W*dpr; cv.height=H*dpr; ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+      nodes=[]; var L=layers.length, padX=W*0.30, gapX=(W-padX*0.5-W*0.06)/(L-1);
+      for(var l=0;l<L;l++){ var n=layers[l],col=[]; for(var i=0;i<n;i++){ col.push({x:W*0.42+l*gapX, y:H*0.5+(i-(n-1)/2)*Math.min(64,H/9)}); } nodes.push(col); }
+      pulses=[]; for(var p=0;p<22;p++) pulses.push({l:Math.floor(Math.random()*(L-1)),from:0,to:0,t:Math.random(),seg:false});
+      pulses.forEach(function(pu){pu.from=Math.floor(Math.random()*layers[pu.l]);pu.to=Math.floor(Math.random()*layers[pu.l+1]);});
+    }
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      for(var l=0;l<nodes.length-1;l++)for(var i=0;i<nodes[l].length;i++)for(var j=0;j<nodes[l+1].length;j++){
+        ctx.strokeStyle='rgba(150,150,230,0.10)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(nodes[l][i].x,nodes[l][i].y);ctx.lineTo(nodes[l+1][j].x,nodes[l+1][j].y);ctx.stroke();
+      }
+      pulses.forEach(function(pu){
+        var a=nodes[pu.l][pu.from],b=nodes[pu.l+1][pu.to];
+        var x=a.x+(b.x-a.x)*pu.t,y=a.y+(b.y-a.y)*pu.t;
+        var g=ctx.createRadialGradient(x,y,0,x,y,6);g.addColorStop(0,'rgba(255,140,126,0.95)');g.addColorStop(1,'rgba(255,92,73,0)');
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,6,0,7);ctx.fill();
+        if(!REDUCE){pu.t+=0.012; if(pu.t>=1){pu.t=0;pu.l=Math.floor(Math.random()*(nodes.length-1));pu.from=Math.floor(Math.random()*layers[pu.l]);pu.to=Math.floor(Math.random()*layers[pu.l+1]);}}
+      });
+      for(var L2=0;L2<nodes.length;L2++)for(var k=0;k<nodes[L2].length;k++){
+        var nd=nodes[L2][k];
+        ctx.fillStyle='rgba(255,255,255,0.92)';ctx.beginPath();ctx.arc(nd.x,nd.y,4.5,0,7);ctx.fill();
+        ctx.strokeStyle='rgba(185,178,255,0.6)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(nd.x,nd.y,7.5,0,7);ctx.stroke();
+      }
+    }
+    build();
+    if(REDUCE){draw();} else {(function loop(){draw();requestAnimationFrame(loop);})();}
+    window.addEventListener('resize',function(){clearTimeout(window._hr);window._hr=setTimeout(build,160);});
+  })();
+
+  /* ================= 1. NEURON decision boundary ================= */
+  (function(){
+    var cv=document.getElementById('neuronCanvas'); if(!cv) return;
+    var w1=document.getElementById('w1'),w2=document.getElementById('w2'),bb=document.getElementById('bb');
+    var w1v=document.getElementById('w1v'),w2v=document.getElementById('w2v'),bv=document.getElementById('bv');
+    var rd=document.getElementById('neuronReadout');
+    var data='and';
+    var pts=[{x:0,y:0},{x:0,y:1},{x:1,y:0},{x:1,y:1}];
+    function label(p){ if(data==='and')return (p.x&&p.y)?1:0; if(data==='or')return (p.x||p.y)?1:0; return (p.x^p.y)?1:0; }
+    var S,W,H,ctx; var dom={a:-0.4,b:1.4};
+    function X(v){return (v-dom.a)/(dom.b-dom.a)*W;}
+    function Y(v){return H-(v-dom.a)/(dom.b-dom.a)*H;}
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;
+      var A=+w1.value,B=+w2.value,b=+bb.value;
+      w1v.textContent=A.toFixed(2);w2v.textContent=B.toFixed(2);bv.textContent=b.toFixed(2);
+      ctx.clearRect(0,0,W,H);
+      // shade half-planes by sampling coarse grid
+      var step=14;
+      for(var px=0;px<W;px+=step)for(var py=0;py<H;py+=step){
+        var vx=dom.a+(px/W)*(dom.b-dom.a), vy=dom.a+((H-py)/H)*(dom.b-dom.a);
+        var z=A*vx+B*vy+b;
+        ctx.fillStyle = z>=0 ? 'rgba(67,56,202,0.07)' : 'rgba(14,156,146,0.06)';
+        ctx.fillRect(px,py,step,step);
+      }
+      // boundary line A x + B y + b = 0
+      ctx.strokeStyle=C.coral;ctx.lineWidth=2.5;ctx.beginPath();
+      if(Math.abs(B)>1e-4){ var x1=dom.a,x2=dom.b; ctx.moveTo(X(x1),Y(-(A*x1+b)/B));ctx.lineTo(X(x2),Y(-(A*x2+b)/B)); }
+      else if(Math.abs(A)>1e-4){ var xv=-b/A; ctx.moveTo(X(xv),0);ctx.lineTo(X(xv),H); }
+      ctx.stroke();
+      // points
+      var correct=0;
+      pts.forEach(function(p){
+        var t=label(p), z=A*p.x+B*p.y+b, pred=z>=0?1:0; if(pred===t)correct++;
+        var cx=X(p.x),cy=Y(p.y);
+        ctx.beginPath();ctx.arc(cx,cy,11,0,7);
+        ctx.fillStyle = t===1 ? C.indigo : C.teal; ctx.fill();
+        ctx.lineWidth=3; ctx.strokeStyle = pred===t ? '#fff' : C.coralDeep; ctx.stroke();
+        ctx.fillStyle='#fff';ctx.font='600 12px "JetBrains Mono"';ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(t,cx,cy);
+      });
+      ctx.fillStyle=C.faint;ctx.font=MONO;ctx.textAlign='left';ctx.textBaseline='alphabetic';
+      ctx.fillText('class 1',12,18);ctx.fillStyle=C.indigo;ctx.fillRect(64,9,10,10);
+      ctx.fillStyle=C.faint;ctx.fillText('class 0',12,36);ctx.fillStyle=C.teal;ctx.fillRect(64,27,10,10);
+      var ok=correct===4;
+      rd.innerHTML='Accuracy: <b>'+correct+'/4</b>. '+(ok?'This dataset is linearly separable — one line solves it.':(data==='xor'?'<b>XOR is not linearly separable</b> — no single line can ever score 4/4. You need a hidden layer.':'Keep adjusting — a perfect line exists for this dataset.'));
+    }
+    [w1,w2,bb].forEach(function(s){s.addEventListener('input',draw);});
+    document.querySelectorAll('#dataSeg button').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        document.querySelectorAll('#dataSeg button').forEach(function(b){b.classList.remove('on');});
+        btn.classList.add('on');data=btn.dataset.d;
+        if(data==='or'){w1.value=1;w2.value=1;bb.value=-0.5;} else if(data==='and'){w1.value=1;w2.value=1;bb.value=-1.5;}
+        draw();
+      });
+    });
+    register(draw);
+  })();
+
+  /* ================= 2. ACTIVATION explorer ================= */
+  (function(){
+    var cv=document.getElementById('actCanvas'); if(!cv) return;
+    function erf(x){var s=x<0?-1:1;x=Math.abs(x);var t=1/(1+0.3275911*x);
+      var y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);return s*y;}
+    var Phi=function(z){return 0.5*(1+erf(z/Math.SQRT2));}, pdf=function(z){return Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);};
+    var ACT={
+      sigmoid:{f:function(z){return 1/(1+Math.exp(-z));},d:function(z){var s=1/(1+Math.exp(-z));return s*(1-s);},name:'Sigmoid'},
+      tanh:{f:function(z){return Math.tanh(z);},d:function(z){var t=Math.tanh(z);return 1-t*t;},name:'Tanh'},
+      relu:{f:function(z){return Math.max(0,z);},d:function(z){return z>0?1:0;},name:'ReLU'},
+      leaky:{f:function(z){return z>0?z:0.1*z;},d:function(z){return z>0?1:0.1;},name:'Leaky ReLU (α=0.1)'},
+      gelu:{f:function(z){return z*Phi(z);},d:function(z){return Phi(z)+z*pdf(z);},name:'GELU'}
+    };
+    var cur='sigmoid', zpt=document.getElementById('zpt'), zv=document.getElementById('zv'), rd=document.getElementById('actReadout');
+    var zmin=-6,zmax=6,ymin=-1.5,ymax=3.2,W,H,ctx,S;
+    function PX(z){return (z-zmin)/(zmax-zmin)*W;}
+    function PY(y){return H-(y-ymin)/(ymax-ymin)*H;}
+    function plot(fn,color,wid){ctx.strokeStyle=color;ctx.lineWidth=wid;ctx.beginPath();var first=true;
+      for(var px=0;px<=W;px+=2){var z=zmin+(px/W)*(zmax-zmin),y=fn(z); if(y<ymin-2)y=ymin-2; if(y>ymax+2)y=ymax+2;
+        if(first){ctx.moveTo(px,PY(y));first=false;}else ctx.lineTo(px,PY(y));} ctx.stroke();}
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      // axes
+      ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,PY(0));ctx.lineTo(W,PY(0));ctx.moveTo(PX(0),0);ctx.lineTo(PX(0),H);ctx.stroke();
+      var a=ACT[cur];
+      plot(a.d,'rgba(255,92,73,0.85)',2);      // derivative (coral)
+      plot(a.f,C.indigo,2.6);                   // function (indigo)
+      var z=+zpt.value; zv.textContent=z.toFixed(2);
+      var fy=a.f(z),dy=a.d(z);
+      // marker + tangent
+      ctx.strokeStyle='rgba(20,22,42,0.25)';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(PX(z),0);ctx.lineTo(PX(z),H);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=C.indigoDeep;ctx.beginPath();ctx.arc(PX(z),PY(fy),5,0,7);ctx.fill();
+      ctx.fillStyle=C.coralDeep;ctx.beginPath();ctx.arc(PX(z),PY(dy),5,0,7);ctx.fill();
+      // legend
+      ctx.font=DISP;ctx.textAlign='left';
+      ctx.fillStyle=C.indigo;ctx.fillText('φ(z) — '+a.name,14,22);
+      ctx.fillStyle=C.coralDeep;ctx.fillText("φ'(z) — gradient",14,42);
+      rd.innerHTML='At z = <b>'+z.toFixed(2)+'</b>:  φ(z) = <b>'+fy.toFixed(3)+'</b>,  gradient φ\'(z) = <b>'+dy.toFixed(3)+'</b>.  '+
+        (dy<0.05?'The gradient here is nearly zero — a saturated unit barely learns.':'A healthy gradient flows through this unit.');
+    }
+    zpt.addEventListener('input',draw);
+    document.querySelectorAll('#actSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#actSeg button').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');cur=btn.dataset.f;draw();});});
+    register(draw);
+  })();
+
+  /* ================= 3. OPTIMIZER playground ================= */
+  (function(){
+    var cv=document.getElementById('optCanvas'); if(!cv) return;
+    var opt='sgd', lr=document.getElementById('lr'), lrv=document.getElementById('lrv'), rd=document.getElementById('optReadout');
+    var dom={xa:-5,xb:5,ya:-2.2,yb:2.2},W,H,ctx,S, start={x:-4.5,y:1.7}, path=[], anim=null;
+    function f(x,y){return 0.04*x*x+3*y*y;}
+    function grad(x,y){return [0.08*x,6*y];}
+    function PX(x){return (x-dom.xa)/(dom.xb-dom.xa)*W;}
+    function PY(y){return H-(y-dom.ya)/(dom.yb-dom.ya)*H;}
+    function bg(){
+      var step=10,maxL=f(dom.xa,dom.yb);
+      for(var px=0;px<W;px+=step)for(var py=0;py<H;py+=step){
+        var x=dom.xa+(px/W)*(dom.xb-dom.xa),y=dom.ya+((H-py)/H)*(dom.yb-dom.ya);
+        var l=f(x,y)/maxL, t=Math.pow(l,0.45);
+        var r=Math.round(238-t*70),g=Math.round(238-t*70),b=Math.round(248-t*20);
+        ctx.fillStyle='rgb('+r+','+g+','+b+')';ctx.fillRect(px,py,step,step);
+      }
+      // contour rings
+      ctx.strokeStyle='rgba(67,56,202,0.18)';ctx.lineWidth=1;
+      [0.5,2,5,10,20,40].forEach(function(lev){
+        ctx.beginPath();
+        for(var a=0;a<=6.3;a+=0.05){var x=Math.sqrt(lev/0.04)*Math.cos(a),y=Math.sqrt(lev/3)*Math.sin(a);
+          var sx=PX(x),sy=PY(y); if(a===0)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);} ctx.closePath();ctx.stroke();
+      });
+      ctx.fillStyle=C.teal;ctx.beginPath();ctx.arc(PX(0),PY(0),5,0,7);ctx.fill();
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.textAlign='center';ctx.fillText('minimum',PX(0),PY(0)+18);
+    }
+    function drawPath(){
+      bg();
+      if(path.length){
+        ctx.strokeStyle=C.coral;ctx.lineWidth=2;ctx.beginPath();
+        path.forEach(function(p,i){var sx=PX(p.x),sy=PY(p.y); if(i===0)ctx.moveTo(sx,sy);else ctx.lineTo(sx,sy);});ctx.stroke();
+        path.forEach(function(p){ctx.fillStyle='rgba(232,65,46,0.6)';ctx.beginPath();ctx.arc(PX(p.x),PY(p.y),2.5,0,7);ctx.fill();});
+        var last=path[path.length-1];ctx.fillStyle=C.coralDeep;ctx.beginPath();ctx.arc(PX(last.x),PY(last.y),6,0,7);ctx.fill();
+      }
+      ctx.fillStyle=C.indigoDeep;ctx.beginPath();ctx.arc(PX(start.x),PY(start.y),6,0,7);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    }
+    function draw(){S=fit(cv,640/420);W=S.w;H=S.h;ctx=S.ctx;drawPath();}
+    function run(){
+      if(anim)cancelAnimationFrame(anim);
+      var L=+lr.value, p={x:start.x,y:start.y}, m=[0,0],v=[0,0],vel=[0,0],t=0; path=[{x:p.x,y:p.y}];
+      var b1=0.9,b2=0.999,eps=1e-8,diverged=false,steps=0,maxSteps=120;
+      function stepOnce(){
+        t++;var g=grad(p.x,p.y);
+        if(opt==='sgd'){p.x-=L*g[0];p.y-=L*g[1];}
+        else if(opt==='momentum'){vel[0]=0.9*vel[0]+g[0];vel[1]=0.9*vel[1]+g[1];p.x-=L*vel[0];p.y-=L*vel[1];}
+        else{for(var d=0;d<2;d++){var gg=g[d];m[d]=b1*m[d]+(1-b1)*gg;v[d]=b2*v[d]+(1-b2)*gg*gg;
+          var mh=m[d]/(1-Math.pow(b1,t)),vh=v[d]/(1-Math.pow(b2,t));var dp=L*mh/(Math.sqrt(vh)+eps); if(d===0)p.x-=dp;else p.y-=dp;}}
+        path.push({x:p.x,y:p.y});
+        if(Math.abs(p.x)>40||Math.abs(p.y)>20||!isFinite(p.x)){diverged=true;}
+      }
+      function frame(){
+        for(var k=0;k<2;k++){stepOnce();steps++; if(diverged||steps>=maxSteps)break;}
+        drawPath();
+        var loss=f(path[path.length-1].x,path[path.length-1].y);
+        if(diverged){rd.innerHTML='<b style="color:'+C.coralDeep+'">Diverged.</b> The learning rate ('+L.toFixed(3)+') is too large for SGD on this ravine — steps overshoot and blow up. Lower it, or switch to Momentum/Adam.';return;}
+        if(steps>=maxSteps||loss<0.002){rd.innerHTML='Converged near the minimum in '+steps+' steps. Final loss ≈ <b>'+loss.toFixed(4)+'</b>. '+(opt==='sgd'?'Notice SGD zig-zags across the steep walls.':opt==='momentum'?'Momentum smooths the zig-zag and glides along the valley.':'Adam adapts its step per-direction for a near-straight descent.');return;}
+        anim=requestAnimationFrame(frame);
+      }
+      frame();
+    }
+    lr.addEventListener('input',function(){lrv.textContent=(+lr.value).toFixed(3);});
+    lrv.textContent=(+lr.value).toFixed(3);
+    document.querySelectorAll('#optSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#optSeg button').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');opt=btn.dataset.o;});});
+    cv.addEventListener('click',function(e){var r=cv.getBoundingClientRect();var mx=e.clientX-r.left,my=e.clientY-r.top;
+      start.x=dom.xa+(mx/r.width)*(dom.xb-dom.xa);start.y=dom.ya+((r.height-my)/r.height)*(dom.yb-dom.ya);path=[];drawPath();
+      rd.innerHTML='Start set. Press <b>Run</b> to descend with '+opt.toUpperCase()+'.';});
+    document.getElementById('optRun').addEventListener('click',run);
+    document.getElementById('optReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);path=[];start={x:-4.5,y:1.7};drawPath();rd.innerHTML='Click anywhere on the surface to drop a starting point, then press Run.';});
+    register(draw);
+  })();
+
+  /* ================= 4. CONVOLUTION ================= */
+  (function(){
+    var cv=document.getElementById('convCanvas'); if(!cv) return;
+    var rd=document.getElementById('convReadout'),kern='edgev',auto=null;
+    var N=8,K=3,O=N-K+1;
+    var img=[]; for(var r=0;r<N;r++){img[r]=[];for(var c=0;c<N;c++){img[r][c]=(r>=2&&r<=5&&c>=2&&c<=5)?0.85:0.15;}}
+    var KER={edgev:[[-1,0,1],[-1,0,1],[-1,0,1]],edgeh:[[-1,-1,-1],[0,0,0],[1,1,1]],
+             blur:[[1/9,1/9,1/9],[1/9,1/9,1/9],[1/9,1/9,1/9]],sharp:[[0,-1,0],[-1,5,-1],[0,-1,0]]};
+    var pos=0, out=[]; for(var i=0;i<O*O;i++)out.push(null);
+    function conv(or,oc){var s=0,k=KER[kern];for(var a=0;a<K;a++)for(var b=0;b<K;b++)s+=img[or+a][oc+b]*k[a][b];return s;}
+    var W,H,ctx,S;
+    function draw(){
+      S=fit(cv,640/300);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var cell=Math.min((W*0.34)/N,(H-40)/N), ox=10, oy=24;
+      var or=Math.floor(pos/O),oc=pos%O;
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.textAlign='left';
+      ctx.fillText('input',ox,16);
+      for(var r=0;r<N;r++)for(var c=0;c<N;c++){var g=Math.round(255-img[r][c]*210);ctx.fillStyle='rgb('+g+','+g+','+(g+6)+')';
+        ctx.fillRect(ox+c*cell,oy+r*cell,cell-1,cell-1);}
+      // window highlight
+      ctx.strokeStyle=C.coral;ctx.lineWidth=2.5;ctx.strokeRect(ox+oc*cell,oy+or*cell,K*cell,K*cell);
+      // kernel
+      var kx=ox+N*cell+24, kcell=Math.min(cell,26);
+      ctx.fillStyle=C.faint;ctx.fillText('kernel',kx,16);
+      for(var a=0;a<K;a++)for(var b=0;b<K;b++){ctx.fillStyle=C.wash;ctx.fillRect(kx+b*kcell,oy+a*kcell,kcell-2,kcell-2);
+        ctx.fillStyle=C.indigoDeep;ctx.font='600 10px "JetBrains Mono"';ctx.textAlign='center';
+        var kv=KER[kern][a][b];ctx.fillText((Math.abs(kv)<1&&kv!==0)?kv.toFixed(2):kv,kx+b*kcell+kcell/2-1,oy+a*kcell+kcell/2+3);}
+      // feature map
+      var fx=kx+K*kcell+30, fcell=Math.min((W-fx-12)/O,(H-40)/O);
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.textAlign='left';ctx.fillText('feature map',fx,16);
+      var vals=out.filter(function(v){return v!==null;}),mn=Math.min.apply(null,vals.concat([0])),mx=Math.max.apply(null,vals.concat([0.01]));
+      for(var i2=0;i2<O*O;i2++){var rr=Math.floor(i2/O),cc=i2%O;var v=out[i2];
+        if(v===null){ctx.fillStyle='#F4F5F8';}else{var t=(v-mn)/(mx-mn+1e-6);var col=Math.round(255-t*200);ctx.fillStyle='rgb('+Math.round(255-t*188)+','+col+',255)';}
+        ctx.fillRect(fx+cc*fcell,oy+rr*fcell,fcell-1,fcell-1);}
+      ctx.strokeStyle=C.coral;ctx.lineWidth=2.5;ctx.strokeRect(fx+oc*fcell,oy+or*fcell,fcell,fcell);
+    }
+    function step(){var or=Math.floor(pos/O),oc=pos%O;out[pos]=conv(or,oc);
+      rd.innerHTML='Position ('+or+','+oc+'): the 3×3 window is multiplied by the kernel and summed to <b>'+out[pos].toFixed(2)+'</b>.';
+      pos=(pos+1)%(O*O); if(pos===0){/*finished*/} draw();}
+    document.querySelectorAll('#kernSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#kernSeg button').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');kern=btn.dataset.k;
+      out=[];for(var i=0;i<O*O;i++)out.push(null);pos=0;draw();rd.innerHTML='Kernel changed. Press Step or Auto to convolve.';});});
+    document.getElementById('convStep').addEventListener('click',function(){if(auto){clearInterval(auto);auto=null;}step();});
+    document.getElementById('convAuto').addEventListener('click',function(){
+      if(auto){clearInterval(auto);auto=null;return;} auto=setInterval(function(){step();if(pos===0){clearInterval(auto);auto=null;}},220);});
+    register(draw);
+  })();
+
+  /* ================= 5. ATTENTION heatmap ================= */
+  (function(){
+    var cv=document.getElementById('attnCanvas'); if(!cv) return;
+    var temp=document.getElementById('temp'),tempv=document.getElementById('tempv'),rd=document.getElementById('attnReadout');
+    var sents=[{toks:['the','cat','sat'],logits:[[2,1,0.5],[1,2,1.5],[0.5,2.5,1.5]]},
+               {toks:['it','ate','food'],logits:[[1.5,1,2],[0.5,2,2.5],[1,1.5,2]]}];
+    var cur=0,W,H,ctx,S;
+    function softmax(row,scale){var e=row.map(function(x){return Math.exp(x/scale);});var s=e.reduce(function(a,b){return a+b;},0);return e.map(function(x){return x/s;});}
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var s=sents[cur],n=s.toks.length,scale=+temp.value;tempv.textContent=scale.toFixed(1);
+      var cell=Math.min((W-200)/n,(H-90)/n), gx=150, gy=60;
+      ctx.font=DISP;ctx.fillStyle=C.inkSoft;ctx.textAlign='center';
+      ctx.fillText('keys (attended to) →',gx+n*cell/2,28);
+      for(var j=0;j<n;j++){ctx.fillStyle=C.indigoDeep;ctx.fillText(s.toks[j],gx+j*cell+cell/2,52);}
+      for(var i=0;i<n;i++){
+        var w=softmax(s.logits[i],scale);
+        ctx.save();ctx.translate(gx-12,gy+i*cell+cell/2);ctx.textAlign='right';ctx.fillStyle=C.coralDeep;ctx.fillText(s.toks[i],0,4);ctx.restore();
+        for(var j2=0;j2<n;j2++){var t=w[j2];
+          ctx.fillStyle='rgba(67,56,202,'+(0.08+t*0.9)+')';ctx.fillRect(gx+j2*cell,gy+i*cell,cell-2,cell-2);
+          ctx.fillStyle=t>0.5?'#fff':C.indigoDeep;ctx.font='600 11px "JetBrains Mono"';ctx.textAlign='center';
+          ctx.fillText(t.toFixed(2),gx+j2*cell+cell/2-1,gy+i*cell+cell/2+4);}
+      }
+      ctx.save();ctx.translate(26,gy+n*cell/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillStyle=C.inkSoft;ctx.font=DISP;ctx.fillText('queries ↓',0,0);ctx.restore();
+      rd.innerHTML='Scale '+scale.toFixed(1)+': '+(scale<1.2?'low scale → <b>sharp</b>, near one-hot attention (a hard lookup).':scale>3.5?'high scale → <b>diffuse</b>, nearly uniform averaging.':'a balanced distribution — each row sums to 1.0.');
+    }
+    temp.addEventListener('input',draw);
+    document.querySelectorAll('#sentSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#sentSeg button').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');cur=+btn.dataset.s;draw();});});
+    register(draw);
+  })();
+
+  /* ================= 6. EMBEDDING arithmetic ================= */
+  (function(){
+    var cv=document.getElementById('embedCanvas'); if(!cv) return;
+    var rd=document.getElementById('embedReadout'),cur=0;
+    var sets=[
+      {pts:{man:[1,1],woman:[1,3],king:[4,1],queen:[4,3]},a:'king',b:'man',c:'woman',d:'queen',note:'gender'},
+      {pts:{france:[1,1],italy:[1,3],paris:[4,1],rome:[4,3]},a:'paris',b:'france',c:'italy',d:'rome',note:'capital-of'},
+      {pts:{walk:[1,1],walked:[4,1],swim:[1,3],swam:[4,3]},a:'walked',b:'walk',c:'swim',d:'swam',note:'past-tense'}
+    ];
+    var dom={a:-0.3,b:5.3},W,H,ctx,S;
+    function PX(x){return 40+(x-dom.a)/(dom.b-dom.a)*(W-60);}
+    function PY(y){return H-30-(y-dom.a)/(dom.b-dom.a)*(H-60);}
+    function arrow(x1,y1,x2,y2,col,wid){ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=wid;
+      ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+      var ang=Math.atan2(y2-y1,x2-x1);ctx.beginPath();ctx.moveTo(x2,y2);
+      ctx.lineTo(x2-9*Math.cos(ang-0.4),y2-9*Math.sin(ang-0.4));ctx.lineTo(x2-9*Math.cos(ang+0.4),y2-9*Math.sin(ang+0.4));ctx.closePath();ctx.fill();}
+    function draw(){
+      S=fit(cv,640/400);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      // grid
+      ctx.strokeStyle=C.line;ctx.lineWidth=1;
+      for(var g=0;g<=5;g++){ctx.globalAlpha=0.5;ctx.beginPath();ctx.moveTo(PX(g),PY(0));ctx.lineTo(PX(g),PY(5));ctx.moveTo(PX(0),PY(g));ctx.lineTo(PX(5),PY(g));ctx.stroke();}
+      ctx.globalAlpha=1;
+      var s=sets[cur],P=s.pts;
+      // analogy: b->a direction applied at c  => c + (a-b)
+      var av=P[s.a],bv=P[s.b],cv2=P[s.c],dv=P[s.d];
+      var res=[cv2[0]+(av[0]-bv[0]),cv2[1]+(av[1]-bv[1])];
+      // offset arrows (parallel)
+      arrow(PX(bv[0]),PY(bv[1]),PX(av[0]),PY(av[1]),'rgba(14,156,146,0.85)',2);
+      arrow(PX(cv2[0]),PY(cv2[1]),PX(res[0]),PY(res[1]),C.coral,2.5);
+      // points
+      function dot(name,v,col){ctx.fillStyle=col;ctx.beginPath();ctx.arc(PX(v[0]),PY(v[1]),6,0,7);ctx.fill();
+        ctx.fillStyle=C.ink;ctx.font=DISP;ctx.textAlign='left';ctx.fillText(name,PX(v[0])+10,PY(v[1])+4);}
+      Object.keys(P).forEach(function(k){dot(k,P[k], (k===s.d)?C.indigo:C.inkSoft);});
+      // result marker
+      ctx.strokeStyle=C.coralDeep;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(PX(res[0]),PY(res[1]),11,0,7);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.coralDeep;ctx.textAlign='left';ctx.fillText('result',PX(res[0])+14,PY(res[1])-10);
+      rd.innerHTML='<b>'+s.a+' − '+s.b+' + '+s.c+' ≈ '+s.d+'</b>. The coral vector is the same direction as the teal one (the "'+s.note+'" relationship); applied to "'+s.c+'" it lands on "'+s.d+'".';
+    }
+    document.querySelectorAll('#analogySeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#analogySeg button').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');cur=+btn.dataset.a;draw();});});
+    register(draw);
+  })();
+
+  /* ================= 7. DIFFUSION ================= */
+  (function(){
+    var cv=document.getElementById('diffCanvas'); if(!cv) return;
+    var difft=document.getElementById('difft'),diffv=document.getElementById('diffv'),rd=document.getElementById('diffReadout');
+    var N=420, x0=[], noise=[], W,H,ctx,S,anim=null,curT=0;
+    for(var i=0;i<N;i++){var th=i/N*Math.PI*4, r=i/N; x0.push([Math.cos(th)*r,Math.sin(th)*r]);
+      // box-muller
+      var u1=Math.random(),u2=Math.random();var g1=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2),g2=Math.sqrt(-2*Math.log(u1))*Math.sin(2*Math.PI*u2);
+      noise.push([g1,g2]);}
+    function abar(t){var fr=t/100;return Math.pow(Math.cos(fr*Math.PI/2),2);}
+    function draw(t){
+      S=fit(cv,640/320);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var cx=W/2,cy=H/2, scaleD=Math.min(W,H)*0.40, sn=Math.min(W,H)*0.34;
+      var ab=abar(t),sa=Math.sqrt(ab),sb=Math.sqrt(1-ab);
+      for(var i=0;i<N;i++){
+        var x=sa*x0[i][0]*scaleD+sb*noise[i][0]*sn, y=sa*x0[i][1]*scaleD+sb*noise[i][1]*sn;
+        var hue=i/N; ctx.fillStyle='rgba('+Math.round(67+hue*188)+','+Math.round(56+hue*36)+','+Math.round(202-hue*129)+',0.8)';
+        ctx.beginPath();ctx.arc(cx+x,cy+y,2.1,0,7);ctx.fill();
+      }
+      diffv.textContent=t;
+      rd.innerHTML='t = '+t+':  ᾱ = <b>'+ab.toFixed(3)+'</b>,  √ᾱ = '+sa.toFixed(3)+' (signal),  √(1−ᾱ) = '+sb.toFixed(3)+' (noise). '+(t===0?'Clean data — the spiral is intact.':t>=98?'Almost pure Gaussian noise — structure is gone.':'A mix of signal and noise.');
+    }
+    difft.addEventListener('input',function(){if(anim)cancelAnimationFrame(anim);curT=+difft.value;draw(curT);});
+    document.getElementById('diffReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);curT=0;difft.value=0;draw(0);});
+    document.getElementById('diffDenoise').addEventListener('click',function(){
+      if(anim)cancelAnimationFrame(anim); var t=+difft.value;
+      function frame(){ t-=1.4; if(t<=0){t=0;draw(0);difft.value=0;rd.innerHTML='Denoised back to the data manifold — the reverse process recovered the spiral.';return;}
+        difft.value=Math.round(t);draw(t);anim=requestAnimationFrame(frame);} frame();});
+    register(function(){draw(+difft.value);});
+  })();
+
+  /* ================= BACKPROP step-by-step ================= */
+  (function(){
+    var cv=document.getElementById('bpCanvas'); if(!cv) return;
+    var rd=document.getElementById('bpReadout'),auto=null;
+    var sg=function(z){return 1/(1+Math.exp(-z));}, f2=function(n){return (n>=0?' ':'')+n.toFixed(2);};
+    var x=[1.0,0.5], y=1.0, lr=0.5;
+    var init={W1:[[0.5,-0.4],[0.3,0.8]],bh:[0.1,-0.2],W2:[0.7,-0.5],bo:0.2};
+    var st;
+    function reset(){st={W1:[init.W1[0].slice(),init.W1[1].slice()],bh:init.bh.slice(),W2:init.W2.slice(),bo:init.bo,
+      stage:0,zh:[null,null],ah:[null,null],zo:null,ao:null,L:null,do_:null,dW2:[null,null],dbo:null,dh:[null,null],dW1:[[null,null],[null,null]]};}
+    reset();
+    function advance(){var s=st.stage;
+      if(s===0){st.zh=[st.W1[0][0]*x[0]+st.W1[0][1]*x[1]+st.bh[0],st.W1[1][0]*x[0]+st.W1[1][1]*x[1]+st.bh[1]];}
+      else if(s===1){st.ah=[sg(st.zh[0]),sg(st.zh[1])];}
+      else if(s===2){st.zo=st.W2[0]*st.ah[0]+st.W2[1]*st.ah[1]+st.bo;st.ao=sg(st.zo);}
+      else if(s===3){st.L=0.5*(st.ao-y)*(st.ao-y);}
+      else if(s===4){st.do_=(st.ao-y)*st.ao*(1-st.ao);}
+      else if(s===5){st.dW2=[st.do_*st.ah[0],st.do_*st.ah[1]];st.dbo=st.do_;}
+      else if(s===6){st.dh=[st.W2[0]*st.do_*st.ah[0]*(1-st.ah[0]),st.W2[1]*st.do_*st.ah[1]*(1-st.ah[1])];}
+      else if(s===7){st.dW1=[[st.dh[0]*x[0],st.dh[0]*x[1]],[st.dh[1]*x[0],st.dh[1]*x[1]]];}
+      else if(s===8){for(var i=0;i<2;i++)for(var j=0;j<2;j++)st.W1[i][j]-=lr*st.dW1[i][j];st.W2[0]-=lr*st.dW2[0];st.W2[1]-=lr*st.dW2[1];st.bo-=lr*st.dbo;}
+      if(st.stage<9)st.stage++; draw();
+    }
+    var NAR=['Inputs x=[1.0, 0.5], target y=1.0. Press Next step to push the signal forward through the network.',
+      'FORWARD · hidden pre-activation  z_h = W₁x + b_h  =  ['+0+'].',
+      'FORWARD · hidden activation  a_h = σ(z_h).',
+      'FORWARD · output  z_o = W₂·a_h + b_o, then ŷ = σ(z_o).',
+      'FORWARD · loss  L = ½(ŷ − y)².',
+      'BACKWARD · output error  δ_o = (ŷ − y)·ŷ(1−ŷ).  This is the seed of all gradients.',
+      'BACKWARD · output weight gradient  ∂L/∂W₂ = δ_o · a_h  (error × upstream activation).',
+      'BACKWARD · hidden error  δ_h = (W₂ δ_o) ⊙ σ′(z_h)  — error flows back through the weights, gated by the slope.',
+      'BACKWARD · input weight gradient  ∂L/∂W₁ = δ_h · xᵀ.  Every gradient is now known.',
+      'UPDATE · W ← W − η·∂L/∂W. The weights just moved to lower the loss. Press Reset to run again.'];
+    var W,H,ctx,S;
+    function node(px,py,r,fill,stroke){ctx.beginPath();ctx.arc(px,py,r,0,7);ctx.fillStyle=fill;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=stroke;ctx.stroke();}
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var ix=W*0.12, hx=W*0.5, ox=W*0.86, r=Math.min(26,H*0.07);
+      var iy=[H*0.36,H*0.64], hy=[H*0.30,H*0.70], oy=H*0.5;
+      var stage=st.stage, fwd=stage>=1&&stage<=4, bwd=stage>=5;
+      ctx.lineWidth=1.5;
+      // edges input->hidden
+      for(var i=0;i<2;i++)for(var j=0;j<2;j++){
+        ctx.strokeStyle = (bwd&&stage>=8)?'rgba(255,92,73,0.7)':'rgba(120,124,150,0.35)';
+        ctx.beginPath();ctx.moveTo(ix+r,iy[j]);ctx.lineTo(hx-r,hy[i]);ctx.stroke();
+      }
+      // edges hidden->output
+      for(var k=0;k<2;k++){ctx.strokeStyle=(bwd&&stage>=6)?'rgba(255,92,73,0.8)':((stage>=3)?'rgba(14,156,146,0.6)':'rgba(120,124,150,0.35)');
+        ctx.lineWidth=(bwd&&stage>=6)?3:1.5;ctx.beginPath();ctx.moveTo(hx+r,hy[k]);ctx.lineTo(ox-r,oy);ctx.stroke();}
+      ctx.lineWidth=2;
+      // nodes
+      ctx.font='600 12px "JetBrains Mono"';ctx.textAlign='center';ctx.textBaseline='middle';
+      node(ix,iy[0],r,C.wash,C.indigo);node(ix,iy[1],r,C.wash,C.indigo);
+      ctx.fillStyle=C.indigoDeep;ctx.fillText(x[0].toFixed(1),ix,iy[0]);ctx.fillText(x[1].toFixed(1),ix,iy[1]);
+      for(var h=0;h<2;h++){var glow=(stage>=1&&stage<=2)||(stage===7);node(hx,hy[h],r,glow?'#E7F7F4':'#fff',(bwd?C.coral:C.teal));
+        if(st.ah[h]!=null){ctx.fillStyle=C.teal;ctx.fillText('a'+ (h+1)+'='+st.ah[h].toFixed(2),hx,hy[h]);}
+        else if(st.zh[h]!=null){ctx.fillStyle=C.inkSoft;ctx.fillText('z='+st.zh[h].toFixed(2),hx,hy[h]);}
+        else{ctx.fillStyle=C.faint;ctx.fillText('h'+(h+1),hx,hy[h]);}
+        if(bwd&&st.dh[0]!=null){ctx.fillStyle=C.coralDeep;ctx.font='600 10px "JetBrains Mono"';ctx.fillText('δ='+st.dh[h].toFixed(2),hx,hy[h]+r+10);ctx.font='600 12px "JetBrains Mono"';}
+      }
+      var oglow=(stage>=3&&stage<=4)||(stage===5);node(ox,oy,r,oglow?'#EAF7F4':'#fff',(bwd?C.coral:(stage>=3?C.teal:C.indigo)));
+      if(st.ao!=null){ctx.fillStyle=C.ink;ctx.fillText('ŷ='+st.ao.toFixed(2),ox,oy);}else{ctx.fillStyle=C.faint;ctx.fillText('out',ox,oy);}
+      if(bwd&&st.do_!=null){ctx.fillStyle=C.coralDeep;ctx.font='600 10px "JetBrains Mono"';ctx.fillText('δ='+st.do_.toFixed(2),ox,oy+r+10);ctx.font='600 12px "JetBrains Mono"';}
+      // labels
+      ctx.fillStyle=C.faint;ctx.font='600 11px "Space Grotesk"';ctx.textBaseline='alphabetic';
+      ctx.fillText('inputs',ix,H*0.13);ctx.fillText('hidden (σ)',hx,H*0.13);ctx.fillText('output (σ)',ox,H*0.13);
+      ctx.textAlign='right';ctx.fillStyle=(stage>=4?C.coralDeep:C.faint);ctx.font='600 12px "Space Grotesk"';
+      ctx.fillText('target y = 1.00',W-12,H*0.93);
+      if(st.L!=null){ctx.fillStyle=C.ink;ctx.fillText('loss L = '+st.L.toFixed(3),W-12,H*0.985);}
+      var extra='';
+      if(stage===1)extra='  z_h = ['+st.zh[0].toFixed(2)+', '+st.zh[1].toFixed(2)+'].';
+      else if(stage===2)extra='  a_h = ['+st.ah[0].toFixed(2)+', '+st.ah[1].toFixed(2)+'].';
+      else if(stage===3)extra='  ŷ = '+st.ao.toFixed(3)+'.';
+      else if(stage===4)extra='  L = '+st.L.toFixed(3)+'.';
+      else if(stage===5)extra='  δ_o = '+st.do_.toFixed(3)+'.';
+      else if(stage===6)extra='  ∂L/∂W₂ = ['+st.dW2[0].toFixed(3)+', '+st.dW2[1].toFixed(3)+'].';
+      else if(stage===7)extra='  δ_h = ['+st.dh[0].toFixed(3)+', '+st.dh[1].toFixed(3)+'].';
+      else if(stage===8)extra='  ∂L/∂W₁ row 1 = ['+st.dW1[0][0].toFixed(3)+', '+st.dW1[0][1].toFixed(3)+'].';
+      rd.innerHTML='<b>Step '+stage+'/9.</b> '+NAR[stage]+extra;
+    }
+    document.getElementById('bpNext').addEventListener('click',function(){if(auto){clearInterval(auto);auto=null;}if(st.stage<9)advance();});
+    document.getElementById('bpReset').addEventListener('click',function(){if(auto){clearInterval(auto);auto=null;}reset();draw();});
+    document.getElementById('bpAuto').addEventListener('click',function(){if(auto){clearInterval(auto);auto=null;return;}
+      auto=setInterval(function(){if(st.stage<9)advance();else{clearInterval(auto);auto=null;}},950);});
+    register(draw);
+  })();
+
+  /* ================= ATTENTION FLOW ================= */
+  (function(){
+    var cv=document.getElementById('aflowCanvas'); if(!cv) return;
+    var rd=document.getElementById('aflowReadout');
+    var toks=['The','animal','didn\u2019t','cross','it'];
+    var hues=[210,28,150,275,0]; // value "colors"
+    var logits=[[3,1,1,1,1],[1,3,1,1,1.5],[1,1.5,3,1.5,1],[1,1.5,1.5,3,1],[1,3.2,1,1,2]];
+    var q=2, phase=0, prog=0, anim=null, W,H,ctx,S;
+    function softmax(a){var m=Math.max.apply(null,a),e=a.map(function(v){return Math.exp(v-m);}),s=e.reduce(function(p,c){return p+c;},0);return e.map(function(v){return v/s;});}
+    function hcol(h,a){return 'hsla('+h+',70%,55%,'+(a==null?1:a)+')';}
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var n=toks.length, topY=64, gap=W/(n+1), w=softmax(logits[q]);
+      // query box
+      var qx=W/2, qy=H-70;
+      ctx.fillStyle=C.coral;ctx.beginPath();ctx.roundRect?ctx.roundRect(qx-58,qy-20,116,40,9):ctx.rect(qx-58,qy-20,116,40);ctx.fill();
+      ctx.fillStyle='#fff';ctx.font='600 14px "Space Grotesk"';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('query: '+toks[q],qx,qy);
+      // key tokens + value swatches
+      for(var j=0;j<n;j++){var kx=gap*(j+1);
+        ctx.fillStyle=C.wash;ctx.strokeStyle=C.line;ctx.lineWidth=1;
+        ctx.beginPath();(ctx.roundRect?ctx.roundRect(kx-42,topY-18,84,34,8):ctx.rect(kx-42,topY-18,84,34));ctx.fill();ctx.stroke();
+        ctx.fillStyle=C.ink;ctx.font='600 13px "Space Grotesk"';ctx.fillText(toks[j],kx,topY-1);
+        // value swatch
+        ctx.fillStyle=hcol(hues[j]);ctx.beginPath();ctx.arc(kx,topY+34,9,0,7);ctx.fill();
+        ctx.fillStyle=C.faint;ctx.font='10px "JetBrains Mono"';ctx.fillText('v'+(j+1),kx,topY+52);
+        // connection
+        var ww=w[j];
+        if(phase>=1){
+          ctx.strokeStyle='rgba(67,56,202,'+(0.12+0.8*ww)+')';ctx.lineWidth=1+10*ww;
+          ctx.beginPath();ctx.moveTo(qx,qy-22);ctx.lineTo(kx,topY+18);ctx.stroke();
+        }
+        if(phase>=1){ctx.fillStyle=C.indigoDeep;ctx.font='600 11px "JetBrains Mono"';
+          ctx.fillText((phase===1?('score '+logits[q][j].toFixed(1)):(ww.toFixed(2))),(qx+kx)/2,(qy+topY)/2 + (j-2)*4);}
+      }
+      // output swatch (weighted blend) in phase 3
+      if(phase>=2){
+        var rr=0,gg=0,bb=0;
+        for(var j2=0;j2<n;j2++){var c=hslToRgb(hues[j2]/360,0.7,0.55);rr+=w[j2]*c[0];gg+=w[j2]*c[1];bb+=w[j2]*c[2];}
+        ctx.fillStyle='rgb('+(rr|0)+','+(gg|0)+','+(bb|0)+')';
+        ctx.beginPath();ctx.arc(qx+90,qy,16,0,7);ctx.fill();ctx.strokeStyle=C.coralDeep;ctx.lineWidth=2;ctx.stroke();
+        ctx.fillStyle=C.inkSoft;ctx.font='10px "JetBrains Mono"';ctx.fillText('output',qx+90,qy+30);
+      }
+      // animated value-pull dots
+      if(phase===3){
+        for(var j3=0;j3<n;j3++){var kx=gap*(j3+1),cnt=Math.round(w[j3]*12);
+          for(var d=0;d<cnt;d++){var t=(prog+ d/Math.max(1,cnt))%1;var px=kx+(qx+90-kx)*t,py=(topY+34)+((qy)-(topY+34))*t;
+            ctx.fillStyle=hcol(hues[j3],0.9);ctx.beginPath();ctx.arc(px,py,3,0,7);ctx.fill();}}
+      }
+      ctx.textAlign='left';
+      var best=w.indexOf(Math.max.apply(null,w));
+      rd.innerHTML=(phase===0?'Press Play. ':phase===1?'<b>Scores:</b> raw q·k similarities. ':phase===2?'<b>Softmax weights:</b> scores normalised to sum to 1. ':'<b>Weighted sum:</b> values blended by weight into the output. ')+
+        'Query "'+toks[q]+'" attends most to <b>"'+toks[best]+'"</b> ('+(w[best]*100).toFixed(0)+'%).';
+    }
+    function hslToRgb(h,s,l){var r,g,b;function hue(p,q,t){if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;}
+      var q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;r=hue(p,q,h+1/3);g=hue(p,q,h);b=hue(p,q,h-1/3);return [r*255,g*255,b*255];}
+    function play(){if(anim)cancelAnimationFrame(anim);phase=0;draw();var t0=performance.now();
+      function fr(now){var e=(now-t0)/1000;phase=e<1?1:e<2?2:3;prog=(e*0.6)%1;draw();if(e<5)anim=requestAnimationFrame(fr);else{phase=3;draw();}}
+      anim=requestAnimationFrame(fr);}
+    document.querySelectorAll('#aflowSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#aflowSeg button').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');q=+btn.dataset.q;phase=0;draw();});});
+    document.getElementById('aflowPlay').addEventListener('click',play);
+    register(draw);
+  })();
+
+  /* ================= DOG IMAGE diffusion ================= */
+  (function(){
+    var cv=document.getElementById('dogCanvas'); if(!cv) return;
+    var dt=document.getElementById('dogt'),dv=document.getElementById('dogv'),rd=document.getElementById('dogReadout'),anim=null;
+    var R=30, base=[], noise=[];
+    function setPx(arr,xx,yy,c){if(xx>=0&&xx<R&&yy>=0&&yy<R)arr[yy*R+xx]=c;}
+    (function build(){
+      for(var i=0;i<R*R;i++){base[i]=[238,240,247];}
+      for(var yy=0;yy<R;yy++)for(var xx=0;xx<R;xx++){
+        var cxh=15,cyh=17,dx=xx-cxh,dy=yy-cyh;
+        // ears
+        if(((xx-9)*(xx-9)+(yy-7)*(yy-7)<9)||((xx-21)*(xx-21)+(yy-7)*(yy-7)<9))base[yy*R+xx]=[120,86,58];
+        // head
+        if(dx*dx/1.0+dy*dy/1.1<46)base[yy*R+xx]=[171,124,80];
+        // snout
+        if((xx-15)*(xx-15)/1.2+(yy-22)*(yy-22)<14)base[yy*R+xx]=[208,170,128];
+        // eyes
+        if((xx-11)*(xx-11)+(yy-15)*(yy-15)<2||(xx-19)*(xx-19)+(yy-15)*(yy-15)<2)base[yy*R+xx]=[35,28,30];
+        // nose
+        if((xx-15)*(xx-15)+(yy-21)*(yy-21)<2)base[yy*R+xx]=[35,28,30];
+      }
+      for(var k=0;k<R*R;k++){var u1=Math.random(),u2=Math.random();
+        noise[k]=[Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2),Math.sqrt(-2*Math.log(u1))*Math.sin(2*Math.PI*u2),
+                  Math.sqrt(-2*Math.log(Math.random()))*Math.cos(2*Math.PI*Math.random())];}
+    })();
+    function abar(t){var fr=t/100;return Math.pow(Math.cos(fr*Math.PI/2),2);}
+    var W,H,ctx,S;
+    function draw(t){
+      S=fit(cv,640/300);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var sz=Math.min(H-30,W*0.46), ox=14, oy=(H-sz)/2, cell=sz/R, ab=abar(t),sa=Math.sqrt(ab),sb=Math.sqrt(1-ab);
+      for(var yy=0;yy<R;yy++)for(var xx=0;xx<R;xx++){var i=yy*R+xx,ch=[];
+        for(var c=0;c<3;c++){var b=base[i][c]/127.5-1, xt=sa*b+sb*noise[i][c]; ch[c]=Math.max(0,Math.min(255,(xt+1)*127.5));}
+        ctx.fillStyle='rgb('+(ch[0]|0)+','+(ch[1]|0)+','+(ch[2]|0)+')';ctx.fillRect(ox+xx*cell,oy+yy*cell,cell+0.6,cell+0.6);
+      }
+      ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.strokeRect(ox,oy,sz,sz);
+      // right panel text
+      var tx=ox+sz+30;
+      ctx.textAlign='left';ctx.fillStyle=C.ink;ctx.font='600 15px "Space Grotesk"';
+      ctx.fillText(t===0?'clean image  x₀':t>=98?'pure noise  x_T':'noised image  x_t',tx,oy+22);
+      ctx.font='12px "JetBrains Mono"';ctx.fillStyle=C.inkSoft;
+      ctx.fillText('t = '+t,tx,oy+50);
+      ctx.fillText('ᾱ_t   = '+ab.toFixed(3),tx,oy+72);
+      ctx.fillText('√ᾱ_t  = '+sa.toFixed(3)+'  (signal)',tx,oy+92);
+      ctx.fillText('√1−ᾱ = '+sb.toFixed(3)+'  (noise)',tx,oy+112);
+      // signal/noise bar
+      var bw=Math.min(W-tx-20,220);ctx.fillStyle='#E7F7F4';ctx.fillRect(tx,oy+132,bw*sa,12);
+      ctx.fillStyle='#FBE7E3';ctx.fillRect(tx+bw*sa,oy+132,bw*(1-sa),12);
+      ctx.strokeStyle=C.line;ctx.strokeRect(tx,oy+132,bw,12);
+      dv.textContent=t;
+      rd.innerHTML=(t===0?'The clean dog. Drag the slider to add noise, or press Generate to denoise from wherever you are.':t>=98?'Almost pure Gaussian static — every pixel is noise. Generation starts here.':'Each pixel is √ᾱ·(dog) + √(1−ᾱ)·(noise). The model learns to predict and subtract that noise.');
+    }
+    dt.addEventListener('input',function(){if(anim)cancelAnimationFrame(anim);draw(+dt.value);});
+    document.getElementById('dogReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);dt.value=0;draw(0);});
+    document.getElementById('dogDenoise').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);var t=+dt.value; if(t===0){t=100;}
+      function fr(){t-=1.6;if(t<=0){t=0;draw(0);dt.value=0;rd.innerHTML='Generated. The reverse process removed the noise step by step and recovered a clean dog.';return;}dt.value=Math.round(t);draw(t);anim=requestAnimationFrame(fr);}fr();});
+    register(function(){draw(+dt.value);});
+  })();
+
+  /* ================= MORE SAMPLES → better distribution ================= */
+  (function(){
+    var cv=document.getElementById('sampCanvas'); if(!cv) return;
+    var sN=document.getElementById('sampN'),sv=document.getElementById('sampv'),rd=document.getElementById('sampReadout');
+    var W,H,ctx,S,samples=[],gen=null;
+    function manifold(s){return [0.12*1+0.76*s, 0.66-0.46*Math.sin(Math.PI*s)];} // normalized coords
+    function toPx(p){return [p[0]*W,(p[1])*H];}
+    function rebuild(N){samples=[];for(var i=0;i<N;i++){var s=Math.random();var m=manifold(s);
+      var u1=Math.random(),u2=Math.random();var g=Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+      samples.push([m[0],m[1]+g*0.018]);}}
+    function distManifold(p){var best=1e9;for(var s=0;s<=1;s+=0.02){var m=manifold(s);var d=(m[0]-p[0])*(m[0]-p[0])+(m[1]-p[1])*(m[1]-p[1]);if(d<best)best=d;}return Math.sqrt(best);}
+    function draw(){
+      S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var N=samples.length, h=0.05/Math.sqrt(N)+0.012; // KDE bandwidth shrinks with N
+      // density shading
+      var step=12;
+      for(var px=0;px<W;px+=step)for(var py=0;py<H;py+=step){
+        var nx=px/W,ny=py/H,dens=0;
+        for(var i=0;i<N;i++){var dx=nx-samples[i][0],dy=ny-samples[i][1];dens+=Math.exp(-(dx*dx+dy*dy)/(2*h*h));}
+        dens/=N; var a=Math.min(0.5,dens*h*h*60);
+        if(a>0.01){ctx.fillStyle='rgba(67,56,202,'+a+')';ctx.fillRect(px,py,step,step);}
+      }
+      // true manifold faint
+      ctx.strokeStyle='rgba(14,156,146,0.5)';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();
+      for(var s=0;s<=1;s+=0.02){var m=toPx(manifold(s));if(s===0)ctx.moveTo(m[0],m[1]);else ctx.lineTo(m[0],m[1]);}ctx.stroke();ctx.setLineDash([]);
+      // samples
+      for(var i=0;i<N;i++){var p=toPx(samples[i]);ctx.fillStyle=C.teal;ctx.beginPath();ctx.arc(p[0],p[1],2.6,0,7);ctx.fill();}
+      // generated
+      if(gen){var gp=toPx(gen.p);ctx.fillStyle=gen.ok?C.coral:C.coralDeep;
+        ctx.beginPath();ctx.arc(gp[0],gp[1],8,0,7);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+        ctx.fillStyle=gen.ok?C.teal:C.coralDeep;ctx.font='600 12px "Space Grotesk"';ctx.textAlign='center';
+        ctx.fillText(gen.ok?'realistic dog ✓':'unrealistic ✗',gp[0],gp[1]-14);}
+      ctx.textAlign='left';ctx.fillStyle=C.faint;ctx.font='11px "JetBrains Mono"';
+      ctx.fillText('teal dashed = true "dog" manifold · dots = training images · shade = learned density',12,H-10);
+    }
+    function generate(){var N=samples.length; if(!N)return; var src=samples[(Math.random()*N)|0];
+      var jit=60/Math.sqrt(N)/640; var u1=Math.random(),u2=Math.random();
+      var gx=src[0]+Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2)*jit;
+      var gy=src[1]+Math.sqrt(-2*Math.log(u1))*Math.sin(2*Math.PI*u2)*jit;
+      var p=[gx,gy], d=distManifold(p), ok=d<0.045; gen={p:p,ok:ok};draw();
+      rd.innerHTML=ok?'<b style="color:'+C.teal+'">Realistic.</b> With '+N+' samples the learned density hugs the true manifold, so the generated dog lands on it — a plausible, novel dog.'
+        :'<b style="color:'+C.coralDeep+'">Off-manifold.</b> With only '+N+' samples the density has gaps, so generation drifts into empty space — a blurry, unrealistic dog. Add more samples.';
+    }
+    sN.addEventListener('input',function(){sv.textContent=sN.value;rebuild(+sN.value);gen=null;draw();});
+    document.getElementById('sampGen').addEventListener('click',generate);
+    rebuild(+sN.value);sv.textContent=sN.value;
+    register(draw);
+  })();
+
+  /* ================= VLA forward pass ================= */
+  (function(){
+    var cv=document.getElementById('vlaCanvas'); if(!cv) return;
+    var rd=document.getElementById('vlaReadout'),anim=null;
+    var toks=['pick','up','the','red','block'];
+    var W,H,ctx,S, t0=null, playing=false;
+    function scene(ox,oy,sz){
+      ctx.fillStyle='#EEF0F6';ctx.fillRect(ox,oy,sz,sz);ctx.strokeStyle=C.line;ctx.strokeRect(ox,oy,sz,sz);
+      // table
+      ctx.fillStyle='#E2D6BD';ctx.fillRect(ox,oy+sz*0.7,sz,sz*0.3);
+      // blue cup
+      ctx.fillStyle='#3B6FE0';ctx.fillRect(ox+sz*0.22,oy+sz*0.5,sz*0.16,sz*0.22);
+      // red block
+      ctx.fillStyle='#E33B33';ctx.fillRect(ox+sz*0.6,oy+sz*0.56,sz*0.16,sz*0.16);
+      return {block:[ox+sz*0.68,oy+sz*0.64]};
+    }
+    function draw(e){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var sz=Math.min(H*0.5,W*0.34), ox=16, oy=20, sc=scene(ox,oy,sz);
+      var phase = e==null?0 : (e<1.1?1:e<2.6?2:3);
+      // patch grid overlay (phase>=1)
+      if(phase>=1){ctx.strokeStyle='rgba(67,56,202,0.30)';ctx.lineWidth=1;
+        for(var g=1;g<4;g++){ctx.beginPath();ctx.moveTo(ox+g*sz/4,oy);ctx.lineTo(ox+g*sz/4,oy+sz);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(ox,oy+g*sz/4);ctx.lineTo(ox+sz,oy+g*sz/4);ctx.stroke();}}
+      ctx.fillStyle=C.faint;ctx.font='11px "JetBrains Mono"';ctx.textAlign='left';ctx.fillText('camera → patch tokens',ox,oy+sz+16);
+      // instruction tokens
+      var tx=ox+sz+34, ty=oy+18;
+      ctx.fillStyle=C.inkSoft;ctx.font='600 12px "Space Grotesk"';ctx.fillText('instruction tokens',tx,ty-4);
+      for(var i=0;i<toks.length;i++){var bx=tx+(i%3)*92, by=ty+8+((i/3)|0)*34, red=(toks[i]==='red');
+        ctx.fillStyle=(red&&phase>=2)?C.coral:C.wash;ctx.strokeStyle=red?C.coral:C.line;ctx.lineWidth=red?2:1;
+        ctx.beginPath();(ctx.roundRect?ctx.roundRect(bx,by,84,26,7):ctx.rect(bx,by,84,26));ctx.fill();ctx.stroke();
+        ctx.fillStyle=(red&&phase>=2)?'#fff':C.ink;ctx.font='600 12px "Space Grotesk"';ctx.textAlign='center';ctx.fillText(toks[i],bx+42,by+17);ctx.textAlign='left';}
+      // attention from "red" to red block (phase 2)
+      var redPos=[tx+ (3%3)*92+42, ty+8+((3/3)|0)*34+13];
+      if(phase>=2){ctx.strokeStyle='rgba(255,92,73,0.85)';ctx.lineWidth=3;
+        ctx.beginPath();ctx.moveTo(redPos[0],redPos[1]);ctx.lineTo(sc.block[0],sc.block[1]);ctx.stroke();
+        ctx.fillStyle=C.coralDeep;ctx.font='10px "JetBrains Mono"';ctx.fillText('"red" attends to red pixels',ox+sz*0.2,oy+sz-6);}
+      // transformer + action expert boxes
+      var bx2=tx, by2=oy+sz-6;
+      ctx.fillStyle=(phase>=2)?'rgba(255,92,73,0.15)':'#fff';ctx.strokeStyle=C.coral;ctx.lineWidth=1.5;
+      ctx.beginPath();(ctx.roundRect?ctx.roundRect(bx2,by2,120,30,8):ctx.rect(bx2,by2,120,30));ctx.fill();ctx.stroke();
+      ctx.fillStyle=C.coralDeep;ctx.font='600 12px "Space Grotesk"';ctx.textAlign='center';ctx.fillText('Transformer',bx2+60,by2+19);
+      ctx.fillStyle=(phase>=3)?'rgba(67,56,202,0.15)':'#fff';ctx.strokeStyle=C.indigo;
+      ctx.beginPath();(ctx.roundRect?ctx.roundRect(bx2+134,by2,120,30,8):ctx.rect(bx2+134,by2,120,30));ctx.fill();ctx.stroke();
+      ctx.fillStyle=C.indigoDeep;ctx.fillText('action expert',bx2+194,by2+19);ctx.textAlign='left';
+      // action chunk trajectory (phase 3)
+      if(phase>=3){
+        var start=[ox+sz*0.15,oy+sz*0.2], end=sc.block, prog=Math.min(1,(e-2.6)/0.9);
+        ctx.strokeStyle=C.indigo;ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.beginPath();
+        var pts=[];for(var s=0;s<=1;s+=0.05){var px=start[0]+(end[0]-start[0])*s, py=start[1]+(end[1]-start[1])*s-Math.sin(s*Math.PI)*30;pts.push([px,py]);}
+        pts.forEach(function(p,k){if(k===0)ctx.moveTo(p[0],p[1]);else ctx.lineTo(p[0],p[1]);});ctx.stroke();ctx.setLineDash([]);
+        var gi=Math.min(pts.length-1,(prog*(pts.length-1))|0),gp=pts[gi];
+        ctx.fillStyle=C.indigoDeep;ctx.fillRect(gp[0]-5,gp[1]-5,10,10);
+      }
+      var msg=phase===0?'Press Run. The policy will encode the scene, attend, and generate an action.':
+              phase===1?'<b>Encode.</b> The image is split into patch tokens; the instruction into word tokens — all in one shared space.':
+              phase===2?'<b>Attend.</b> The token "red" sends strong attention to the red block\u2019s patches — grounding the word in pixels.':
+              '<b>Decode.</b> The fused representation flows to the action expert, which generates a smooth gripper trajectory to the red block.';
+      rd.innerHTML=msg;
+    }
+    function play(){if(anim)cancelAnimationFrame(anim);playing=true;t0=performance.now();
+      function fr(now){var e=(now-t0)/1000;draw(e);if(e<4)anim=requestAnimationFrame(fr);else draw(3.6);}anim=requestAnimationFrame(fr);}
+    document.getElementById('vlaPlay').addEventListener('click',play);
+    document.getElementById('vlaReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);draw(null);});
+    register(function(){draw(null);});
+  })();
+
+});
+</script>
+</body>
+</html>

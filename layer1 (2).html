@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foundations — Layer 1 Interactive Textbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="window.__katexReady=true;if(window.__doRender)window.__doRender();"></script>
+<style>
+/* ============================================================
+   DESIGN SYSTEM — "Signal & Field"
+   A computational-textbook identity: cool paper, deep indigo
+   ink, an electric coral reserved EXCLUSIVELY for things you
+   can touch (the signature), teal as the secondary data hue.
+   ============================================================ */
+:root{
+  --paper:#F4F5F8;
+  --surface:#FFFFFF;
+  --ink:#14162A;
+  --ink-soft:#474B66;
+  --ink-faint:#878BA6;
+  --indigo:#4338CA;
+  --indigo-deep:#2A2090;
+  --indigo-wash:#EEEEF8;
+  --coral:#FF5C49;
+  --coral-deep:#E8412E;
+  --teal:#0E9C92;
+  --teal-wash:#E4F3F1;
+  --amber:#C98314;
+  --amber-wash:#FBF1DC;
+  --tint:#EDEEF7;
+  --line:#DBDDE8;
+  --line-soft:#E7E8F0;
+  --code-bg:#191B30;
+  --code-ink:#E8E9F2;
+  --shadow:0 1px 2px rgba(20,22,42,.04),0 8px 30px rgba(20,22,42,.06);
+  --shadow-lg:0 4px 12px rgba(20,22,42,.08),0 20px 50px rgba(20,22,42,.10);
+  --serif:"Newsreader",Georgia,serif;
+  --display:"Space Grotesk",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --reading:760px;
+  --wide:1000px;
+  --sidebar:280px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:19px;
+  line-height:1.72;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+::selection{background:var(--coral);color:#fff}
+
+/* ---------- reading progress ---------- */
+#progress{
+  position:fixed;top:0;left:0;height:3px;width:0%;
+  background:linear-gradient(90deg,var(--indigo),var(--coral));
+  z-index:120;transition:width .12s linear;
+}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);
+  background:var(--surface);border-right:1px solid var(--line);
+  padding:30px 0 40px;overflow-y:auto;z-index:100;
+}
+.sidebar-brand{padding:0 26px 22px;border-bottom:1px solid var(--line-soft);margin-bottom:18px}
+.sidebar-brand .eyebrow{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--coral);font-weight:500;
+}
+.sidebar-brand h1{
+  font-family:var(--display);font-weight:700;font-size:22px;
+  line-height:1.12;margin-top:8px;letter-spacing:-.01em;color:var(--ink);
+}
+.sidebar-brand .sub{font-size:13px;color:var(--ink-faint);margin-top:7px;font-family:var(--display);font-weight:400}
+.toc{list-style:none;font-family:var(--display);font-size:14px}
+.toc>li{margin:1px 0}
+.toc .chap{
+  display:flex;gap:11px;align-items:baseline;padding:8px 26px;
+  color:var(--ink-soft);text-decoration:none;font-weight:500;
+  border-left:3px solid transparent;transition:all .15s;
+}
+.toc .chap .num{font-family:var(--mono);font-size:11px;color:var(--ink-faint);min-width:18px}
+.toc .chap:hover{background:var(--indigo-wash);color:var(--indigo)}
+.toc .chap.active{color:var(--indigo);border-left-color:var(--coral);background:var(--indigo-wash)}
+.toc .chap.active .num{color:var(--coral)}
+.toc .subs{list-style:none;padding:2px 0 6px}
+.toc .subs a{
+  display:block;padding:4px 26px 4px 55px;font-size:12.5px;
+  color:var(--ink-faint);text-decoration:none;border-left:3px solid transparent;
+}
+.toc .subs a:hover{color:var(--indigo)}
+.toc .subs a.active{color:var(--ink);border-left-color:var(--line)}
+
+/* ---------- mobile menu ---------- */
+.menu-btn{
+  display:none;position:fixed;top:14px;left:14px;z-index:130;
+  background:var(--ink);color:#fff;border:none;border-radius:9px;
+  width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:var(--shadow);
+}
+.scrim{display:none;position:fixed;inset:0;background:rgba(20,22,42,.4);z-index:99}
+
+/* ---------- main layout ---------- */
+.content{margin-left:var(--sidebar);padding:0 0 120px}
+.wrap{max-width:var(--reading);margin:0 auto;padding:0 28px}
+.wrap-wide{max-width:var(--wide);margin:0 auto;padding:0 28px}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;height:clamp(440px,72vh,640px);
+  display:flex;align-items:center;overflow:hidden;
+  background:linear-gradient(165deg,#15172E 0%,#221C6B 55%,#3A2D9E 100%);
+  margin-bottom:70px;
+}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;opacity:.9}
+.hero-inner{position:relative;z-index:2;max-width:var(--wide);margin:0 auto;padding:0 48px;width:100%}
+.hero .eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  color:#FF8C7E;font-weight:500;margin-bottom:20px;
+}
+.hero h1{
+  font-family:var(--display);font-weight:700;color:#fff;
+  font-size:clamp(40px,7vw,76px);line-height:.98;letter-spacing:-.03em;
+}
+.hero h1 em{font-style:normal;color:#B9B2FF}
+.hero .lead{
+  font-family:var(--serif);color:#C9CCE8;font-size:clamp(17px,2.2vw,21px);
+  max-width:620px;margin-top:26px;line-height:1.6;
+}
+.hero .scroll-cue{
+  margin-top:38px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:#9A9DD0;display:flex;align-items:center;gap:10px;
+}
+.hero .scroll-cue::before{content:"";width:34px;height:1px;background:#6E72B8}
+
+/* ---------- typography in body ---------- */
+.chapter{padding-top:34px;margin-top:34px}
+.chapter-head{margin-bottom:14px}
+.chapter-head .kicker{
+  font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:12px;
+}
+.chapter-head .kicker::after{content:"";flex:1;height:1px;background:var(--line)}
+.chapter-head h2{
+  font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,42px);
+  line-height:1.06;letter-spacing:-.02em;margin-top:14px;color:var(--ink);
+}
+h3{
+  font-family:var(--display);font-weight:600;font-size:25px;line-height:1.2;
+  margin:46px 0 4px;letter-spacing:-.01em;color:var(--ink);
+}
+h4{
+  font-family:var(--display);font-weight:500;font-size:18px;
+  margin:30px 0 2px;color:var(--indigo-deep);letter-spacing:-.005em;
+}
+.content p{margin:16px 0;color:var(--ink)}
+.content p.intro{font-size:21px;line-height:1.66;color:var(--ink-soft)}
+.content a{color:var(--indigo);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.content a:hover{text-decoration-color:var(--coral)}
+strong{font-weight:600;color:var(--ink)}
+em{font-style:italic}
+.term{font-weight:600;color:var(--indigo-deep);font-style:normal}
+code{font-family:var(--mono);font-size:.84em;background:var(--tint);padding:.12em .4em;border-radius:5px;color:var(--indigo-deep)}
+ul,ol{margin:16px 0 16px 4px;padding-left:26px}
+li{margin:8px 0;padding-left:4px}
+li::marker{color:var(--coral)}
+hr{border:none;border-top:1px solid var(--line);margin:54px 0}
+
+/* ---------- callout boxes ---------- */
+.box{border-radius:14px;padding:22px 26px;margin:28px 0;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
+.box .box-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.box .box-label::before{content:"";width:7px;height:7px;border-radius:50%}
+.box p:first-of-type,.box .box-label+p{margin-top:0}
+.box p:last-child{margin-bottom:0}
+
+.def{background:var(--indigo-wash);border-color:#D6D7F0}
+.def .box-label{color:var(--indigo)}
+.def .box-label::before{background:var(--indigo)}
+
+.intuition{background:var(--teal-wash);border-color:#C4E4E0}
+.intuition .box-label{color:var(--teal)}
+.intuition .box-label::before{background:var(--teal)}
+
+.note{background:var(--amber-wash);border-color:#EAD9AE}
+.note .box-label{color:var(--amber)}
+.note .box-label::before{background:var(--amber)}
+
+.derivation{background:var(--surface);border-color:var(--line);border-left:4px solid var(--ink)}
+.derivation .box-label{color:var(--ink)}
+.derivation .box-label::before{background:var(--ink)}
+.derivation .step{display:flex;gap:14px;margin:14px 0;align-items:flex-start}
+.derivation .step .s-num{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;background:var(--ink);
+  min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  margin-top:4px;flex-shrink:0;
+}
+.derivation .step .s-body{flex:1}
+.derivation .step .s-body p{margin:0 0 4px}
+
+/* ---------- math display ---------- */
+.katex-display{margin:20px 0!important;overflow-x:auto;overflow-y:hidden;padding:4px 0}
+.eqn{position:relative}
+.content .katex{font-size:1.04em}
+
+/* ---------- figures & demos ---------- */
+figure{margin:34px 0;text-align:center}
+figcaption{font-family:var(--display);font-size:13.5px;color:var(--ink-faint);margin-top:14px;line-height:1.5}
+figcaption b{color:var(--ink-soft);font-weight:600}
+.svg-fig{width:100%;height:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+
+.demo{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  margin:34px 0;box-shadow:var(--shadow-lg);overflow:hidden;
+}
+.demo-head{padding:18px 24px 16px;border-bottom:1px solid var(--line-soft);background:linear-gradient(180deg,#FFF,#FCFCFE)}
+.demo-head .tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:8px;
+}
+.demo-head .tag::before{content:"▶";font-size:8px}
+.demo-head h4{font-family:var(--display);font-weight:600;font-size:18px;color:var(--ink);margin:7px 0 0}
+.demo-body{padding:22px 24px}
+.demo canvas{display:block;max-width:100%;border-radius:10px;background:#FBFBFD;border:1px solid var(--line-soft)}
+.demo-controls{display:flex;flex-wrap:wrap;gap:18px 28px;margin-top:18px;align-items:flex-end}
+.ctrl{display:flex;flex-direction:column;gap:6px;min-width:150px;flex:1}
+.ctrl label{font-family:var(--display);font-size:12.5px;font-weight:500;color:var(--ink-soft);display:flex;justify-content:space-between;gap:10px}
+.ctrl label .val{font-family:var(--mono);color:var(--coral);font-weight:700}
+.demo .readout{font-family:var(--mono);font-size:13px;color:var(--ink-soft);background:var(--tint);padding:10px 14px;border-radius:8px;margin-top:14px;line-height:1.6}
+.demo .readout b{color:var(--indigo-deep)}
+
+/* coral = interactive (the signature) */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;
+  background:var(--line);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;border:none;
+}
+.btn{
+  font-family:var(--display);font-weight:500;font-size:13.5px;cursor:pointer;
+  background:var(--coral);color:#fff;border:none;padding:9px 18px;border-radius:9px;
+  transition:transform .1s,background .15s;
+}
+.btn:hover{background:var(--coral-deep)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--indigo);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--indigo-wash);color:var(--indigo)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{
+  font-family:var(--display);font-size:12.5px;font-weight:500;background:var(--surface);
+  border:none;padding:8px 14px;cursor:pointer;color:var(--ink-soft);border-right:1px solid var(--line);
+}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--indigo);color:#fff}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto;margin:30px 0}
+table{border-collapse:collapse;width:100%;font-size:15.5px;font-family:var(--display)}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-soft)}
+th{font-weight:600;color:var(--indigo-deep);border-bottom:2px solid var(--line);font-size:13px;letter-spacing:.02em}
+td{color:var(--ink-soft)}
+tr:hover td{background:var(--indigo-wash)}
+td code{font-size:.9em}
+
+/* ---------- pill / chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.chip{font-family:var(--mono);font-size:11px;background:var(--tint);color:var(--indigo-deep);padding:5px 11px;border-radius:20px;border:1px solid var(--line)}
+
+/* ---------- footer ---------- */
+.endcard{
+  background:linear-gradient(165deg,#15172E,#2A2090);color:#fff;border-radius:18px;
+  padding:44px;margin:60px 0 0;box-shadow:var(--shadow-lg);
+}
+.endcard .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#FF8C7E}
+.endcard h3{color:#fff;margin-top:10px}
+.endcard p{color:#C9CCE8}
+.endcard a{color:#B9B2FF}
+
+footer.page{padding:40px 0 0;color:var(--ink-faint);font-family:var(--display);font-size:13px;text-align:center}
+
+/* ---------- responsive ---------- */
+@media(max-width:1080px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .25s;width:300px;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-btn{display:block}
+  .scrim.show{display:block}
+  .content{margin-left:0}
+  .hero-inner{padding:0 26px}
+  .wrap,.wrap-wide{padding:0 22px}
+}
+@media(max-width:640px){
+  body{font-size:17.5px}
+  .content p.intro{font-size:18.5px}
+  .demo-controls{gap:14px}
+  .ctrl{min-width:120px}
+  .endcard{padding:28px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<button class="menu-btn" id="menuBtn" aria-label="Open contents">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">
+    <div class="brand-mark">L1</div>
+    <div class="brand-text"><strong>Foundations</strong><span>Robotics &amp; VLA · Layer 1 of 6</span></div>
+  </div>
+  <nav>
+  <ul class="toc">
+    <li><a class="chap" href="#ch1"><span class="num">01</span><span>Vectors &amp; Spaces</span></a>
+      <ul class="subs">
+        <li><a href="#whatvec">What a vector is</a></li>
+        <li><a href="#dot">Dot product &amp; similarity</a></li>
+        <li><a href="#norms">Lengths &amp; distances</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch2"><span class="num">02</span><span>Matrices &amp; Transformations</span></a>
+      <ul class="subs">
+        <li><a href="#matmachine">Matrices move space</a></li>
+        <li><a href="#matmul">Matrix multiplication</a></li>
+        <li><a href="#eigen">Determinant &amp; eigenvectors</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch3"><span class="num">03</span><span>Calculus of Change</span></a>
+      <ul class="subs">
+        <li><a href="#deriv">The derivative</a></li>
+        <li><a href="#chain">The chain rule</a></li>
+        <li><a href="#gradient">Gradients &amp; descent</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch4"><span class="num">04</span><span>Probability</span></a>
+      <ul class="subs">
+        <li><a href="#probbasics">Thinking in probabilities</a></li>
+        <li><a href="#bayes">Bayes' theorem</a></li>
+        <li><a href="#randvar">Random variables</a></li>
+        <li><a href="#gaussian">The Gaussian &amp; CLT</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch5"><span class="num">05</span><span>Estimation &amp; MLE</span></a>
+      <ul class="subs">
+        <li><a href="#mle">Maximum likelihood</a></li>
+        <li><a href="#mlegauss">MLE for the Gaussian</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch6"><span class="num">06</span><span>Learning from Data</span></a>
+      <ul class="subs">
+        <li><a href="#supervised">The supervised setup</a></li>
+        <li><a href="#linreg">Linear regression</a></li>
+        <li><a href="#logreg">Logistic regression</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch7"><span class="num">07</span><span>Generalization</span></a>
+      <ul class="subs">
+        <li><a href="#overfit">Over- and underfitting</a></li>
+        <li><a href="#biasvar">Bias–variance</a></li>
+        <li><a href="#regularize">Regularization</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch8"><span class="num">08</span><span>Information Theory</span></a>
+      <ul class="subs">
+        <li><a href="#entropy">Surprise &amp; entropy</a></li>
+        <li><a href="#kl">Cross-entropy &amp; KL</a></li>
+      </ul></li>
+  </ul>
+  </nav>
+  <div class="side-foot">Layer 1 · Foundations<br>← precedes <em>Layer 2 · Deep Learning Core</em></div>
+</aside>
+<div id="scrim"></div>
+
+<div class="content">
+
+  <header class="hero">
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero-inner">
+      <div class="eyebrow">Robotics &amp; VLA Curriculum · Layer 1</div>
+      <h1>Foundations: <em>the mathematics of learning</em></h1>
+      <p class="lead">Vectors, matrices, derivatives, probability, and the first learning algorithms — every idea that deep learning is built on, developed from scratch with pictures you can touch. No prerequisites beyond high-school algebra and curiosity.</p>
+      <div class="scroll-cue">Scroll to begin · 8 chapters</div>
+    </div>
+  </header>
+
+  <section class="wrap" id="preface">
+    <p class="intro">Deep learning has a reputation for difficulty, but its mathematical core is a small set of ideas used over and over: <em>data is vectors, models are transformations, learning is calculus, uncertainty is probability.</em> This layer builds each one carefully. If Layer 2 is the engine, this is the metallurgy — and knowing it is the difference between memorizing formulas and seeing why they could not be otherwise.</p>
+    <div class="box note">
+      <div class="box-label">How to read this</div>
+      <p>Blue panels are <span class="term">definitions</span> — the precise statement of an idea. Green panels build <span style="color:var(--teal);font-weight:600">intuition</span> — read them even if you skip the math. Black-edged panels are <strong>step-by-step derivations</strong>; read them with a pen. Coral controls are <strong style="color:var(--coral)">interactive</strong> — every coral element is something you can drag, toggle, or run. Amber panels point forward: <em>where you will meet this idea again</em> in Layer 2 and beyond.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 1 ===================== -->
+  <section class="wrap chapter" id="ch1">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 01</div>
+      <h2>Vectors &amp; Spaces</h2>
+    </div>
+    <p class="intro">Everything a learning machine touches — an image, a sentence, a robot's joint angles, the word "dog" — must first become a list of numbers. That list is a vector. Linear algebra is the art of doing useful things to those lists, and it is the native language of every chapter that follows.</p>
+
+    <h3 id="whatvec">1.1 · What a vector is</h3>
+    <p>A vector is two pictures of the same object, and fluency means switching between them without noticing:</p>
+    <ul>
+      <li><strong>The data picture:</strong> a vector is an ordered list of numbers — a row in a spreadsheet. A 3-vector $\mathbf{x}=(x_1,x_2,x_3)$ might be (height, weight, age).</li>
+      <li><strong>The geometry picture:</strong> a vector is an arrow from the origin to a point in space. Each number is a coordinate along one axis.</li>
+    </ul>
+    <div class="box def">
+      <div class="box-label">Definition — vectors and the operations they obey</div>
+      <p>A vector $\mathbf{x}\in\mathbb{R}^{n}$ is an ordered tuple of $n$ real numbers. Two operations define the whole subject:</p>
+      $$\mathbf{x}+\mathbf{y}=(x_1+y_1,\dots,x_n+y_n),\qquad c\,\mathbf{x}=(cx_1,\dots,cx_n)$$
+      <p>Addition places arrows tip-to-tail; scaling stretches an arrow without turning it. Any combination $c_1\mathbf{x}+c_2\mathbf{y}$ built from these is a <span class="term">linear combination</span> — the single most reused construction in machine learning.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — a vector is a recipe</div>
+      <p>Think of the standard basis vectors as ingredients: $\mathbf{e}_1$ is "one step east," $\mathbf{e}_2$ "one step north." The vector $(3,2)$ is a recipe: three parts east, two parts north. Linear combinations are just mixing recipes. When Layer 2 computes a weighted sum $\sum_i w_i x_i$ inside a neuron, or blends value vectors inside attention, it is mixing recipes — nothing more exotic than that. <em>Data lives in space; learning rearranges the space.</em></p>
+    </div>
+    <p>The number of entries, $n$, is the <span class="term">dimension</span>. Real data is high-dimensional: a small 224×224 photo is a vector in $\mathbb{R}^{150528}$. You cannot draw that — but every 2D picture in this book is an honest shadow of it, because the algebra is identical in any dimension. That is the quiet superpower of linear algebra: <em>prove it in 2D, use it in 150 thousand D.</em></p>
+
+    <h3 id="dot">1.2 · The dot product — an agreement meter</h3>
+    <p>If vectors are the nouns of machine learning, the dot product is the verb. It takes two vectors and returns a single number measuring how much they <em>agree</em>.</p>
+    <div class="box def">
+      <div class="box-label">Definition — dot product, two equivalent forms</div>
+      $$\mathbf{a}\cdot\mathbf{b}=\sum_{i=1}^{n}a_i b_i \;=\;\lVert\mathbf{a}\rVert\,\lVert\mathbf{b}\rVert\cos\theta$$
+      <p>The left side is arithmetic: multiply matching entries, add them up. The right side is geometry: the product of the lengths, scaled by the cosine of the angle $\theta$ between the arrows. The equality of these two is a theorem, derived below.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — read it as alignment</div>
+      <p>Fix both lengths to 1. Then $\mathbf{a}\cdot\mathbf{b}=\cos\theta$: it is $+1$ when the arrows point the same way, $0$ when perpendicular (no shared direction at all), $-1$ when opposed. The dot product is an <strong>agreement meter</strong>. Hold onto this: in Layer 2, attention decides which words to look at by dotting queries with keys, and Word2Vec decides which words are similar by dotting their embeddings. The most important operation in modern AI is this agreement meter, computed billions of times per second.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why arithmetic equals geometry</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Take the triangle with sides $\mathbf{a}$, $\mathbf{b}$, and the connecting side $\mathbf{a}-\mathbf{b}$. The law of cosines (a generalized Pythagoras) says:</p>$$\lVert\mathbf{a}-\mathbf{b}\rVert^{2}=\lVert\mathbf{a}\rVert^{2}+\lVert\mathbf{b}\rVert^{2}-2\lVert\mathbf{a}\rVert\lVert\mathbf{b}\rVert\cos\theta$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Expand the left side using only arithmetic ($\lVert\mathbf{v}\rVert^2=\sum_i v_i^2$):</p>$$\lVert\mathbf{a}-\mathbf{b}\rVert^{2}=\sum_i(a_i-b_i)^2=\sum_i a_i^2+\sum_i b_i^2-2\sum_i a_ib_i=\lVert\mathbf{a}\rVert^{2}+\lVert\mathbf{b}\rVert^{2}-2\,\mathbf{a}\cdot\mathbf{b}$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Set the two expressions equal; the squared-length terms cancel, leaving</p>$$\mathbf{a}\cdot\mathbf{b}=\lVert\mathbf{a}\rVert\,\lVert\mathbf{b}\rVert\cos\theta$$<p>Arithmetic on coordinates secretly computes an angle. This is why a computer, which only ever does arithmetic, can reason about geometry.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The agreement meter — rotate a vector, watch the dot product</h4></div>
+      <div class="demo-body">
+        <canvas id="dotCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>angle of <b style="color:var(--coral)">b</b> <span class="val" id="dotav">45°</span></label><input type="range" id="dotAngle" min="0" max="360" step="1" value="45"></div>
+          <div class="ctrl"><label>length of <b style="color:var(--coral)">b</b> <span class="val" id="dotlv">1.0</span></label><input type="range" id="dotLen" min="0.2" max="1.6" step="0.05" value="1"></div>
+        </div>
+        <div class="readout" id="dotReadout"></div>
+      </div>
+    </div>
+    <p>Watch three things at once: the dot product (bar at right), the cosine similarity, and the <span class="term">projection</span> — the shadow $\mathbf{b}$ casts onto $\mathbf{a}$, drawn as the teal segment. The dot product is exactly "length of $\mathbf{a}$ × length of that shadow." When the shadow points backwards, the sign flips negative.</p>
+
+    <h3 id="norms">1.3 · Lengths, distances, and similarity</h3>
+    <div class="box def">
+      <div class="box-label">Definition — norm and distance</div>
+      <p>The <span class="term">Euclidean norm</span> (length) of a vector, and the distance between two vectors:</p>
+      $$\lVert\mathbf{x}\rVert=\sqrt{\mathbf{x}\cdot\mathbf{x}}=\sqrt{\textstyle\sum_i x_i^2},\qquad d(\mathbf{x},\mathbf{y})=\lVert\mathbf{x}-\mathbf{y}\rVert$$
+      <p>And the scale-free version of the dot product, <span class="term">cosine similarity</span>:</p>
+      $$\cos\theta=\frac{\mathbf{x}\cdot\mathbf{y}}{\lVert\mathbf{x}\rVert\,\lVert\mathbf{y}\rVert}\in[-1,1]$$
+    </div>
+    <p>Distance asks "how far apart are these points?"; cosine asks "do these arrows point the same way, regardless of length?" Machine learning uses both, and the choice matters: two documents of very different lengths can still be about the same topic — cosine similarity sees that, raw distance does not.</p>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>Layer 2 measures word similarity by cosine (Ch 6), normalizes activations by their statistics (LayerNorm, Ch 2), and scales attention scores by a norm-derived factor $\sqrt{d_k}$ (Ch 5). Every one of those is this section wearing a different coat.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 2 ===================== -->
+  <section class="wrap chapter" id="ch2">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 02</div>
+      <h2>Matrices &amp; Transformations</h2>
+    </div>
+    <p class="intro">A matrix looks like a boring grid of numbers. It is actually a <em>machine that moves space</em> — every point picked up and carried somewhere else, all at once, by one consistent rule. Neural networks are towers of these machines. Understand one matrix deeply and you understand what every layer of a network is doing.</p>
+
+    <h3 id="matmachine">2.1 · A matrix is a function</h3>
+    <div class="box def">
+      <div class="box-label">Definition — matrix-vector multiplication</div>
+      <p>An $m\times n$ matrix $A$ maps a vector $\mathbf{x}\in\mathbb{R}^{n}$ to a vector $A\mathbf{x}\in\mathbb{R}^{m}$:</p>
+      $$ (A\mathbf{x})_i=\sum_{j=1}^{n}A_{ij}\,x_j $$
+      <p>Equivalently — and far more usefully — $A\mathbf{x}$ is a linear combination of the <em>columns</em> of $A$, mixed with the entries of $\mathbf{x}$ as the amounts:</p>
+      $$A\mathbf{x}=x_1\,\mathbf{a}_{\text{col }1}+x_2\,\mathbf{a}_{\text{col }2}+\cdots+x_n\,\mathbf{a}_{\text{col }n}$$
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — the columns tell you everything</div>
+      <p>To know what a machine does, feed it the simplest possible inputs. Feed $A$ the basis vector $\mathbf{e}_1=(1,0)$: out comes exactly column 1. Feed it $\mathbf{e}_2$: out comes column 2. So <strong>the columns of a matrix are where the basis vectors land</strong> — and since every vector is a recipe of basis vectors (Ch 1), linearity carries the whole space along for the ride. A matrix is fully described by what it does to a handful of arrows. In the demo below, you are directly dragging where $\mathbf{e}_1$ and $\mathbf{e}_2$ land, and the entire grid follows.</p>
+    </div>
+    <p>A transformation is <span class="term">linear</span> when it keeps grid lines straight, parallel, and evenly spaced, and keeps the origin fixed: $A(c\mathbf{x}+d\mathbf{y})=cA\mathbf{x}+dA\mathbf{y}$. Rotations, stretches, shears, reflections, projections — all linear, all matrices. What a single matrix can never do is <em>bend</em> space. (Remember that: it is exactly why Layer 2 must insert nonlinear activation functions between matrices.)</p>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The space machine — edit a matrix, move the world</h4></div>
+      <div class="demo-body">
+        <canvas id="matCanvas" width="640" height="420"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>$a$ (col 1, x) <span class="val" id="mav">1.0</span></label><input type="range" id="ma" min="-2" max="2" step="0.05" value="1"></div>
+          <div class="ctrl"><label>$c$ (col 1, y) <span class="val" id="mcv">0.0</span></label><input type="range" id="mc" min="-2" max="2" step="0.05" value="0"></div>
+          <div class="ctrl"><label>$b$ (col 2, x) <span class="val" id="mbv">0.0</span></label><input type="range" id="mb" min="-2" max="2" step="0.05" value="0"></div>
+          <div class="ctrl"><label>$d$ (col 2, y) <span class="val" id="mdv">1.0</span></label><input type="range" id="md" min="-2" max="2" step="0.05" value="1"></div>
+        </div>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>presets</label><div class="seg" id="matSeg"><button data-m="id">identity</button><button data-m="rot">rotate</button><button data-m="shear">shear</button><button data-m="stretch">stretch</button><button data-m="sing">collapse</button></div></div>
+        </div>
+        <div class="readout" id="matReadout"></div>
+      </div>
+    </div>
+    <p>The matrix is $A=\begin{pmatrix}a&b\\c&d\end{pmatrix}$ — the indigo arrow is column 1 (where east lands), the coral arrow column 2 (where north lands). The shaded square is the image of the unit square; its area is the determinant. Try <strong>collapse</strong>: when the columns line up, the whole plane flattens onto a line, information is destroyed, and no inverse can recover it.</p>
+
+    <h3 id="matmul">2.2 · Matrix multiplication is composition</h3>
+    <p>Why is matrix multiplication defined by that strange rows-into-columns rule? Because it is forced — it is the unique rule that makes <em>"apply $B$, then apply $A$"</em> equal a single matrix $AB$.</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the multiplication rule, forced by composition</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>We want a matrix $C$ such that $C\mathbf{x}=A(B\mathbf{x})$ for every $\mathbf{x}$. From Ch 2.1, column $j$ of any matrix is where $\mathbf{e}_j$ lands. So:</p>$$\mathbf{c}_{\text{col }j}=A(B\,\mathbf{e}_j)=A\,\mathbf{b}_{\text{col }j}$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Column $j$ of $C$ is therefore $A$ applied to column $j$ of $B$. Writing that entry-by-entry gives exactly the textbook rule:</p>$$C_{ij}=\sum_{k}A_{ik}B_{kj}$$<p>Each entry of the product is a dot product — row $i$ of $A$ agreeing with column $j$ of $B$. The "weird" rule is just composition of machines, written in coordinates.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Composition order matters ($AB\neq BA$ in general — shear then rotate is not rotate then shear), and composition is associative, $(AB)C=A(BC)$, because "do C, then B, then A" needs no parentheses. Associativity is why a deep network of stacked layers is mathematically coherent.</p></div></div>
+    </div>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>A neural network layer is $\phi(W\mathbf{x}+\mathbf{b})$: a matrix machine, a shift, a bend. Attention's scores are the matrix product $QK^{\top}$ — every query dotted against every key in one multiplication. GPUs exist, commercially speaking, to do this one operation absurdly fast.</p>
+    </div>
+
+    <h3 id="eigen">2.3 · Determinant, eigenvectors, rank</h3>
+    <p>Three diagnostics tell you what kind of machine a matrix is.</p>
+    <div class="box def">
+      <div class="box-label">Definition — determinant</div>
+      <p>For $A=\begin{pmatrix}a&b\\c&d\end{pmatrix}$, the <span class="term">determinant</span> is $\det A = ad-bc$. It is the (signed) factor by which $A$ scales <em>area</em> — volume in higher dimensions. $|\det A|=2$ doubles areas; $\det A=0$ flattens space onto a line (or point); a negative sign means the plane was flipped over.</p>
+    </div>
+    <div class="box def">
+      <div class="box-label">Definition — eigenvectors and eigenvalues</div>
+      <p>An <span class="term">eigenvector</span> of $A$ is a nonzero vector whose <em>direction</em> survives the machine — it only gets scaled:</p>
+      $$A\mathbf{v}=\lambda\,\mathbf{v}$$
+      <p>The scale factor $\lambda$ is its <span class="term">eigenvalue</span>. Eigenvectors are the skeleton of a transformation: the axes along which a complicated-looking map is just stretching.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — why anyone cares</div>
+      <p>Repeatedly applying a matrix (as recurrent networks do, and as gradient flow through deep networks effectively does) amplifies the eigen-directions with $|\lambda|\gt 1$ and crushes those with $|\lambda|\lt 1$. The vanishing/exploding gradients of Layer 2's Chapter 4 are an eigenvalue story. PCA — the classical workhorse of dimensionality reduction — is "find the eigenvectors of the data's covariance matrix": the directions along which the data genuinely varies.</p>
+    </div>
+    <p>Finally, <span class="term">rank</span> counts the number of independent directions that survive the machine — the dimension of the output space actually reached. Full rank means nothing is lost and the matrix is invertible; rank-deficient means a collapse like the demo's "collapse" preset, where $\det A=0$ and the inverse cannot exist. Low-rank structure is also a gift: Layer 2's LoRA fine-tunes giant models by learning only a low-rank correction.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 3 ===================== -->
+  <section class="wrap chapter" id="ch3">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 03</div>
+      <h2>Calculus of Change</h2>
+    </div>
+    <p class="intro">Learning means improving, and improving means knowing which direction is "better." Calculus is the mathematics of that question. One idea — the derivative — asked three ways (one variable, chained variables, many variables) gives us everything gradient descent and backpropagation will ever need.</p>
+
+    <h3 id="deriv">3.1 · The derivative — a local slope</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the derivative</div>
+      <p>The derivative of $f$ at $x$ is the limit of "rise over run" as the run shrinks to nothing:</p>
+      $$f'(x)=\lim_{h\to 0}\frac{f(x+h)-f(x)}{h}$$
+      <p>Geometrically it is the slope of the tangent line at $x$; operationally it answers: <em>if I nudge the input a tiny bit, how much does the output move, and in which direction?</em></p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — a speedometer, and a zoom lens</div>
+      <p>Average speed over an hour is $\Delta\text{distance}/\Delta\text{time}$. Your speedometer shows the same ratio over an instant — that is a derivative. Equivalently: zoom into any smooth curve far enough and it becomes indistinguishable from a straight line; the derivative is that line's slope. <strong>"Smooth functions are locally linear"</strong> is the single sentence on which all of deep learning's training rests: at any point, the loss surface looks like a tilted plane, and a tilted plane tells you which way is down.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — a derivative from scratch: $f(x)=x^2$</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Form the rise-over-run for a finite nudge $h$:</p>$$\frac{f(x+h)-f(x)}{h}=\frac{(x+h)^2-x^2}{h}=\frac{x^2+2xh+h^2-x^2}{h}=\frac{2xh+h^2}{h}$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Cancel the $h$ (legal while $h\neq0$): the ratio is $2x+h$. Now let the nudge vanish, $h\to0$:</p>$$f'(x)=2x$$<p>The slope of $x^2$ grows linearly with $x$ — gentle near the bottom, steep far away. (You will see this exact shape again as the MSE loss: small errors get small corrective pushes, large errors large ones.)</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The same patient procedure produces a small toolkit that covers nearly everything: $\frac{d}{dx}x^{n}=nx^{n-1}$, $\frac{d}{dx}e^{x}=e^{x}$, $\frac{d}{dx}\ln x=\frac1x$, $(f+g)'=f'+g'$, $(fg)'=f'g+fg'$. Memorize the toolkit; remember it all came from one limit.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The zoom lens — secant lines becoming a tangent</h4></div>
+      <div class="demo-body">
+        <canvas id="derivCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>function</label><div class="seg" id="dfnSeg"><button class="on" data-f="sq">x²</button><button data-f="sin">sin x</button><button data-f="abs">|x|</button><button data-f="cube">x³−x</button></div></div>
+          <div class="ctrl"><label>point $x$ <span class="val" id="dxv">0.8</span></label><input type="range" id="dx" min="-2" max="2" step="0.02" value="0.8"></div>
+          <div class="ctrl"><label>nudge $h$ <span class="val" id="dhv">1.00</span></label><input type="range" id="dh" min="0.01" max="1.5" step="0.01" value="1"></div>
+        </div>
+        <div class="readout" id="derivReadout"></div>
+      </div>
+    </div>
+    <p>The amber line connects $(x,f(x))$ to $(x{+}h,f(x{+}h))$ — a <em>secant</em>, the average slope over the nudge. Shrink $h$ and watch it settle onto the coral tangent. Then switch to $|x|$ and put the point at $0$: the secant never settles. The kink has no single slope — no derivative — which is precisely the issue Layer 2 tiptoes around with ReLU.</p>
+
+    <h3 id="chain">3.2 · The chain rule — sensitivities multiply</h3>
+    <p>Deep learning's functions are pipelines: $x\to g(x)\to f(g(x))$. The chain rule says how a nudge propagates through a pipeline.</p>
+    <div class="box def">
+      <div class="box-label">Definition — chain rule</div>
+      $$\frac{d}{dx}f\big(g(x)\big)=f'\big(g(x)\big)\cdot g'(x)$$
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — gear ratios</div>
+      <p>If a bike's pedal gear turns the chainring 2× per pedal turn, and the chainring turns the wheel 3× per chainring turn, the wheel turns $2\times3=6$× per pedal turn. Sensitivities along a chain <em>multiply</em>. That is the entire chain rule — and the entire mechanism of backpropagation, which multiplies layer-by-layer sensitivities backward through a network. It is also the seed of Layer 2's vanishing-gradient problem: multiply many gear ratios smaller than 1 and the far end barely turns.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — sketch, and a worked example</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>A nudge $\Delta x$ produces $\Delta g\approx g'(x)\,\Delta x$ (local linearity). That output nudge produces $\Delta f\approx f'(g)\,\Delta g$. Substitute:</p>$$\Delta f\approx f'(g(x))\,g'(x)\,\Delta x\;\;\Rightarrow\;\;\frac{\Delta f}{\Delta x}\to f'(g(x))\,g'(x)$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Worked example — the function $\sigma(2x+1)$ where $\sigma$ is the sigmoid with $\sigma'=\sigma(1-\sigma)$ (derived in Layer 2):</p>$$\frac{d}{dx}\,\sigma(2x+1)=\sigma'(2x+1)\cdot 2=2\,\sigma(2x+1)\big(1-\sigma(2x+1)\big)$$<p>Outer sensitivity times inner sensitivity. A neural network just iterates this, thousands of layers of gears deep.</p></div></div>
+    </div>
+
+    <h3 id="gradient">3.3 · Many variables — the gradient, and descent</h3>
+    <p>A loss function takes <em>millions</em> of inputs (all the parameters) and returns one number. The derivative idea survives intact: hold everything else still, nudge one variable, record the sensitivity. Do that for each variable and stack the answers into a vector.</p>
+    <div class="box def">
+      <div class="box-label">Definition — partial derivatives and the gradient</div>
+      $$\frac{\partial f}{\partial x_i}=\lim_{h\to0}\frac{f(\mathbf{x}+h\,\mathbf{e}_i)-f(\mathbf{x})}{h},\qquad
+      \nabla f(\mathbf{x})=\left(\frac{\partial f}{\partial x_1},\dots,\frac{\partial f}{\partial x_n}\right)$$
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the gradient points uphill, steepest</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Walk from $\mathbf{x}$ in a unit direction $\mathbf{u}$. By local linearity, the rate of change is the <em>directional derivative</em>, a dot product:</p>$$D_{\mathbf{u}}f=\nabla f\cdot\mathbf{u}=\lVert\nabla f\rVert\cos\theta$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>This is the agreement meter of Chapter 1! It is maximized when $\theta=0$ — walking <em>with</em> the gradient — and most negative at $\theta=\pi$, walking against it. Hence:</p>$$\textbf{steepest ascent}=\nabla f,\qquad \textbf{steepest descent}=-\nabla f$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>That single fact licenses the master algorithm of this whole curriculum, <span class="term">gradient descent</span>: repeat $\;\mathbf{x}\leftarrow\mathbf{x}-\eta\,\nabla f(\mathbf{x})$ with a small step size $\eta$. Everything in Layer 2's training chapter is refinement of this one line.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Descending a curve — watch step size make or break it</h4></div>
+      <div class="demo-body">
+        <canvas id="gdCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>learning rate $\eta$ <span class="val" id="glrv">0.10</span></label><input type="range" id="glr" min="0.01" max="1.1" step="0.01" value="0.1"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="gdRun">▸ Run descent</button> <button class="btn ghost" id="gdReset">Reset</button></div>
+        </div>
+        <div class="readout" id="gdReadout"></div>
+      </div>
+    </div>
+    <p>Click anywhere on the curve to place the ball, then run. Small $\eta$: a safe but slow roll. Large $\eta$: overshooting, oscillation, even explosion. And notice the two valleys — start in the wrong basin and descent happily settles in the worse minimum. It only ever knows the local slope; it has no map. These are not bugs in the demo; they are the true open problems of optimization that Layer 2's momentum and Adam exist to soften.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 4 ===================== -->
+  <section class="wrap chapter" id="ch4">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 04</div>
+      <h2>Probability</h2>
+    </div>
+    <p class="intro">Data is noisy, sensors lie a little, and the future is uncertain. Probability is the calculus of uncertainty — the rules for holding beliefs of intermediate strength and updating them honestly when evidence arrives. Machine learning is, at bottom, applied probability.</p>
+
+    <h3 id="probbasics">4.1 · Thinking in probabilities</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the three rules of probability</div>
+      <p>A probability assigns each event $A$ a number $P(A)\in[0,1]$, with $P(\text{certain})=1$, and for mutually exclusive events $P(A\text{ or }B)=P(A)+P(B)$. From these, two workhorse rules:</p>
+      $$\textbf{Product rule: } P(A,B)=P(A\mid B)\,P(B)\qquad\quad \textbf{Sum rule: } P(A)=\sum_{b}P(A,B{=}b)$$
+      <p>where $P(A\mid B)$ — "$A$ given $B$" — is the probability of $A$ once you know $B$ happened: $P(A\mid B)=P(A,B)/P(B)$.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — probability is area</div>
+      <p>Picture all possible worlds as a square of area 1. An event is a region; its probability is its area. Conditioning on $B$ means <em>zooming in</em>: throw away everything outside $B$, and re-measure areas as fractions of $B$ alone. The sum rule says a region's area is the sum of its slices. Every probability identity in this chapter is provable by staring at overlapping regions — and the Bayes demo below is literally that picture, drawn with people instead of area.</p>
+    </div>
+    <p>Two events are <span class="term">independent</span> when knowing one tells you nothing about the other: $P(A\mid B)=P(A)$, equivalently $P(A,B)=P(A)P(B)$. Independence is the assumption that lets likelihoods of datasets factor into products — which is why logarithms (turning products into sums) appear everywhere in ML.</p>
+
+    <h3 id="bayes">4.2 · Bayes' theorem — the mathematics of changing your mind</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — Bayes from one line of algebra</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Write the product rule both ways around — the joint probability doesn't care about order:</p>$$P(H\mid E)\,P(E)=P(H,E)=P(E\mid H)\,P(H)$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Divide by $P(E)$:</p>$$P(H\mid E)=\frac{P(E\mid H)\,P(H)}{P(E)}$$<p>Read with names: the <strong>posterior</strong> (belief in hypothesis $H$ after evidence $E$) equals the <strong>likelihood</strong> (how well $H$ predicts $E$) times the <strong>prior</strong> (belief before), normalized by the overall probability of the evidence.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The denominator expands by the sum rule over all hypotheses, $P(E)=\sum_h P(E\mid h)P(h)$ — it is just the normalizer making posteriors sum to 1.</p></div></div>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — why test results surprise people</div>
+      <p>A disease affects 1% of people. A test catches 90% of true cases, with a 9% false-alarm rate. You test positive — how worried should you be? Most people say "around 90%." Bayes says: out of 1000 people, ~10 are sick and ~9 of them test positive; but ~89 of the 990 healthy people <em>also</em> test positive. Your positive result is one of ~98, of which only 9 are real: about a <strong>9%</strong> chance. The prior (rarity of the disease) dominates. Evidence doesn't replace prior belief — it <em>reweights</em> it. Play with exactly this in the demo.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Bayes, drawn as a population — priors vs. evidence</h4></div>
+      <div class="demo-body">
+        <canvas id="bayesCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>prevalence $P(\text{sick})$ <span class="val" id="bprv">1%</span></label><input type="range" id="bpr" min="0.5" max="50" step="0.5" value="1"></div>
+          <div class="ctrl"><label>sensitivity $P(+\mid \text{sick})$ <span class="val" id="bsev">90%</span></label><input type="range" id="bse" min="50" max="100" step="1" value="90"></div>
+          <div class="ctrl"><label>false-positive rate $P(+\mid \text{healthy})$ <span class="val" id="bfpv">9%</span></label><input type="range" id="bfp" min="0" max="30" step="0.5" value="9"></div>
+        </div>
+        <div class="readout" id="bayesReadout"></div>
+      </div>
+    </div>
+    <p>Each dot is a person; rows of fate, columns of luck. Filled dots tested positive. The posterior is simply: <em>of the filled dots, what fraction are coral (sick)?</em> Drag the prevalence up and watch the same test become trustworthy — the posterior is a tug-of-war between prior and likelihood.</p>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>All of machine learning can be read as Bayes at scale: a model's parameters are the hypothesis, the dataset is the evidence, and training seeks parameters with high posterior. MLE (next chapter) is Bayes with a flat prior; Layer 2's regularization is Bayes with an informative one; and a VLA deciding what it sees from noisy pixels is doing this arithmetic implicitly in every forward pass.</p>
+    </div>
+
+    <h3 id="randvar">4.3 · Random variables, expectation, variance</h3>
+    <div class="box def">
+      <div class="box-label">Definition — random variable, expectation, variance</div>
+      <p>A <span class="term">random variable</span> $X$ is a quantity whose value is determined by chance, described by a distribution $p(x)$. Its <span class="term">expectation</span> (long-run average) and <span class="term">variance</span> (average squared spread) are:</p>
+      $$\mathbb{E}[X]=\sum_x x\,p(x)\;\;\text{(or }\textstyle\int x\,p(x)\,dx\text{)},\qquad \operatorname{Var}(X)=\mathbb{E}\big[(X-\mathbb{E}[X])^2\big]$$
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the shortcut formula for variance</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Expand the square inside the expectation, writing $\mu=\mathbb{E}[X]$ (a constant):</p>$$\operatorname{Var}(X)=\mathbb{E}[X^2-2\mu X+\mu^2]=\mathbb{E}[X^2]-2\mu\,\mathbb{E}[X]+\mu^2$$<p>using linearity of expectation, $\mathbb{E}[aX+b]=a\mathbb{E}[X]+b$ — itself immediate from the definition.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Substitute $\mathbb{E}[X]=\mu$ and simplify:</p>$$\operatorname{Var}(X)=\mathbb{E}[X^2]-\mu^2=\mathbb{E}[X^2]-\mathbb{E}[X]^2$$<p>"Mean of the square minus square of the mean." This identity powers Layer 2's batch-norm statistics, Adam's second-moment estimates, and the $\sqrt{d_k}$ attention-scaling derivation.</p></div></div>
+    </div>
+
+    <h3 id="gaussian">4.4 · The Gaussian, and why it is everywhere</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the normal (Gaussian) distribution</div>
+      $$\mathcal{N}(x\mid\mu,\sigma^2)=\frac{1}{\sqrt{2\pi\sigma^2}}\exp\!\left(-\frac{(x-\mu)^2}{2\sigma^2}\right)$$
+      <p>Two parameters: the mean $\mu$ (where the bell sits) and the variance $\sigma^2$ (how wide it is). About 68% of the mass lies within $1\sigma$ of the mean, 95% within $2\sigma$.</p>
+    </div>
+    <p>Why does this one curve rule statistics? The <span class="term">Central Limit Theorem</span>: sum (or average) many independent random influences — whatever their individual shapes — and the result's distribution approaches a Gaussian. Measurement noise is a sum of countless tiny pushes, so noise is Gaussian; that assumption is what made MSE the "correct" regression loss in Layer 2, and Gaussian noise is literally the raw material that diffusion models sculpt images from.</p>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The Central Limit Theorem — order out of randomness</h4></div>
+      <div class="demo-body">
+        <canvas id="cltCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>source distribution (very non-Gaussian)</label><div class="seg" id="cltSeg"><button class="on" data-d="uni">uniform</button><button data-d="skew">skewed</button><button data-d="bi">two-spike</button></div></div>
+          <div class="ctrl"><label>how many draws per average, $n$ <span class="val" id="cltnv">1</span></label><input type="range" id="cltn" min="1" max="40" step="1" value="1"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="cltDrop">▸ Drop 2000 averages</button> <button class="btn ghost" id="cltClear">Clear</button></div>
+        </div>
+        <div class="readout" id="cltReadout"></div>
+      </div>
+    </div>
+    <p>At $n=1$ the histogram just mirrors the (deliberately ugly) source. Raise $n$ — averaging more draws per sample — and the bell emerges regardless of the source's shape, with the dashed Gaussian fit hugging it. <em>Averages of anything become Gaussian.</em> That is the CLT, and it is why the bell curve earned the name "normal."</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 5 ===================== -->
+  <section class="wrap chapter" id="ch5">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 05</div>
+      <h2>Estimation &amp; Maximum Likelihood</h2>
+    </div>
+    <p class="intro">Probability runs forward: given a model, what data should I expect? Statistics runs the film backwards: given data, what model was likely behind it? The bridge between them — maximum likelihood — is the single principle from which nearly every loss function in deep learning is derived.</p>
+
+    <h3 id="mle">5.1 · The likelihood, and its maximum</h3>
+    <div class="box def">
+      <div class="box-label">Definition — likelihood and the MLE</div>
+      <p>Suppose data $x_1,\dots,x_N$ were drawn independently from a distribution $p(x\mid\theta)$ with unknown parameter $\theta$. The <span class="term">likelihood</span> of $\theta$ is the probability of the data, viewed as a function of $\theta$:</p>
+      $$L(\theta)=\prod_{i=1}^{N}p(x_i\mid\theta)$$
+      <p>The <span class="term">maximum likelihood estimate</span> is the parameter making the observed data most probable: $\hat\theta=\arg\max_\theta L(\theta)$. In practice we maximize $\log L$ — the log turns the product into a sum and moves the maximum nowhere, since $\log$ is increasing.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — which world makes my data least surprising?</div>
+      <p>Imagine every candidate $\theta$ as a parallel world. In each world, ask: "how surprised would I be to see exactly my data?" MLE picks the world of minimum surprise. It does <em>not</em> say that world is true — only that, among the candidates, it explains what you saw best. Minimizing a loss in deep learning <em>is</em> this: Layer 2 shows that MSE is Gaussian MLE and cross-entropy is categorical MLE. "Training a network" and "maximum likelihood" are, for the standard losses, the same sentence.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — MLE for a coin (Bernoulli)</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>A coin lands heads with unknown probability $\theta$. In $N$ flips you saw $k$ heads. Each head contributes $\theta$, each tail $(1-\theta)$:</p>$$L(\theta)=\theta^{k}(1-\theta)^{N-k}\;\;\Rightarrow\;\;\ell(\theta)=\log L=k\log\theta+(N-k)\log(1-\theta)$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>At a maximum the slope is zero. Differentiate and set to zero (using $\frac{d}{d\theta}\log\theta=1/\theta$):</p>$$\ell'(\theta)=\frac{k}{\theta}-\frac{N-k}{1-\theta}=0\;\;\Rightarrow\;\;k(1-\theta)=(N-k)\,\theta$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Solve:</p>$$\hat\theta=\frac{k}{N}$$<p>The principle of minimum surprise recovers exactly the answer common sense wanted: the observed frequency. But now it is a <em>theorem</em>, and the same machinery will keep working where common sense has no guess to offer.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The likelihood curve — flip coins, watch the peak move</h4></div>
+      <div class="demo-body">
+        <canvas id="mleCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0;justify-content:flex-end">
+            <button class="btn" id="mleFlip1">▸ Flip 1</button>
+            <button class="btn" id="mleFlip25">▸ Flip 25</button>
+            <button class="btn ghost" id="mleReset">Reset</button>
+          </div>
+          <div class="ctrl"><label>true (hidden) coin bias <span class="val" id="mletv">0.70</span></label><input type="range" id="mlet" min="0.05" max="0.95" step="0.05" value="0.7"></div>
+        </div>
+        <div class="readout" id="mleReadout"></div>
+      </div>
+    </div>
+    <p>The curve is the (normalized) likelihood $\theta^{k}(1-\theta)^{N-k}$ over all candidate biases; the coral marker sits at its peak $k/N$, the dashed teal line at the hidden truth. Watch two things as flips accumulate: the peak homes in on the truth, and the curve <em>narrows</em> — more data doesn't just improve the estimate, it sharpens the confidence. With 3 flips, many worlds explain your data; with 300, very few survive.</p>
+
+    <h3 id="mlegauss">5.2 · MLE for the Gaussian — where "the average" comes from</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the sample mean is an MLE</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Data $x_1,\dots,x_N$ from $\mathcal{N}(\mu,\sigma^2)$ with $\sigma$ known. The log-likelihood (dropping constants in $\mu$):</p>$$\ell(\mu)=-\frac{1}{2\sigma^2}\sum_{i=1}^{N}(x_i-\mu)^2+\text{const}$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Maximizing $\ell$ means <em>minimizing the sum of squared distances</em> — squared error appears by itself, uninvited. Set the derivative to zero:</p>$$\frac{d\ell}{d\mu}=\frac{1}{\sigma^2}\sum_i(x_i-\mu)=0\;\;\Rightarrow\;\;\hat\mu=\frac{1}{N}\sum_i x_i$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The humble average is the maximum-likelihood estimate under Gaussian noise. This is the seed of the whole "least squares" tradition — and the reason Layer 2 could derive MSE from first principles. When you compute a mean, you are fitting a model.</p></div></div>
+    </div>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>Every loss in Layer 2 is a negative log-likelihood: MSE ↔ Gaussian, cross-entropy ↔ categorical, the VAE's objective ↔ a likelihood bound, diffusion's noise-prediction ↔ a likelihood bound too. "Pick a loss" really means "state your noise model."</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 6 ===================== -->
+  <section class="wrap chapter" id="ch6">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 06</div>
+      <h2>Learning from Data</h2>
+    </div>
+    <p class="intro">We now have all the parts: vectors to hold data, transformations to model relationships, derivatives to improve, likelihood to define "good." Click them together and you get the first real learning algorithms — and the template that every neural network still follows.</p>
+
+    <h3 id="supervised">6.1 · The supervised learning setup</h3>
+    <div class="box def">
+      <div class="box-label">Definition — supervised learning</div>
+      <p>Given a dataset of input–output pairs $\{(\mathbf{x}_i,y_i)\}_{i=1}^{N}$ drawn from some unknown distribution, choose a family of functions $f_{\boldsymbol\theta}$ (the <span class="term">model</span>), a <span class="term">loss</span> $\mathcal{L}$ measuring prediction error, and find</p>
+      $$\hat{\boldsymbol\theta}=\arg\min_{\boldsymbol\theta}\;\frac{1}{N}\sum_{i=1}^{N}\mathcal{L}\big(f_{\boldsymbol\theta}(\mathbf{x}_i),\,y_i\big)$$
+      <p>Three independent choices — model family, loss, optimizer — and every learning system in this curriculum, up to and including a robot's VLA policy, is an instance of this template.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — learning is curve-fitting with consequences</div>
+      <p>Strip the mystique: supervised learning is fitting a curve through labeled points and hoping the curve keeps being right <em>between</em> and <em>beyond</em> them. The drama is in the hoping — that is Chapter 7. A VLA "learns to pick up blocks" by fitting a (very large) curve from camera pixels to motor torques through millions of demonstration points. Same template, bigger curve.</p>
+    </div>
+
+    <h3 id="linreg">6.2 · Linear regression — the first model</h3>
+    <p>The simplest useful family: a line, $f(x)=wx+b$. The Gaussian-MLE argument of Chapter 5 hands us the loss — squared error. Now calculus finds the best line <em>exactly</em>.</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — least squares, solved in closed form</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Define the loss as a function of the two parameters:</p>$$\mathcal{L}(w,b)=\frac{1}{N}\sum_{i=1}^{N}\big(wx_i+b-y_i\big)^2$$<p>It is a smooth bowl in $(w,b)$ — quadratic, hence one minimum, found where both partial derivatives vanish.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Set $\partial\mathcal{L}/\partial b=0$. With $\bar{x},\bar{y}$ the means:</p>$$\frac{2}{N}\sum_i(wx_i+b-y_i)=0\;\;\Rightarrow\;\;b=\bar{y}-w\bar{x}$$<p>The best line passes through the data's center of mass $(\bar x,\bar y)$.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Substitute into $\partial\mathcal{L}/\partial w=0$ and solve (a few lines of algebra):</p>$$w=\frac{\sum_i(x_i-\bar{x})(y_i-\bar{y})}{\sum_i(x_i-\bar{x})^2}=\frac{\operatorname{Cov}(x,y)}{\operatorname{Var}(x)}$$<p>The slope is "how much $x$ and $y$ vary together, per unit of how much $x$ varies alone." In matrix form for many features this becomes the <span class="term">normal equation</span> $\hat{\mathbf{w}}=(X^{\top}X)^{-1}X^{\top}\mathbf{y}$ — same derivation, vector clothes.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Least squares live — add points, watch the best line follow</h4></div>
+      <div class="demo-body">
+        <canvas id="regCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn ghost" id="regClear">Clear points</button><button class="btn ghost" id="regNoise">Sprinkle noisy line</button></div>
+        </div>
+        <div class="readout" id="regReadout"></div>
+      </div>
+    </div>
+    <p><strong>Click to add data points</strong> (click a point again to remove it). The line re-solves the closed-form equations instantly; the faint vertical segments are the <em>residuals</em> whose squares it minimizes. Try adding one extreme outlier and watch the line lurch toward it — squaring makes big errors scream louder than many small ones combined, the signature behavior (and weakness) of MSE.</p>
+
+    <h3 id="logreg">6.3 · Logistic regression — from numbers to decisions</h3>
+    <p>Many questions want a probability, not a number: <em>will this customer churn? is this pixel part of the red block?</em> Bolting a probability onto a line takes one function — the sigmoid, $\sigma(z)=1/(1+e^{-z})$ — which squashes any real number into $(0,1)$.</p>
+    <div class="box def">
+      <div class="box-label">Definition — logistic regression</div>
+      $$P(y=1\mid x)=\sigma(wx+b)=\frac{1}{1+e^{-(wx+b)}}$$
+      <p>Fit $w,b$ by maximum likelihood: maximize $\prod_i P(y_i\mid x_i)$, equivalently minimize the <span class="term">binary cross-entropy</span> $-\sum_i\big[y_i\log\hat p_i+(1-y_i)\log(1-\hat p_i)\big]$.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why the sigmoid, of all squashers?</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Model the <em>log-odds</em> as linear (odds = probability for, over probability against):</p>$$\log\frac{P(y{=}1\mid x)}{1-P(y{=}1\mid x)}=wx+b$$<p>This is the actual modeling assumption — "each unit of $x$ multiplies the odds by a constant factor $e^{w}$."</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Solve for the probability: exponentiate, $\frac{p}{1-p}=e^{wx+b}$, then rearrange $p=(1-p)e^{wx+b}$:</p>$$p=\frac{e^{wx+b}}{1+e^{wx+b}}=\frac{1}{1+e^{-(wx+b)}}=\sigma(wx+b)$$<p>The sigmoid is not an arbitrary squasher — it is the unique inverse of "linear log-odds." Its multi-class generalization is the softmax of Layer 2.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>And a small miracle for training: the gradient of the BCE loss for one example works out to</p>$$\frac{\partial \mathcal{L}}{\partial w}=(\hat p - y)\,x$$<p>— error times input, no sigmoid derivative surviving. The same cancellation Layer 2 finds for softmax + cross-entropy. Clean losses make clean gradients.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>A probability machine — fit the S-curve by hand, or let MLE do it</h4></div>
+      <div class="demo-body">
+        <canvas id="logCanvas" width="640" height="340"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>weight $w$ <span class="val" id="lwv">1.0</span></label><input type="range" id="lw" min="-1" max="8" step="0.1" value="1"></div>
+          <div class="ctrl"><label>bias $b$ <span class="val" id="lbv">0.0</span></label><input type="range" id="lb" min="-16" max="16" step="0.2" value="0"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="logFit">▸ Fit by MLE</button></div>
+        </div>
+        <div class="readout" id="logReadout"></div>
+      </div>
+    </div>
+    <p>Dots along the bottom and top are the two classes (hours studied → fail/pass). Slide $w$ and $b$ to move the S-curve and watch the cross-entropy meter respond; the decision boundary sits where the curve crosses $p=0.5$, at $x=-b/w$. Then press <strong>Fit by MLE</strong> — gradient descent on the BCE loss, exactly the update derived above, finds the curve you were groping for.</p>
+    <div class="box note">
+      <div class="box-label">The punchline of this chapter</div>
+      <p>Logistic regression <em>is</em> a one-neuron neural network: weighted sum, sigmoid, cross-entropy, gradient descent. Layer 2's first chapter begins by stacking this exact object into layers. You have now built, from first principles, the atom of deep learning.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 7 ===================== -->
+  <section class="wrap chapter" id="ch7">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 07</div>
+      <h2>Generalization</h2>
+    </div>
+    <p class="intro">Fitting the data you have is easy — a wavy enough curve can hit every point exactly. The entire difficulty of machine learning is doing well on data you <em>haven't</em> seen. This chapter is about that gap: why it appears, how to measure it honestly, and the levers that shrink it.</p>
+
+    <h3 id="overfit">7.1 · Overfitting and underfitting</h3>
+    <div class="box intuition">
+      <div class="box-label">Intuition — memorizing vs. understanding</div>
+      <p>A student can pass a practice exam two ways: understand the subject, or memorize the answer key. Both score 100% on practice; only one survives the real exam. A model with too much flexibility "memorizes the answer key" — it fits the noise, the accidents of this particular sample, not the signal. A model with too little flexibility can't even represent the signal. The honest test is always the same: <strong>held-out data the model never saw.</strong> Train on one split, evaluate on another; the gap between the two errors is the overfitting, made visible.</p>
+    </div>
+    <div class="box def">
+      <div class="box-label">Definition — training vs. generalization error</div>
+      <p>The <span class="term">training error</span> is the average loss on the fitting data; the <span class="term">generalization (test) error</span> is the expected loss on fresh data from the same distribution:</p>
+      $$\mathcal{E}_{\text{train}}=\frac{1}{N}\sum_{i\in\text{train}}\mathcal{L}(f(\mathbf{x}_i),y_i),\qquad \mathcal{E}_{\text{gen}}=\mathbb{E}_{(\mathbf{x},y)}\big[\mathcal{L}(f(\mathbf{x}),y)\big]$$
+      <p><span class="term">Underfitting</span>: both errors high (model too simple). <span class="term">Overfitting</span>: training error low, generalization error high (model too flexible for the data available).</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The flexibility dial — watch a model start hallucinating</h4></div>
+      <div class="demo-body">
+        <canvas id="fitCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>polynomial degree (model flexibility) <span class="val" id="fitdv">1</span></label><input type="range" id="fitd" min="0" max="13" step="1" value="1"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn ghost" id="fitNew">New random data</button></div>
+        </div>
+        <div class="readout" id="fitReadout"></div>
+      </div>
+    </div>
+    <p>Teal points train the polynomial; hollow points are held out. At degree 0–1 the model is a board across a valley — too stiff (underfit). Around degree 3–4 it traces the true curve (dashed) beautifully. Push to degree 12 and watch it contort through every training point while the test error chart on the right takes off — the canonical <strong>U-shape of generalization</strong>: test error falls, bottoms out, then climbs as flexibility outruns the data.</p>
+
+    <h3 id="biasvar">7.2 · The bias–variance decomposition</h3>
+    <p>The U-shape isn't an accident; it is arithmetic. Expected squared error provably splits into three named parts.</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — bias² + variance + noise</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Setup: truth $y=g(x)+\varepsilon$ with noise variance $\sigma^2$; our learned model $\hat f$ depends on the random training sample, so $\hat f(x)$ is itself a random variable. Write $\bar f(x)=\mathbb{E}[\hat f(x)]$ for the average model over re-drawn datasets. Decompose the error by inserting $\bar f$:</p>$$\hat f(x)-y=\underbrace{\big(\hat f(x)-\bar f(x)\big)}_{\text{model's wobble}}+\underbrace{\big(\bar f(x)-g(x)\big)}_{\text{average miss}}-\varepsilon$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Square and take expectations. All three cross-terms vanish — each contains a zero-mean factor ($\hat f-\bar f$ has mean zero by construction; $\varepsilon$ has mean zero and is independent of the rest):</p>$$\mathbb{E}\big[(\hat f(x)-y)^2\big]=\underbrace{\big(\bar f(x)-g(x)\big)^2}_{\textbf{bias}^2}+\underbrace{\mathbb{E}\big[(\hat f(x)-\bar f(x))^2\big]}_{\textbf{variance}}+\underbrace{\sigma^2}_{\textbf{noise}}$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Read it as a budget. <strong>Bias</strong>: error from the model family being too rigid to capture the truth, no matter the sample (the degree-1 board). <strong>Variance</strong>: error from the model swinging with the luck of the sample (the degree-12 contortionist — re-draw the data and it fits a wildly different curve). <strong>Noise</strong>: the floor nobody beats. Simple models spend on bias; flexible models spend on variance; learning well is balancing the budget.</p></div></div>
+    </div>
+    <div class="box note">
+      <div class="box-label">A modern asterisk</div>
+      <p>Deep networks complicate this classic picture: wildly overparameterized models often generalize <em>well</em> ("double descent"), with implicit regularization from SGD doing quiet work. The decomposition stays true — it is arithmetic — but which regime you land in is subtler. Layer 2's regularization chapter picks up this thread.</p>
+    </div>
+
+    <h3 id="regularize">7.3 · Regularization — buying smoothness</h3>
+    <div class="box def">
+      <div class="box-label">Definition — ridge (L2) regularization</div>
+      <p>Add a penalty on weight size to the loss, with strength $\lambda$:</p>
+      $$\mathcal{L}_{\text{ridge}}=\frac{1}{N}\sum_i\big(f_{\mathbf{w}}(\mathbf{x}_i)-y_i\big)^2+\lambda\lVert\mathbf{w}\rVert^2$$
+      <p>Large wiggly fits need large coefficients; taxing $\lVert\mathbf{w}\rVert^2$ makes wiggles expensive, so the optimizer buys them only when the data truly pays for them. L1 ($\lambda\sum|w_i|$) instead pushes weights exactly to zero — automatic feature selection.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — and the Bayesian reading</div>
+      <p>Regularization is a thumb on the scale toward simple explanations — Occam's razor as a term in the loss. The Bayesian view makes it precise: minimizing the L2-penalized loss is exactly maximizing the posterior with a Gaussian prior "weights are probably small." (Take the negative log of prior × likelihood and the penalty appears.) The same idea reappears in Layer 2 as weight decay in AdamW, dropout, and early stopping: different taxes, same principle — <em>don't let the model spend complexity it can't justify.</em></p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 8 ===================== -->
+  <section class="wrap chapter" id="ch8">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 08</div>
+      <h2>Information Theory</h2>
+    </div>
+    <p class="intro">How much does a message really say? Claude Shannon's 1948 answer gave "information" a unit and a calculus — and, decades later, handed deep learning its most important loss function. This short chapter closes the loop back to Layer 2.</p>
+
+    <h3 id="entropy">8.1 · Surprise and entropy</h3>
+    <div class="box intuition">
+      <div class="box-label">Intuition — information is surprise</div>
+      <p>"The sun rose this morning" carries no information — you already knew. "It snowed in the Sahara" carries a lot. Information should measure <em>surprise</em>: rarer events say more. And surprise should add up: two independent surprises together should sum. The unique function turning "probabilities multiply" into "surprises add" is the logarithm — which forces the definition below, up to the choice of base (base 2 measures in <em>bits</em>).</p>
+    </div>
+    <div class="box def">
+      <div class="box-label">Definition — surprise (self-information) and entropy</div>
+      <p>The surprise of an event with probability $p$ is $I(p)=\log_2\frac{1}{p}$, so that $I(pq)=I(p)+I(q)$. The <span class="term">entropy</span> of a distribution is its <em>average</em> surprise:</p>
+      $$H(p)=\mathbb{E}[I]=-\sum_{x}p(x)\log_2 p(x)$$
+      <p>Entropy is largest for the uniform distribution (every outcome equally surprising — maximum uncertainty) and zero for a certain one. It is also the provable minimum average number of yes/no questions — bits — needed to communicate a sample.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The uncertainty meter — shape a distribution, read its entropy</h4></div>
+      <div class="demo-body">
+        <canvas id="entCanvas" width="640" height="340"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>weather: sharpness of beliefs <span class="val" id="entsv">uniform</span></label><input type="range" id="ents" min="0" max="100" step="1" value="0"></div>
+        </div>
+        <div class="readout" id="entReadout"></div>
+      </div>
+    </div>
+    <p>Four possible weathers. Slide from "no idea" (uniform, $H=2$ bits — two good questions needed) toward certainty ($H\to0$ — nothing to ask). Each bar shows its probability and its surprise $-\log_2 p$; entropy is the probability-weighted blend. Notice how a near-certain distribution still has nonzero entropy: rare outcomes are exactly the expensive ones.</p>
+
+    <h3 id="kl">8.2 · Cross-entropy and KL divergence — the bridge to Layer 2</h3>
+    <div class="box def">
+      <div class="box-label">Definition — cross-entropy and KL divergence</div>
+      <p>If reality follows $p$ but you act (compress, predict, bet) as if it follows $q$, your average surprise is the <span class="term">cross-entropy</span>; the overhead versus knowing the truth is the <span class="term">KL divergence</span>:</p>
+      $$H(p,q)=-\sum_x p(x)\log q(x),\qquad D_{\mathrm{KL}}(p\,\|\,q)=H(p,q)-H(p)=\sum_x p(x)\log\frac{p(x)}{q(x)}$$
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — KL is never negative</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Use the bound $\log t\le t-1$ (the log sits below its tangent at $t{=}1$, with equality only at $t{=}1$). Apply it inside $-D_{\mathrm{KL}}$ with $t=q(x)/p(x)$:</p>$$-D_{\mathrm{KL}}(p\|q)=\sum_x p(x)\log\frac{q(x)}{p(x)}\le\sum_x p(x)\Big(\frac{q(x)}{p(x)}-1\Big)$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>The right side telescopes: $\sum_x q(x)-\sum_x p(x)=1-1=0$. Hence</p>$$D_{\mathrm{KL}}(p\,\|\,q)\ge 0,\qquad\text{with equality iff } q=p$$<p>Wrong beliefs always cost extra surprise; the only free lunch is the truth. So minimizing cross-entropy $H(p,q)=H(p)+D_{\mathrm{KL}}(p\|q)$ over $q$ drives $q$ toward $p$ — which is <em>exactly</em> what Layer 2's classification training does: the network's predicted distribution is $q$, the labels are $p$, and "minimize cross-entropy loss" means "make your beliefs match reality, measured in bits."</p></div></div>
+    </div>
+
+    <div class="box intuition">
+      <div class="box-label">The whole layer, in one paragraph</div>
+      <p>Data became <strong>vectors</strong> (Ch 1) acted on by <strong>matrices</strong> (Ch 2). <strong>Derivatives</strong> told us how to improve anything smooth (Ch 3). <strong>Probability</strong> let us model uncertainty (Ch 4), and <strong>maximum likelihood</strong> turned "fit the data" into mathematics (Ch 5), giving us <strong>regression</strong> in closed form and the sigmoid classifier (Ch 6). <strong>Generalization</strong> taught us the real game is unseen data (Ch 7), and <strong>information theory</strong> gave the loss that trains every modern classifier (Ch 8). Layer 2 takes precisely these parts — weighted sums, sigmoids, cross-entropy, gradient descent — and stacks them deep. Nothing harder is coming; only more of this, composed.</p>
+    </div>
+
+    <div class="endcard">
+      <div class="eyebrow">You've finished Layer 1</div>
+      <h3>Where this goes next</h3>
+      <p><strong>Layer 2 — Deep Learning Core</strong> — begins exactly where this page ends: the one-neuron logistic model of Chapter 6 gets stacked into multilayer networks, the chain rule of Chapter 3 becomes backpropagation, the MLE of Chapter 5 becomes every loss function, and the Gaussian of Chapter 4 becomes the noise that diffusion models sculpt into images. From there: foundation models, decision-making, robotics — and the vision-language-action models where it all converges.</p>
+      <p style="margin-top:18px;font-family:var(--mono);font-size:13px;color:#9A9DD0">Vectors → data · Matrices → models · Derivatives → learning · Probability → honesty about uncertainty.</p>
+    </div>
+
+    <footer class="page">An interactive textbook for the Robotics &amp; VLA curriculum · Layer 1 of 6 · Built to be read with a pen in hand.</footer>
+  </section>
+
+</div><!-- /content -->
+
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  /* ---------- KaTeX (robust) ---------- */
+  window.__doRender=function(el){
+    if(!window.renderMathInElement) return;
+    renderMathInElement(el||document.body,{
+      delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'\\[',right:'\\]',display:true},
+        {left:'$',right:'$',display:false},
+        {left:'\\(',right:'\\)',display:false}
+      ],
+      throwOnError:false,
+      macros:{"\\R":"\\mathbb{R}","\\E":"\\mathbb{E}"}
+    });
+  };
+  // Render as soon as KaTeX is available. The CDN script may not have finished
+  // loading at DOMContentLoaded, so we poll briefly instead of giving up after one try.
+  (function(){
+    if(window.renderMathInElement){ window.__doRender(); return; }
+    var tries=0, iv=setInterval(function(){
+      if(window.renderMathInElement){ clearInterval(iv); window.__doRender(); }
+      else if(++tries>200){ clearInterval(iv); } // ~10s ceiling, then stop
+    },50);
+  })();
+
+  var C={ink:'#14162A',inkSoft:'#474B66',faint:'#878BA6',indigo:'#4338CA',indigoDeep:'#2A2090',
+         coral:'#FF5C49',coralDeep:'#E8412E',teal:'#0E9C92',line:'#DBDDE8',wash:'#EEEEF8',amber:'#C98314'};
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var DISP='600 13px "Space Grotesk",sans-serif', MONO='12px "JetBrains Mono",monospace';
+
+  var redraws=[];
+  function fit(cv,aspect){
+    var dpr=window.devicePixelRatio||1;
+    cv.style.width='100%';
+    var w=cv.clientWidth||cv.parentElement.clientWidth;
+    var h=Math.round(w/aspect);
+    cv.style.height=h+'px';
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+    var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {w:w,h:h,ctx:ctx};
+  }
+  function register(fn){ redraws.push(fn); fn(); }
+  window.addEventListener('resize',function(){clearTimeout(window._rt);window._rt=setTimeout(function(){redraws.forEach(function(f){f();});},160);});
+  function gauss(){var u1=Math.random()||1e-9,u2=Math.random();return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);}
+
+  /* ---------- NAV ---------- */
+  var prog=document.getElementById('progress');
+  var chapLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .chap'));
+  var chapSecs=chapLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  var subLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .subs a'));
+  var subTargets=subLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  function onScroll(){
+    var st=window.scrollY||document.documentElement.scrollTop;
+    var docH=document.documentElement.scrollHeight-window.innerHeight;
+    prog.style.width=(docH>0?(st/docH*100):0)+'%';
+    var active=-1;
+    for(var i=0;i<chapSecs.length;i++){ if(chapSecs[i]&&chapSecs[i].offsetTop-140<=st) active=i; }
+    chapLinks.forEach(function(a,i){a.classList.toggle('active',i===active);});
+    var sa=-1;
+    for(var j=0;j<subTargets.length;j++){ if(subTargets[j]&&subTargets[j].offsetTop-160<=st) sa=j; }
+    subLinks.forEach(function(a,i){a.classList.toggle('active',i===sa);});
+  }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+  var sidebar=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),menuBtn=document.getElementById('menuBtn');
+  function closeMenu(){sidebar.classList.remove('open');scrim.classList.remove('show');}
+  menuBtn.addEventListener('click',function(){sidebar.classList.toggle('open');scrim.classList.toggle('show');});
+  scrim.addEventListener('click',closeMenu);
+  document.querySelectorAll('.toc a').forEach(function(a){a.addEventListener('click',closeMenu);});
+
+  /* ---------- HERO: drifting vector field ---------- */
+  (function(){
+    var cv=document.getElementById('heroCanvas'); if(!cv) return;
+    var ctx,W,H,parts=[];
+    function field(x,y,t){var s=0.004;return [Math.sin(y*s*2+t*0.4)+0.4*Math.cos(x*s*3),Math.cos(x*s*2-t*0.3)*0.8];}
+    function build(){
+      var hdr=cv.parentElement,dpr=window.devicePixelRatio||1;
+      W=hdr.clientWidth;H=hdr.clientHeight;
+      cv.width=W*dpr;cv.height=H*dpr;ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+      parts=[];for(var i=0;i<90;i++)parts.push({x:Math.random()*W,y:Math.random()*H,age:Math.random()*120});
+    }
+    var t=0;
+    function draw(){
+      ctx.fillStyle='rgba(20,18,52,0.16)';ctx.fillRect(0,0,W,H);
+      t+=0.016;
+      parts.forEach(function(p){
+        var v=field(p.x,p.y,t),nx=p.x+v[0]*1.8,ny=p.y+v[1]*1.8;
+        ctx.strokeStyle=(p.age%120<14)?'rgba(255,140,126,0.85)':'rgba(160,160,235,0.35)';
+        ctx.lineWidth=(p.age%120<14)?2:1.2;
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(nx,ny);ctx.stroke();
+        p.x=nx;p.y=ny;p.age++;
+        if(p.x<0||p.x>W||p.y<0||p.y>H){p.x=Math.random()*W;p.y=Math.random()*H;}
+      });
+    }
+    build();
+    if(REDUCE){ctx.fillStyle='#141234';ctx.fillRect(0,0,W,H);for(var k=0;k<260;k++)draw();}
+    else{(function loop(){draw();requestAnimationFrame(loop);})();}
+    window.addEventListener('resize',function(){clearTimeout(window._hr);window._hr=setTimeout(build,160);});
+  })();
+
+  /* ================= 1. DOT PRODUCT ================= */
+  (function(){
+    var cv=document.getElementById('dotCanvas'); if(!cv) return;
+    var ang=document.getElementById('dotAngle'),len=document.getElementById('dotLen');
+    var av=document.getElementById('dotav'),lv=document.getElementById('dotlv'),rd=document.getElementById('dotReadout');
+    var W,H,ctx,S;
+    function arrow(x1,y1,x2,y2,col,wid){ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=wid;
+      ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+      var a2=Math.atan2(y2-y1,x2-x1);ctx.beginPath();ctx.moveTo(x2,y2);
+      ctx.lineTo(x2-10*Math.cos(a2-0.42),y2-10*Math.sin(a2-0.42));ctx.lineTo(x2-10*Math.cos(a2+0.42),y2-10*Math.sin(a2+0.42));ctx.closePath();ctx.fill();}
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var cx=W*0.36,cy=H*0.55,U=Math.min(W,H)*0.30;
+      var th=(+ang.value)*Math.PI/180, L=+len.value;
+      av.textContent=ang.value+'°'; lv.textContent=L.toFixed(2);
+      var A={x:1,y:0}, B={x:L*Math.cos(th),y:L*Math.sin(th)};
+      var dot=A.x*B.x+A.y*B.y, cos=dot/(1*L||1);
+      // axes-ish circle
+      ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,U,0,7);ctx.stroke();
+      // projection (shadow) of B on A: dot * unit-A
+      var px=cx+dot*U, py=cy;
+      ctx.strokeStyle='rgba(14,156,146,0.25)';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(px,py);ctx.stroke();
+      ctx.setLineDash([4,4]);ctx.strokeStyle=C.faint;ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(cx+B.x*U,cy-B.y*U);ctx.lineTo(px,py);ctx.stroke();ctx.setLineDash([]);
+      arrow(cx,cy,cx+U,cy,C.indigo,3);
+      arrow(cx,cy,cx+B.x*U,cy-B.y*U,C.coral,3);
+      ctx.font=DISP;ctx.fillStyle=C.indigoDeep;ctx.fillText('a (fixed, length 1)',cx+U-86,cy+22);
+      ctx.fillStyle=C.coralDeep;ctx.fillText('b',cx+B.x*U+8,cy-B.y*U-6);
+      ctx.fillStyle=C.teal;ctx.fillText('shadow of b on a',cx+10,cy+40);
+      // meter
+      var mx=W*0.78,m0=H*0.78,mh=H*0.56;
+      ctx.fillStyle=C.wash;ctx.fillRect(mx-18,m0-mh,36,mh);
+      var frac=Math.max(-1,Math.min(1.6,dot))/1.6;
+      ctx.fillStyle=dot>=0?C.indigo:C.coralDeep;
+      var barH=Math.abs(frac)*mh/2;
+      ctx.fillRect(mx-18,m0-mh/2-(dot>=0?barH:0),36,barH);
+      ctx.strokeStyle=C.ink;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(mx-24,m0-mh/2);ctx.lineTo(mx+24,m0-mh/2);ctx.stroke();
+      ctx.fillStyle=C.ink;ctx.font=MONO;ctx.textAlign='center';
+      ctx.fillText('a·b = '+dot.toFixed(2),mx,m0+20);
+      ctx.fillText('cos θ = '+cos.toFixed(2),mx,m0+38);ctx.textAlign='left';
+      rd.innerHTML='a·b = ‖a‖‖b‖cos θ = 1 × '+L.toFixed(2)+' × '+cos.toFixed(2)+' = <b>'+dot.toFixed(2)+'</b>. '+
+        (Math.abs(cos)<0.08?'Perpendicular: zero agreement — the shadow vanishes.':cos>0.92?'Nearly parallel: maximum agreement for this length.':cos<-0.5?'Pointing against: <b>negative</b> agreement; the shadow points backwards.':'Partial agreement — exactly the length of the teal shadow.');
+    }
+    [ang,len].forEach(function(s){s.addEventListener('input',draw);});
+    register(draw);
+  })();
+
+  /* ================= 2. MATRIX transformation ================= */
+  (function(){
+    var cv=document.getElementById('matCanvas'); if(!cv) return;
+    var ma=document.getElementById('ma'),mb=document.getElementById('mb'),mc=document.getElementById('mc'),md=document.getElementById('md');
+    var vals={ma:'mav',mb:'mbv',mc:'mcv',md:'mdv'},rd=document.getElementById('matReadout');
+    var W,H,ctx,S;
+    function draw(){
+      S=fit(cv,640/420);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var a=+ma.value,b=+mb.value,c=+mc.value,d=+md.value;
+      document.getElementById('mav').textContent=a.toFixed(2);document.getElementById('mbv').textContent=b.toFixed(2);
+      document.getElementById('mcv').textContent=c.toFixed(2);document.getElementById('mdv').textContent=d.toFixed(2);
+      var cx=W/2,cy=H/2,U=Math.min(W,H)*0.16;
+      function T(x,y){return [cx+(a*x+b*y)*U, cy-(c*x+d*y)*U];}
+      // original grid faint
+      ctx.strokeStyle='rgba(135,139,166,0.18)';ctx.lineWidth=1;
+      for(var g=-3;g<=3;g++){ctx.beginPath();ctx.moveTo(cx+g*U,cy-3*U);ctx.lineTo(cx+g*U,cy+3*U);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(cx-3*U,cy-g*U);ctx.lineTo(cx+3*U,cy-g*U);ctx.stroke();}
+      // transformed grid
+      ctx.strokeStyle='rgba(67,56,202,0.35)';ctx.lineWidth=1.4;
+      for(var g2=-3;g2<=3;g2++){
+        ctx.beginPath();var p=T(g2,-3);ctx.moveTo(p[0],p[1]);p=T(g2,3);ctx.lineTo(p[0],p[1]);ctx.stroke();
+        ctx.beginPath();p=T(-3,g2);ctx.moveTo(p[0],p[1]);p=T(3,g2);ctx.lineTo(p[0],p[1]);ctx.stroke();
+      }
+      // unit square image
+      var q=[T(0,0),T(1,0),T(1,1),T(0,1)];
+      ctx.fillStyle='rgba(255,92,73,0.13)';ctx.beginPath();ctx.moveTo(q[0][0],q[0][1]);
+      for(var i=1;i<4;i++)ctx.lineTo(q[i][0],q[i][1]);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='rgba(232,65,46,0.5)';ctx.lineWidth=1.5;ctx.stroke();
+      // basis arrows
+      function arrow(x2,y2,col){ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=3.2;
+        ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x2,y2);ctx.stroke();
+        var a2=Math.atan2(y2-cy,x2-cx);ctx.beginPath();ctx.moveTo(x2,y2);
+        ctx.lineTo(x2-11*Math.cos(a2-0.42),y2-11*Math.sin(a2-0.42));ctx.lineTo(x2-11*Math.cos(a2+0.42),y2-11*Math.sin(a2+0.42));ctx.closePath();ctx.fill();}
+      var e1=T(1,0),e2=T(0,1);
+      arrow(e1[0],e1[1],C.indigo); arrow(e2[0],e2[1],C.coral);
+      ctx.font=DISP;ctx.fillStyle=C.indigoDeep;ctx.fillText('col 1 = A·e₁',e1[0]+8,e1[1]);
+      ctx.fillStyle=C.coralDeep;ctx.fillText('col 2 = A·e₂',e2[0]+8,e2[1]);
+      // eigenvectors (real ones)
+      var tr=a+d, det=a*d-b*c, disc=tr*tr/4-det;
+      if(disc>=0){
+        var l1=tr/2+Math.sqrt(disc), l2=tr/2-Math.sqrt(disc);
+        [[l1,'λ₁'],[l2,'λ₂']].forEach(function(pair){
+          var l=pair[0],vx,vy;
+          if(Math.abs(b)>1e-6){vx=b;vy=l-a;}else if(Math.abs(c)>1e-6){vx=l-d;vy=c;}else{vx=(Math.abs(l-a)<1e-6)?1:0;vy=(Math.abs(l-d)<1e-6)?1:0;}
+          var n=Math.hypot(vx,vy);if(n<1e-6)return;vx/=n;vy/=n;
+          ctx.strokeStyle='rgba(14,156,146,0.75)';ctx.setLineDash([6,5]);ctx.lineWidth=2;
+          ctx.beginPath();ctx.moveTo(cx-vx*2.6*U,cy+vy*2.6*U);ctx.lineTo(cx+vx*2.6*U,cy-vy*2.6*U);ctx.stroke();ctx.setLineDash([]);
+          ctx.fillStyle=C.teal;ctx.font=MONO;ctx.fillText(pair[1]+'='+l.toFixed(2),cx+vx*2.2*U+6,cy-vy*2.2*U);
+        });
+      }
+      ctx.fillStyle=C.ink;ctx.font=MONO;
+      ctx.fillText('det A = '+det.toFixed(2)+'  (area ×'+Math.abs(det).toFixed(2)+(det<0?', flipped':'')+')',14,22);
+      if(disc<0)ctx.fillText('eigenvalues complex — pure rotation, no real fixed direction',14,40);
+      rd.innerHTML='A = [['+a.toFixed(2)+', '+b.toFixed(2)+'], ['+c.toFixed(2)+', '+d.toFixed(2)+']] · det = <b>'+det.toFixed(2)+'</b>. '+
+        (Math.abs(det)<0.04?'<b style="color:'+C.coralDeep+'">Collapse!</b> The columns are (nearly) parallel — space flattens to a line, det≈0, no inverse exists.':
+         disc<0?'Complex eigenvalues: this machine rotates everything; no direction survives unturned.':
+         'Teal dashed lines are eigen-directions — arrows there only stretch, never turn.');
+    }
+    [ma,mb,mc,md].forEach(function(s){s.addEventListener('input',draw);});
+    var presets={id:[1,0,0,1],rot:[0.71,-0.71,0.71,0.71],shear:[1,0.8,0,1],stretch:[1.6,0,0,0.6],sing:[1,0.5,2,1]};
+    document.querySelectorAll('#matSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#matSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      var p=presets[btn.dataset.m];ma.value=p[0];mb.value=p[1];mc.value=p[2];md.value=p[3];draw();});});
+    register(draw);
+  })();
+
+  /* ================= 3a. DERIVATIVE secant->tangent ================= */
+  (function(){
+    var cv=document.getElementById('derivCanvas'); if(!cv) return;
+    var dx=document.getElementById('dx'),dh=document.getElementById('dh');
+    var xv=document.getElementById('dxv'),hv=document.getElementById('dhv'),rd=document.getElementById('derivReadout');
+    var FN={sq:{f:function(x){return x*x;},d:function(x){return 2*x;},name:'x²',dn:'2x'},
+            sin:{f:Math.sin,d:Math.cos,name:'sin x',dn:'cos x'},
+            abs:{f:Math.abs,d:function(x){return x>0?1:(x<0?-1:NaN);},name:'|x|',dn:'±1 (none at 0)'},
+            cube:{f:function(x){return x*x*x-x;},d:function(x){return 3*x*x-1;},name:'x³−x',dn:'3x²−1'}};
+    var cur='sq',W,H,ctx,S;
+    var xa=-2.4,xb=2.4,ya=-2.2,yb=4.4;
+    function PX(x){return (x-xa)/(xb-xa)*W;} function PY(y){return H-(y-ya)/(yb-ya)*H;}
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var o=FN[cur],x=+dx.value,h=+dh.value;xv.textContent=x.toFixed(2);hv.textContent=h.toFixed(2);
+      ctx.strokeStyle=C.line;ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(0,PY(0));ctx.lineTo(W,PY(0));ctx.moveTo(PX(0),0);ctx.lineTo(PX(0),H);ctx.stroke();
+      // curve
+      ctx.strokeStyle=C.indigo;ctx.lineWidth=2.6;ctx.beginPath();var first=true;
+      for(var px=0;px<=W;px+=2){var xx=xa+(px/W)*(xb-xa),yy=o.f(xx);
+        if(yy<ya-1||yy>yb+1){first=true;continue;}
+        if(first){ctx.moveTo(px,PY(yy));first=false;}else ctx.lineTo(px,PY(yy));}
+      ctx.stroke();
+      var y0=o.f(x),y1=o.f(x+h),sec=(y1-y0)/h,der=o.d(x);
+      // tangent (coral) if defined
+      if(isFinite(der)){
+        ctx.strokeStyle='rgba(232,65,46,0.9)';ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(PX(x-1.6),PY(y0-der*1.6));ctx.lineTo(PX(x+1.6),PY(y0+der*1.6));ctx.stroke();
+      }
+      // secant (amber)
+      ctx.strokeStyle=C.amber;ctx.lineWidth=2;ctx.setLineDash([7,4]);
+      var sl=(y1-y0)/h;
+      ctx.beginPath();ctx.moveTo(PX(x-0.9),PY(y0-sl*0.9));ctx.lineTo(PX(x+h+0.9),PY(y1+sl*0.9));ctx.stroke();ctx.setLineDash([]);
+      // points
+      ctx.fillStyle=C.indigoDeep;ctx.beginPath();ctx.arc(PX(x),PY(y0),5.5,0,7);ctx.fill();
+      ctx.fillStyle=C.amber;ctx.beginPath();ctx.arc(PX(x+h),PY(y1),5.5,0,7);ctx.fill();
+      ctx.font=DISP;ctx.fillStyle=C.indigo;ctx.fillText('f(x) = '+o.name,14,22);
+      ctx.fillStyle=C.amber;ctx.fillText('secant slope = '+sec.toFixed(3),14,42);
+      ctx.fillStyle=C.coralDeep;ctx.fillText(isFinite(der)?("tangent f'(x) = "+der.toFixed(3)):'no tangent at the kink!',14,62);
+      rd.innerHTML=isFinite(der)
+        ? 'Secant (h='+h.toFixed(2)+') slope <b>'+sec.toFixed(3)+'</b> vs true derivative <b>'+der.toFixed(3)+'</b> — gap '+Math.abs(sec-der).toFixed(3)+'. Shrink h and the amber line melts into the coral tangent.'
+        : '<b>|x| at 0 has no derivative.</b> From the right the slope is +1, from the left −1 — the secant flips instead of settling. Smoothness is what makes learning possible.';
+    }
+    [dx,dh].forEach(function(s){s.addEventListener('input',draw);});
+    document.querySelectorAll('#dfnSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#dfnSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');cur=btn.dataset.f;
+      if(cur==='abs'){dx.value=0;}draw();});});
+    register(draw);
+  })();
+
+  /* ================= 3b. GRADIENT DESCENT 1D ================= */
+  (function(){
+    var cv=document.getElementById('gdCanvas'); if(!cv) return;
+    var lr=document.getElementById('glr'),lrv=document.getElementById('glrv'),rd=document.getElementById('gdReadout');
+    var W,H,ctx,S,startX=-2.1,path=[],anim=null;
+    function f(x){return 0.12*Math.pow(x,4)-0.5*x*x+0.18*x+1.4;}
+    function df(x){return 0.48*Math.pow(x,3)-x+0.18;}
+    var xa=-3,xb=3,ya=-0.4,yb=3.4;
+    function PX(x){return (x-xa)/(xb-xa)*W;} function PY(y){return H-(y-ya)/(yb-ya)*H;}
+    function base(){
+      ctx.clearRect(0,0,W,H);
+      ctx.strokeStyle=C.indigo;ctx.lineWidth=2.6;ctx.beginPath();
+      for(var px=0;px<=W;px+=2){var x=xa+(px/W)*(xb-xa),y=f(x);if(px===0)ctx.moveTo(px,PY(y));else ctx.lineTo(px,PY(y));}
+      ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('two valleys — descent only sees the local slope',14,20);
+      // path
+      if(path.length>1){ctx.strokeStyle='rgba(232,65,46,0.65)';ctx.lineWidth=1.6;ctx.beginPath();
+        path.forEach(function(p,i){if(i===0)ctx.moveTo(PX(p),PY(f(p)));else ctx.lineTo(PX(p),PY(f(p)));});ctx.stroke();
+        path.forEach(function(p){ctx.fillStyle='rgba(232,65,46,0.5)';ctx.beginPath();ctx.arc(PX(p),PY(f(p)),3,0,7);ctx.fill();});}
+      var last=path.length?path[path.length-1]:startX;
+      ctx.fillStyle=C.coralDeep;ctx.beginPath();ctx.arc(PX(last),PY(f(last)),8,0,7);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    }
+    function draw(){S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;base();}
+    lr.addEventListener('input',function(){lrv.textContent=(+lr.value).toFixed(2);});
+    lrv.textContent=(+lr.value).toFixed(2);
+    cv.addEventListener('click',function(e){var r=cv.getBoundingClientRect();
+      startX=xa+((e.clientX-r.left)/r.width)*(xb-xa);path=[];if(anim)cancelAnimationFrame(anim);base();
+      rd.innerHTML='Ball placed at x = '+startX.toFixed(2)+'. Press <b>Run descent</b>.';});
+    document.getElementById('gdReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);path=[];startX=-2.1;base();rd.innerHTML='Click the curve to place the ball; set η; run.';});
+    document.getElementById('gdRun').addEventListener('click',function(){
+      if(anim)cancelAnimationFrame(anim);
+      var x=startX,eta=+lr.value,steps=0;path=[x];
+      function frame(){
+        for(var k=0;k<2;k++){x=x-eta*df(x);path.push(x);steps++;
+          if(!isFinite(x)||Math.abs(x)>30){base();rd.innerHTML='<b style="color:'+C.coralDeep+'">Diverged!</b> η='+eta.toFixed(2)+' is too large: each step overshoots so far the next slope is even steeper. Lower the learning rate.';return;}
+          if(steps>140)break;}
+        base();
+        if(steps>140||Math.abs(df(x))<1e-3){
+          var localMin=x>0?1.06:-1.21; // approx minima
+          var glob=f(-1.21)<f(1.06)?-1.21:1.06;
+          rd.innerHTML='Settled at x ≈ <b>'+x.toFixed(2)+'</b> (f='+f(x).toFixed(3)+') after '+steps+' steps. '+((Math.abs(x-glob)<0.4)?'That is the <b>global</b> minimum — good basin, good luck.':'That is a <b>local</b> minimum — the better valley exists, but descent cannot see over the hill.');
+          return;}
+        anim=requestAnimationFrame(frame);
+      } frame();
+    });
+    register(draw);
+  })();
+
+  /* ================= 4a. BAYES population ================= */
+  (function(){
+    var cv=document.getElementById('bayesCanvas'); if(!cv) return;
+    var bpr=document.getElementById('bpr'),bse=document.getElementById('bse'),bfp=document.getElementById('bfp');
+    var prv=document.getElementById('bprv'),sev=document.getElementById('bsev'),fpv=document.getElementById('bfpv'),rd=document.getElementById('bayesReadout');
+    var W,H,ctx,S,COLS=40,ROWS=25,Npop=COLS*ROWS;
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var pr=+bpr.value/100, se=+bse.value/100, fp=+bfp.value/100;
+      prv.textContent=(+bpr.value)+'%';sev.textContent=bse.value+'%';fpv.textContent=(+bfp.value)+'%';
+      var sick=Math.round(Npop*pr), sickPos=Math.round(sick*se), healthy=Npop-sick, healPos=Math.round(healthy*fp);
+      var cell=Math.min(W*0.72/COLS,(H-30)/ROWS), ox=12, oy=18;
+      for(var i=0;i<Npop;i++){
+        var r=Math.floor(i/COLS),c2=i%COLS,x=ox+c2*cell+cell/2,y=oy+r*cell+cell/2;
+        var isSick=i<sick;
+        var pos= isSick ? (i<sickPos) : ((i-sick)<healPos);
+        ctx.beginPath();ctx.arc(x,y,cell*0.34,0,7);
+        if(pos){ctx.fillStyle=isSick?C.coralDeep:C.indigo;ctx.fill();}
+        else{ctx.strokeStyle=isSick?C.coralDeep:'rgba(135,139,166,0.55)';ctx.lineWidth=1.4;ctx.stroke();}
+      }
+      var post=(sickPos+healPos)>0? sickPos/(sickPos+healPos):0;
+      var tx=ox+COLS*cell+18;
+      ctx.font=DISP;ctx.fillStyle=C.ink;ctx.fillText('tested positive:',tx,40);
+      ctx.fillStyle=C.coralDeep;ctx.fillText(sickPos+' truly sick',tx,62);
+      ctx.fillStyle=C.indigo;ctx.fillText(healPos+' false alarms',tx,82);
+      ctx.fillStyle=C.ink;ctx.font='700 26px "Space Grotesk"';
+      ctx.fillText((post*100).toFixed(1)+'%',tx,124);
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText('P(sick | positive)',tx,142);
+      // bar
+      var bw=Math.min(140,W-tx-16);
+      ctx.fillStyle=C.wash;ctx.fillRect(tx,156,bw,14);
+      ctx.fillStyle=C.coralDeep;ctx.fillRect(tx,156,bw*post,14);
+      rd.innerHTML='Of '+Npop+' people: <b style="color:'+C.coralDeep+'">'+sick+' sick</b> ('+sickPos+' test +) and '+healthy+' healthy ('+healPos+' test +). Posterior = '+sickPos+'/('+sickPos+'+'+healPos+') = <b>'+(post*100).toFixed(1)+'%</b>. '+(post<0.4?'The false alarms outnumber the real cases — rare conditions stay unlikely even after a positive test.':'With this prevalence, a positive test is now strong evidence.');
+    }
+    [bpr,bse,bfp].forEach(function(s){s.addEventListener('input',draw);});
+    register(draw);
+  })();
+
+  /* ================= 4b. CLT ================= */
+  (function(){
+    var cv=document.getElementById('cltCanvas'); if(!cv) return;
+    var cn=document.getElementById('cltn'),nv=document.getElementById('cltnv'),rd=document.getElementById('cltReadout');
+    var W,H,ctx,S,dist='uni',bins=new Array(60).fill(0),total=0;
+    function drawOne(){
+      if(dist==='uni')return Math.random();
+      if(dist==='skew'){var u=Math.random();return u*u;}
+      return Math.random()<0.5?0.08+Math.random()*0.06:0.86+Math.random()*0.06;
+    }
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      nv.textContent=cn.value;
+      var maxB=Math.max.apply(null,bins.concat([1]));
+      var bw=W/bins.length;
+      for(var i=0;i<bins.length;i++){
+        var h=bins[i]/maxB*(H-70);
+        ctx.fillStyle='rgba(67,56,202,0.65)';
+        ctx.fillRect(i*bw+1,H-30-h,bw-2,h);
+      }
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(0,H-30);ctx.lineTo(W,H-30);ctx.stroke();
+      // gaussian overlay fit
+      if(total>40){
+        var mean=0,m2=0,cnt=0;
+        for(var i2=0;i2<bins.length;i2++){var x=(i2+0.5)/bins.length;mean+=x*bins[i2];cnt+=bins[i2];}
+        mean/=cnt;
+        for(var i3=0;i3<bins.length;i3++){var x2=(i3+0.5)/bins.length;m2+=bins[i3]*(x2-mean)*(x2-mean);}
+        var sd=Math.sqrt(m2/cnt)||0.01;
+        ctx.strokeStyle=C.coralDeep;ctx.setLineDash([6,4]);ctx.lineWidth=2;ctx.beginPath();
+        var peak=0;for(var i4=0;i4<bins.length;i4++)peak=Math.max(peak,bins[i4]);
+        for(var px=0;px<=W;px+=3){var x3=px/W;var g=Math.exp(-(x3-mean)*(x3-mean)/(2*sd*sd));
+          var y=H-30-g*(peak/maxB)*(H-70);if(px===0)ctx.moveTo(px,y);else ctx.lineTo(px,y);}
+        ctx.stroke();ctx.setLineDash([]);
+        ctx.font=MONO;ctx.fillStyle=C.coralDeep;ctx.fillText('Gaussian fit  μ='+mean.toFixed(2)+'  σ='+sd.toFixed(3),12,22);
+      }
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText(total+' averages of n='+cn.value+' draws ('+dist+')',12,H-10);
+      rd.innerHTML= total===0 ? 'Press <b>Drop 2000 averages</b>. Each sample is the average of n draws from the chosen (deliberately non-Gaussian) source.'
+        : (+cn.value===1 ? 'n=1: the histogram mirrors the ugly source — no averaging, no bell.' :
+          (+cn.value<8 ? 'A bell is forming already — the spikes are smoothing into a hump.' :
+          'Strongly Gaussian. The source\u2019s shape is forgotten; only its mean and a shrunken variance (σ²/n) survive. That is the CLT.'));
+    }
+    function drop(){
+      var n=+cn.value;
+      for(var s=0;s<2000;s++){var sum=0;for(var k=0;k<n;k++)sum+=drawOne();var m=sum/n;
+        var b=Math.min(bins.length-1,Math.max(0,Math.floor(m*bins.length)));bins[b]++;}
+      total+=2000;draw();
+    }
+    document.getElementById('cltDrop').addEventListener('click',drop);
+    document.getElementById('cltClear').addEventListener('click',function(){bins=new Array(60).fill(0);total=0;draw();});
+    cn.addEventListener('input',function(){bins=new Array(60).fill(0);total=0;draw();});
+    document.querySelectorAll('#cltSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#cltSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      dist=btn.dataset.d;bins=new Array(60).fill(0);total=0;draw();});});
+    register(draw);
+  })();
+
+  /* ================= 5. MLE coin ================= */
+  (function(){
+    var cv=document.getElementById('mleCanvas'); if(!cv) return;
+    var mt=document.getElementById('mlet'),tv=document.getElementById('mletv'),rd=document.getElementById('mleReadout');
+    var W,H,ctx,S,k=0,N=0;
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      tv.textContent=(+mt.value).toFixed(2);
+      var pad=46;
+      ctx.strokeStyle=C.line;ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(pad,H-40);ctx.lineTo(W-16,H-40);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.textAlign='center';
+      for(var g=0;g<=4;g++){var th=g/4,x=pad+th*(W-16-pad);ctx.fillText(th.toFixed(2),x,H-22);}
+      ctx.textAlign='left';ctx.fillText('candidate bias θ →',W-160,H-6);
+      // likelihood curve normalized
+      if(N>0){
+        var vals=[],mx=0;
+        for(var i=0;i<=200;i++){var th2=i/200;
+          var ll=k*Math.log(Math.max(th2,1e-12))+(N-k)*Math.log(Math.max(1-th2,1e-12));
+          vals.push(ll);if(i===0||ll>mx)mx=Math.max(mx===0&&i===0?ll:mx,ll);}
+        mx=Math.max.apply(null,vals);
+        ctx.strokeStyle=C.indigo;ctx.lineWidth=2.6;ctx.beginPath();
+        for(var i2=0;i2<=200;i2++){var x2=pad+(i2/200)*(W-16-pad);
+          var y2=(H-40)-Math.exp(vals[i2]-mx)*(H-90);
+          if(i2===0)ctx.moveTo(x2,y2);else ctx.lineTo(x2,y2);}
+        ctx.stroke();
+        var hat=k/N, hx=pad+hat*(W-16-pad);
+        ctx.fillStyle=C.coralDeep;ctx.beginPath();ctx.arc(hx,(H-40)-(H-90),6,0,7);ctx.fill();
+        ctx.font=DISP;ctx.fillText('θ̂ = k/N = '+hat.toFixed(3),Math.min(hx+10,W-150),(H-40)-(H-90)+4);
+      } else {
+        ctx.font=DISP;ctx.fillStyle=C.faint;ctx.fillText('flip some coins to grow a likelihood curve',pad+20,H/2);
+      }
+      // truth line
+      var tx=pad+(+mt.value)*(W-16-pad);
+      ctx.strokeStyle=C.teal;ctx.setLineDash([6,5]);ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(tx,30);ctx.lineTo(tx,H-40);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle=C.teal;ctx.font=MONO;ctx.fillText('truth',tx+5,40);
+      ctx.fillStyle=C.ink;ctx.font=DISP;
+      ctx.fillText('flips: '+N+'   heads: '+k+(N?('   ('+(100*k/N).toFixed(1)+'%)'):''),pad,24);
+      if(N>0){var hat2=k/N;
+        rd.innerHTML='Likelihood θᵏ(1−θ)^(N−k) over all candidate worlds; the peak — minimum surprise — sits at <b>θ̂='+hat2.toFixed(3)+'</b> vs hidden truth '+(+mt.value).toFixed(2)+'. '+(N<20?'Few flips: a wide, forgiving curve — many worlds fit.':'Many flips: the curve has narrowed sharply — the data has become opinionated.');}
+      else rd.innerHTML='Set a hidden bias, then flip. The curve shows how plausible each candidate bias is, given only the observed flips.';
+    }
+    function flip(n){var p=+mt.value;for(var i=0;i<n;i++){N++;if(Math.random()<p)k++;}draw();}
+    document.getElementById('mleFlip1').addEventListener('click',function(){flip(1);});
+    document.getElementById('mleFlip25').addEventListener('click',function(){flip(25);});
+    document.getElementById('mleReset').addEventListener('click',function(){k=0;N=0;draw();});
+    mt.addEventListener('input',draw);
+    register(draw);
+  })();
+
+  /* ================= 6a. LINEAR REGRESSION ================= */
+  (function(){
+    var cv=document.getElementById('regCanvas'); if(!cv) return;
+    var rd=document.getElementById('regReadout');
+    var W,H,ctx,S,pts=[];
+    function seed(){pts=[];for(var i=0;i<9;i++){var x=0.08+0.84*i/8;pts.push({x:x,y:0.25+0.5*x+gauss()*0.05});}}
+    seed();
+    function solve(){
+      var n=pts.length;if(n<2)return null;
+      var mx=0,my=0;pts.forEach(function(p){mx+=p.x;my+=p.y;});mx/=n;my/=n;
+      var num=0,den=0;pts.forEach(function(p){num+=(p.x-mx)*(p.y-my);den+=(p.x-mx)*(p.x-mx);});
+      if(den<1e-9)return null;
+      var w=num/den,b=my-w*mx,sse=0;
+      pts.forEach(function(p){var e=w*p.x+b-p.y;sse+=e*e;});
+      return {w:w,b:b,mse:sse/n,mx:mx,my:my};
+    }
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.strokeRect(0.5,0.5,W-1,H-1);
+      var fitL=solve();
+      if(fitL){
+        // residuals
+        pts.forEach(function(p){var yh=fitL.w*p.x+fitL.b;
+          ctx.strokeStyle='rgba(232,65,46,0.35)';ctx.lineWidth=2;
+          ctx.beginPath();ctx.moveTo(p.x*W,H-p.y*H);ctx.lineTo(p.x*W,H-yh*H);ctx.stroke();});
+        ctx.strokeStyle=C.indigo;ctx.lineWidth=2.8;
+        ctx.beginPath();ctx.moveTo(0,H-(fitL.b)*H);ctx.lineTo(W,H-(fitL.w+fitL.b)*H);ctx.stroke();
+        ctx.fillStyle=C.teal;ctx.beginPath();ctx.arc(fitL.mx*W,H-fitL.my*H,5,0,7);ctx.fill();
+        ctx.font=MONO;ctx.fillStyle=C.teal;ctx.fillText('(x̄,ȳ)',fitL.mx*W+8,H-fitL.my*H-6);
+      }
+      pts.forEach(function(p){ctx.fillStyle=C.indigoDeep;ctx.beginPath();ctx.arc(p.x*W,H-p.y*H,6,0,7);ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();});
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText('click: add point · click a point: remove',12,20);
+      rd.innerHTML=fitL? 'ŷ = <b>'+fitL.w.toFixed(3)+'</b>·x + <b>'+fitL.b.toFixed(3)+'</b> from the closed-form solution — slope = Cov(x,y)/Var(x); MSE = <b>'+fitL.mse.toFixed(4)+'</b>. The line always passes through the mean point (teal).'
+        : 'Add at least two points with different x.';
+    }
+    cv.addEventListener('click',function(e){
+      var r=cv.getBoundingClientRect();var x=(e.clientX-r.left)/r.width,y=1-(e.clientY-r.top)/r.height;
+      for(var i=0;i<pts.length;i++){if(Math.hypot(pts[i].x-x,pts[i].y-y)<0.035){pts.splice(i,1);draw();return;}}
+      pts.push({x:x,y:y});draw();
+    });
+    document.getElementById('regClear').addEventListener('click',function(){pts=[];draw();});
+    document.getElementById('regNoise').addEventListener('click',function(){seed();draw();});
+    register(draw);
+  })();
+
+  /* ================= 6b. LOGISTIC REGRESSION ================= */
+  (function(){
+    var cv=document.getElementById('logCanvas'); if(!cv) return;
+    var lw=document.getElementById('lw'),lb=document.getElementById('lb');
+    var wv=document.getElementById('lwv'),bv=document.getElementById('lbv'),rd=document.getElementById('logReadout');
+    var W,H,ctx,S,anim=null;
+    var data=[];(function(){for(var i=0;i<22;i++){var x=Math.random()*10;
+      var p=1/(1+Math.exp(-(1.4*(x-5))));data.push({x:x,y:Math.random()<p?1:0});}})();
+    function sg(z){return 1/(1+Math.exp(-z));}
+    function bce(w,b){var s=0;data.forEach(function(d){var p=Math.min(1-1e-9,Math.max(1e-9,sg(w*d.x+b)));
+      s+=-(d.y*Math.log(p)+(1-d.y)*Math.log(1-p));});return s/data.length;}
+    var xa=0,xb=10;
+    function PX(x){return (x-xa)/(xb-xa)*W;}
+    function draw(){
+      S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var w=+lw.value,b=+lb.value;wv.textContent=w.toFixed(2);bv.textContent=b.toFixed(2);
+      var y0=H-44,y1=44;
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(0,y0);ctx.lineTo(W,y0);ctx.moveTo(0,y1);ctx.lineTo(W,y1);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText('p=0 (fail)',8,y0+16);ctx.fillText('p=1 (pass)',8,y1-8);
+      // sigmoid curve
+      ctx.strokeStyle=C.coral;ctx.lineWidth=2.8;ctx.beginPath();
+      for(var px=0;px<=W;px+=2){var x=xa+(px/W)*(xb-xa),p=sg(w*x+b);
+        var y=y0-(y0-y1)*p;if(px===0)ctx.moveTo(px,y);else ctx.lineTo(px,y);}
+      ctx.stroke();
+      // boundary
+      if(Math.abs(w)>1e-6){var xbnd=-b/w;
+        if(xbnd>xa&&xbnd<xb){ctx.strokeStyle='rgba(20,22,42,0.4)';ctx.setLineDash([5,5]);
+          ctx.beginPath();ctx.moveTo(PX(xbnd),y1-14);ctx.lineTo(PX(xbnd),y0+14);ctx.stroke();ctx.setLineDash([]);
+          ctx.fillStyle=C.inkSoft;ctx.font=MONO;ctx.fillText('boundary x='+xbnd.toFixed(2),PX(xbnd)+6,(y0+y1)/2);}}
+      // data
+      data.forEach(function(d){var y=d.y?y1:y0;
+        ctx.fillStyle=d.y?C.indigo:C.teal;ctx.beginPath();ctx.arc(PX(d.x),y,6,0,7);ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=1.6;ctx.stroke();});
+      var L=bce(w,b);
+      // loss meter
+      var mw=Math.min(180,W*0.3);
+      ctx.fillStyle=C.wash;ctx.fillRect(W-mw-14,12,mw,12);
+      ctx.fillStyle=L<0.35?C.teal:(L<0.6?C.amber:C.coralDeep);
+      ctx.fillRect(W-mw-14,12,Math.min(1,L/1.2)*mw,12);
+      ctx.fillStyle=C.ink;ctx.font=MONO;ctx.fillText('cross-entropy '+L.toFixed(3),W-mw-14,40);
+      rd.innerHTML='p(pass|x) = σ('+w.toFixed(2)+'·x '+(b>=0?'+ ':'− ')+Math.abs(b).toFixed(2)+') · loss = <b>'+L.toFixed(3)+'</b>. '+(L<0.33?'Close to the MLE fit — the curve separates the classes about as well as this noisy data allows.':'Slide w (steepness) and b (position), or let MLE find the optimum.');
+    }
+    [lw,lb].forEach(function(s){s.addEventListener('input',function(){if(anim)cancelAnimationFrame(anim);draw();});});
+    document.getElementById('logFit').addEventListener('click',function(){
+      if(anim)cancelAnimationFrame(anim);
+      var w=+lw.value,b=+lb.value,steps=0;
+      function frame(){
+        for(var k=0;k<8;k++){var gw=0,gb=0;
+          data.forEach(function(d){var p=sg(w*d.x+b);gw+=(p-d.y)*d.x;gb+=(p-d.y);});
+          gw/=data.length;gb/=data.length;w-=1.2*gw;b-=1.2*gb;steps++;}
+        lw.value=Math.max(-1,Math.min(8,w));lb.value=Math.max(-16,Math.min(16,b));draw();
+        if(steps<400){anim=requestAnimationFrame(frame);}
+        else rd.innerHTML='<b>MLE found.</b> Gradient descent on cross-entropy with the (p̂−y)·x update converged: w='+w.toFixed(2)+', b='+b.toFixed(2)+'. This object — weighted sum, sigmoid, BCE, gradient step — is the neuron of Layer 2.';
+      } frame();
+    });
+    register(draw);
+  })();
+
+  /* ================= 7. POLYNOMIAL over/underfit ================= */
+  (function(){
+    var cv=document.getElementById('fitCanvas'); if(!cv) return;
+    var fd=document.getElementById('fitd'),dv=document.getElementById('fitdv'),rd=document.getElementById('fitReadout');
+    var W,H,ctx,S,train=[],test=[],errs={tr:[],te:[]};
+    function truth(x){return 0.5+0.34*Math.sin(2.6*Math.PI*x)* (1-0.3*x);}
+    function makeData(){
+      train=[];test=[];
+      for(var i=0;i<12;i++){var x=(i+0.5)/12+ (Math.random()-0.5)*0.02;train.push({x:x,y:truth(x)+gauss()*0.05});}
+      for(var j=0;j<12;j++){var x2=Math.random();test.push({x:x2,y:truth(x2)+gauss()*0.05});}
+      errs={tr:[],te:[]};
+      for(var d=0;d<=13;d++){var c=fitPoly(train,d);errs.tr.push(mse(train,c));errs.te.push(mse(test,c));}
+    }
+    function fitPoly(data,deg){
+      // normal equations with ridge eps, gaussian elimination
+      var n=deg+1,A=[],b=[];
+      for(var i=0;i<n;i++){A.push(new Array(n).fill(0));b.push(0);}
+      data.forEach(function(p){var xs=[1];for(var k=1;k<n;k++)xs.push(xs[k-1]*p.x);
+        for(var r=0;r<n;r++){b[r]+=xs[r]*p.y;for(var c=0;c<n;c++)A[r][c]+=xs[r]*xs[c];}});
+      for(var d2=0;d2<n;d2++)A[d2][d2]+=1e-8;
+      // solve
+      for(var col=0;col<n;col++){
+        var piv=col;for(var r2=col+1;r2<n;r2++)if(Math.abs(A[r2][col])>Math.abs(A[piv][col]))piv=r2;
+        var tmp=A[col];A[col]=A[piv];A[piv]=tmp;var tb=b[col];b[col]=b[piv];b[piv]=tb;
+        if(Math.abs(A[col][col])<1e-12)continue;
+        for(var r3=0;r3<n;r3++){if(r3===col)continue;var f=A[r3][col]/A[col][col];
+          for(var c2=col;c2<n;c2++)A[r3][c2]-=f*A[col][c2]; b[r3]-=f*b[col];}
+      }
+      var coef=[];for(var i2=0;i2<n;i2++)coef.push(Math.abs(A[i2][i2])>1e-12? b[i2]/A[i2][i2]:0);
+      return coef;
+    }
+    function evalP(c,x){var s=0,xp=1;for(var i=0;i<c.length;i++){s+=c[i]*xp;xp*=x;}return s;}
+    function mse(data,c){var s=0;data.forEach(function(p){var e=evalP(c,p.x)-p.y;s+=e*e;});return s/data.length;}
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var deg=+fd.value;dv.textContent=deg;
+      var c=fitPoly(train,deg);
+      var pw=W*0.62;
+      function PX(x){return x*pw;} function PY(y){return H-30-(y)*(H-60);}
+      ctx.strokeStyle=C.line;ctx.strokeRect(0.5,0.5,pw,H-1);
+      // truth
+      ctx.strokeStyle='rgba(135,139,166,0.7)';ctx.setLineDash([6,4]);ctx.lineWidth=1.6;ctx.beginPath();
+      for(var px=0;px<=pw;px+=3){var x=px/pw,y=truth(x);if(px===0)ctx.moveTo(PX(x),PY(y));else ctx.lineTo(PX(x),PY(y));}
+      ctx.stroke();ctx.setLineDash([]);
+      // model
+      ctx.strokeStyle=C.coral;ctx.lineWidth=2.6;ctx.beginPath();var first=true;
+      for(var px2=0;px2<=pw;px2+=2){var x2=px2/pw,y2=evalP(c,x2);
+        if(y2<-0.5||y2>1.5){first=true;continue;}
+        if(first){ctx.moveTo(PX(x2),PY(y2));first=false;}else ctx.lineTo(PX(x2),PY(y2));}
+      ctx.stroke();
+      // data
+      train.forEach(function(p){ctx.fillStyle=C.teal;ctx.beginPath();ctx.arc(PX(p.x),PY(p.y),5.5,0,7);ctx.fill();});
+      test.forEach(function(p){ctx.strokeStyle=C.indigoDeep;ctx.lineWidth=2;ctx.beginPath();ctx.arc(PX(p.x),PY(p.y),5,0,7);ctx.stroke();});
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText('teal=train · hollow=test · dashed=truth',10,18);
+      // error chart
+      var ex=pw+24,ew=W-ex-12,e0=H-36,eh=H-80;
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(ex,e0);ctx.lineTo(ex+ew,e0);ctx.stroke();
+      var maxE=Math.min(0.25,Math.max.apply(null,errs.te.concat(errs.tr)));
+      function EY(v){return e0-Math.min(1,v/maxE)*eh;}
+      function curve(arr,col){ctx.strokeStyle=col;ctx.lineWidth=2.2;ctx.beginPath();
+        arr.forEach(function(v,i){var x=ex+(i/13)*ew;if(i===0)ctx.moveTo(x,EY(v));else ctx.lineTo(x,EY(v));});ctx.stroke();}
+      curve(errs.tr,C.teal);curve(errs.te,C.coralDeep);
+      var dx2=ex+(deg/13)*ew;
+      ctx.strokeStyle='rgba(20,22,42,0.35)';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(dx2,e0);ctx.lineTo(dx2,e0-eh);ctx.stroke();ctx.setLineDash([]);
+      ctx.font=MONO;ctx.fillStyle=C.teal;ctx.fillText('train err',ex,28);
+      ctx.fillStyle=C.coralDeep;ctx.fillText('test err',ex,46);
+      ctx.fillStyle=C.faint;ctx.fillText('degree →',ex+ew-66,e0+16);
+      var tr=errs.tr[deg],te=errs.te[deg];
+      rd.innerHTML='Degree '+deg+': train MSE <b style="color:'+C.teal+'">'+tr.toFixed(4)+'</b>, test MSE <b style="color:'+C.coralDeep+'">'+te.toFixed(4)+'</b>. '+
+        (deg<=1?'<b>Underfit</b> — too stiff for the wave; both errors high.':deg<=5?'A good zone: flexible enough for the signal, not the noise.':'<b>Overfitting</b> — train error keeps falling while test error climbs; the model is memorizing noise.');
+    }
+    makeData();
+    fd.addEventListener('input',draw);
+    document.getElementById('fitNew').addEventListener('click',function(){makeData();draw();});
+    register(draw);
+  })();
+
+  /* ================= 8. ENTROPY ================= */
+  (function(){
+    var cv=document.getElementById('entCanvas'); if(!cv) return;
+    var es=document.getElementById('ents'),sv=document.getElementById('entsv'),rd=document.getElementById('entReadout');
+    var W,H,ctx,S,labels=['sun','cloud','rain','snow'];
+    function dist(t){ // t in [0,1]: uniform -> near-certain
+      var w=[1,1,1,1].map(function(_,i){return Math.exp(-t*7*i);});
+      var s=w.reduce(function(a,b){return a+b;},0);return w.map(function(x){return x/s;});
+    }
+    function draw(){
+      S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var t=+es.value/100,p=dist(t);
+      sv.textContent= t<0.07?'uniform': t>0.9?'near-certain':'sharpening';
+      var bw=W*0.13,gap=W*0.05,x0=W*0.08,base=H-58;
+      var Hent=0;
+      for(var i=0;i<4;i++){
+        var x=x0+i*(bw+gap),h=p[i]*(H-120);
+        ctx.fillStyle='rgba(67,56,202,'+(0.35+p[i]*0.65)+')';
+        ctx.fillRect(x,base-h,bw,h);
+        ctx.font=DISP;ctx.fillStyle=C.ink;ctx.textAlign='center';
+        ctx.fillText(labels[i],x+bw/2,base+20);
+        ctx.font=MONO;ctx.fillStyle=C.inkSoft;
+        ctx.fillText('p='+p[i].toFixed(2),x+bw/2,base+38);
+        var sur=p[i]>1e-9?-Math.log2(p[i]):0;
+        ctx.fillStyle=C.coralDeep;
+        ctx.fillText(p[i]>1e-9?(sur.toFixed(1)+' bits'):'—',x+bw/2,base-h-10);
+        if(p[i]>1e-9)Hent+=-p[i]*Math.log2(p[i]);
+      }
+      ctx.textAlign='left';
+      // entropy meter
+      var mx=W*0.84;
+      ctx.font='700 28px "Space Grotesk"';ctx.fillStyle=C.ink;ctx.textAlign='center';
+      ctx.fillText('H = '+Hent.toFixed(2),mx,H*0.36);
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText('bits of uncertainty',mx,H*0.36+20);
+      ctx.fillStyle=C.wash;ctx.fillRect(mx-50,H*0.5,100,12);
+      ctx.fillStyle=C.indigo;ctx.fillRect(mx-50,H*0.5,100*(Hent/2),12);
+      ctx.textAlign='left';
+      rd.innerHTML='H = −Σ p·log₂p = <b>'+Hent.toFixed(3)+' bits</b>. '+(Hent>1.9?'Maximum uncertainty: 4 equal outcomes need exactly 2 yes/no questions.':Hent>0.8?'Partly predictable — rare outcomes carry big surprise (coral), but they rarely happen, so the average drops.':'Nearly certain: almost no questions needed. Information is the resolution of uncertainty.');
+    }
+    es.addEventListener('input',draw);
+    register(draw);
+  })();
+
+});
+</script>
+</body>
+</html>

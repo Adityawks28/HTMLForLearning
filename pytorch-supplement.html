@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PyTorch Under the Hood — Supplementary Interactive Textbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="window.__katexReady=true;if(window.__doRender)window.__doRender();"></script>
+<style>
+/* ============================================================
+   DESIGN SYSTEM — "Signal & Field"
+   A computational-textbook identity: cool paper, deep indigo
+   ink, an electric coral reserved EXCLUSIVELY for things you
+   can touch (the signature), teal as the secondary data hue.
+   ============================================================ */
+:root{
+  --paper:#F4F5F8;
+  --surface:#FFFFFF;
+  --ink:#14162A;
+  --ink-soft:#474B66;
+  --ink-faint:#878BA6;
+  --indigo:#4338CA;
+  --indigo-deep:#2A2090;
+  --indigo-wash:#EEEEF8;
+  --coral:#FF5C49;
+  --coral-deep:#E8412E;
+  --teal:#0E9C92;
+  --teal-wash:#E4F3F1;
+  --amber:#C98314;
+  --amber-wash:#FBF1DC;
+  --tint:#EDEEF7;
+  --line:#DBDDE8;
+  --line-soft:#E7E8F0;
+  --code-bg:#191B30;
+  --code-ink:#E8E9F2;
+  --shadow:0 1px 2px rgba(20,22,42,.04),0 8px 30px rgba(20,22,42,.06);
+  --shadow-lg:0 4px 12px rgba(20,22,42,.08),0 20px 50px rgba(20,22,42,.10);
+  --serif:"Newsreader",Georgia,serif;
+  --display:"Space Grotesk",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --reading:760px;
+  --wide:1000px;
+  --sidebar:280px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:19px;
+  line-height:1.72;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+::selection{background:var(--coral);color:#fff}
+
+/* ---------- reading progress ---------- */
+#progress{
+  position:fixed;top:0;left:0;height:3px;width:0%;
+  background:linear-gradient(90deg,var(--indigo),var(--coral));
+  z-index:120;transition:width .12s linear;
+}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);
+  background:var(--surface);border-right:1px solid var(--line);
+  padding:30px 0 40px;overflow-y:auto;z-index:100;
+}
+.sidebar-brand{padding:0 26px 22px;border-bottom:1px solid var(--line-soft);margin-bottom:18px}
+.sidebar-brand .eyebrow{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--coral);font-weight:500;
+}
+.sidebar-brand h1{
+  font-family:var(--display);font-weight:700;font-size:22px;
+  line-height:1.12;margin-top:8px;letter-spacing:-.01em;color:var(--ink);
+}
+.sidebar-brand .sub{font-size:13px;color:var(--ink-faint);margin-top:7px;font-family:var(--display);font-weight:400}
+.toc{list-style:none;font-family:var(--display);font-size:14px}
+.toc>li{margin:1px 0}
+.toc .chap{
+  display:flex;gap:11px;align-items:baseline;padding:8px 26px;
+  color:var(--ink-soft);text-decoration:none;font-weight:500;
+  border-left:3px solid transparent;transition:all .15s;
+}
+.toc .chap .num{font-family:var(--mono);font-size:11px;color:var(--ink-faint);min-width:18px}
+.toc .chap:hover{background:var(--indigo-wash);color:var(--indigo)}
+.toc .chap.active{color:var(--indigo);border-left-color:var(--coral);background:var(--indigo-wash)}
+.toc .chap.active .num{color:var(--coral)}
+.toc .subs{list-style:none;padding:2px 0 6px}
+.toc .subs a{
+  display:block;padding:4px 26px 4px 55px;font-size:12.5px;
+  color:var(--ink-faint);text-decoration:none;border-left:3px solid transparent;
+}
+.toc .subs a:hover{color:var(--indigo)}
+.toc .subs a.active{color:var(--ink);border-left-color:var(--line)}
+
+/* ---------- mobile menu ---------- */
+.menu-btn{
+  display:none;position:fixed;top:14px;left:14px;z-index:130;
+  background:var(--ink);color:#fff;border:none;border-radius:9px;
+  width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:var(--shadow);
+}
+.scrim{display:none;position:fixed;inset:0;background:rgba(20,22,42,.4);z-index:99}
+
+/* ---------- main layout ---------- */
+.content{margin-left:var(--sidebar);padding:0 0 120px}
+.wrap{max-width:var(--reading);margin:0 auto;padding:0 28px}
+.wrap-wide{max-width:var(--wide);margin:0 auto;padding:0 28px}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;height:clamp(440px,72vh,640px);
+  display:flex;align-items:center;overflow:hidden;
+  background:linear-gradient(165deg,#15172E 0%,#221C6B 55%,#3A2D9E 100%);
+  margin-bottom:70px;
+}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;opacity:.9}
+.hero-inner{position:relative;z-index:2;max-width:var(--wide);margin:0 auto;padding:0 48px;width:100%}
+.hero .eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  color:#FF8C7E;font-weight:500;margin-bottom:20px;
+}
+.hero h1{
+  font-family:var(--display);font-weight:700;color:#fff;
+  font-size:clamp(40px,7vw,76px);line-height:.98;letter-spacing:-.03em;
+}
+.hero h1 em{font-style:normal;color:#B9B2FF}
+.hero .lead{
+  font-family:var(--serif);color:#C9CCE8;font-size:clamp(17px,2.2vw,21px);
+  max-width:620px;margin-top:26px;line-height:1.6;
+}
+.hero .scroll-cue{
+  margin-top:38px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:#9A9DD0;display:flex;align-items:center;gap:10px;
+}
+.hero .scroll-cue::before{content:"";width:34px;height:1px;background:#6E72B8}
+
+/* ---------- typography in body ---------- */
+.chapter{padding-top:34px;margin-top:34px}
+.chapter-head{margin-bottom:14px}
+.chapter-head .kicker{
+  font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:12px;
+}
+.chapter-head .kicker::after{content:"";flex:1;height:1px;background:var(--line)}
+.chapter-head h2{
+  font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,42px);
+  line-height:1.06;letter-spacing:-.02em;margin-top:14px;color:var(--ink);
+}
+h3{
+  font-family:var(--display);font-weight:600;font-size:25px;line-height:1.2;
+  margin:46px 0 4px;letter-spacing:-.01em;color:var(--ink);
+}
+h4{
+  font-family:var(--display);font-weight:500;font-size:18px;
+  margin:30px 0 2px;color:var(--indigo-deep);letter-spacing:-.005em;
+}
+.content p{margin:16px 0;color:var(--ink)}
+.content p.intro{font-size:21px;line-height:1.66;color:var(--ink-soft)}
+.content a{color:var(--indigo);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.content a:hover{text-decoration-color:var(--coral)}
+strong{font-weight:600;color:var(--ink)}
+em{font-style:italic}
+.term{font-weight:600;color:var(--indigo-deep);font-style:normal}
+code{font-family:var(--mono);font-size:.84em;background:var(--tint);padding:.12em .4em;border-radius:5px;color:var(--indigo-deep)}
+ul,ol{margin:16px 0 16px 4px;padding-left:26px}
+li{margin:8px 0;padding-left:4px}
+li::marker{color:var(--coral)}
+hr{border:none;border-top:1px solid var(--line);margin:54px 0}
+
+/* ---------- callout boxes ---------- */
+.box{border-radius:14px;padding:22px 26px;margin:28px 0;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
+.box .box-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.box .box-label::before{content:"";width:7px;height:7px;border-radius:50%}
+.box p:first-of-type,.box .box-label+p{margin-top:0}
+.box p:last-child{margin-bottom:0}
+
+.def{background:var(--indigo-wash);border-color:#D6D7F0}
+.def .box-label{color:var(--indigo)}
+.def .box-label::before{background:var(--indigo)}
+
+.intuition{background:var(--teal-wash);border-color:#C4E4E0}
+.intuition .box-label{color:var(--teal)}
+.intuition .box-label::before{background:var(--teal)}
+
+.note{background:var(--amber-wash);border-color:#EAD9AE}
+.note .box-label{color:var(--amber)}
+.note .box-label::before{background:var(--amber)}
+
+.derivation{background:var(--surface);border-color:var(--line);border-left:4px solid var(--ink)}
+.derivation .box-label{color:var(--ink)}
+.derivation .box-label::before{background:var(--ink)}
+.derivation .step{display:flex;gap:14px;margin:14px 0;align-items:flex-start}
+.derivation .step .s-num{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;background:var(--ink);
+  min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  margin-top:4px;flex-shrink:0;
+}
+.derivation .step .s-body{flex:1}
+.derivation .step .s-body p{margin:0 0 4px}
+
+/* ---------- math display ---------- */
+.katex-display{margin:20px 0!important;overflow-x:auto;overflow-y:hidden;padding:4px 0}
+.eqn{position:relative}
+.content .katex{font-size:1.04em}
+
+/* ---------- figures & demos ---------- */
+figure{margin:34px 0;text-align:center}
+figcaption{font-family:var(--display);font-size:13.5px;color:var(--ink-faint);margin-top:14px;line-height:1.5}
+figcaption b{color:var(--ink-soft);font-weight:600}
+.svg-fig{width:100%;height:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+
+.demo{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  margin:34px 0;box-shadow:var(--shadow-lg);overflow:hidden;
+}
+.demo-head{padding:18px 24px 16px;border-bottom:1px solid var(--line-soft);background:linear-gradient(180deg,#FFF,#FCFCFE)}
+.demo-head .tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:8px;
+}
+.demo-head .tag::before{content:"▶";font-size:8px}
+.demo-head h4{font-family:var(--display);font-weight:600;font-size:18px;color:var(--ink);margin:7px 0 0}
+.demo-body{padding:22px 24px}
+.demo canvas{display:block;max-width:100%;border-radius:10px;background:#FBFBFD;border:1px solid var(--line-soft)}
+.demo-controls{display:flex;flex-wrap:wrap;gap:18px 28px;margin-top:18px;align-items:flex-end}
+.ctrl{display:flex;flex-direction:column;gap:6px;min-width:150px;flex:1}
+.ctrl label{font-family:var(--display);font-size:12.5px;font-weight:500;color:var(--ink-soft);display:flex;justify-content:space-between;gap:10px}
+.ctrl label .val{font-family:var(--mono);color:var(--coral);font-weight:700}
+.demo .readout{font-family:var(--mono);font-size:13px;color:var(--ink-soft);background:var(--tint);padding:10px 14px;border-radius:8px;margin-top:14px;line-height:1.6}
+.demo .readout b{color:var(--indigo-deep)}
+
+/* coral = interactive (the signature) */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;
+  background:var(--line);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;border:none;
+}
+.btn{
+  font-family:var(--display);font-weight:500;font-size:13.5px;cursor:pointer;
+  background:var(--coral);color:#fff;border:none;padding:9px 18px;border-radius:9px;
+  transition:transform .1s,background .15s;
+}
+.btn:hover{background:var(--coral-deep)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--indigo);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--indigo-wash);color:var(--indigo)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{
+  font-family:var(--display);font-size:12.5px;font-weight:500;background:var(--surface);
+  border:none;padding:8px 14px;cursor:pointer;color:var(--ink-soft);border-right:1px solid var(--line);
+}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--indigo);color:#fff}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto;margin:30px 0}
+table{border-collapse:collapse;width:100%;font-size:15.5px;font-family:var(--display)}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-soft)}
+th{font-weight:600;color:var(--indigo-deep);border-bottom:2px solid var(--line);font-size:13px;letter-spacing:.02em}
+td{color:var(--ink-soft)}
+tr:hover td{background:var(--indigo-wash)}
+td code{font-size:.9em}
+
+/* ---------- pill / chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.chip{font-family:var(--mono);font-size:11px;background:var(--tint);color:var(--indigo-deep);padding:5px 11px;border-radius:20px;border:1px solid var(--line)}
+
+/* ---------- footer ---------- */
+.endcard{
+  background:linear-gradient(165deg,#15172E,#2A2090);color:#fff;border-radius:18px;
+  padding:44px;margin:60px 0 0;box-shadow:var(--shadow-lg);
+}
+.endcard .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#FF8C7E}
+.endcard h3{color:#fff;margin-top:10px}
+.endcard p{color:#C9CCE8}
+.endcard a{color:#B9B2FF}
+
+footer.page{padding:40px 0 0;color:var(--ink-faint);font-family:var(--display);font-size:13px;text-align:center}
+
+/* ---------- responsive ---------- */
+@media(max-width:1080px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .25s;width:300px;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-btn{display:block}
+  .scrim.show{display:block}
+  .content{margin-left:0}
+  .hero-inner{padding:0 26px}
+  .wrap,.wrap-wide{padding:0 22px}
+}
+@media(max-width:640px){
+  body{font-size:17.5px}
+  .content p.intro{font-size:18.5px}
+  .demo-controls{gap:14px}
+  .ctrl{min-width:120px}
+  .endcard{padding:28px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto}
+}
+
+/* --- code blocks (supplement) --- */
+pre{font-family:var(--mono);font-size:13px;line-height:1.7;background:#14162A;color:#E7E8F2;
+  border-radius:12px;padding:18px 22px;overflow-x:auto;margin:24px 0;border:1px solid #2A2D4A;
+  box-shadow:var(--shadow)}
+pre .c{color:#8C90B8;font-style:italic}
+pre .k{color:#9BA2FF;font-weight:600}
+pre .s{color:#6FD3C7}
+pre .n{color:#E8B05C}
+pre .f{color:#FF8C7E}
+.cd-cap{font-family:var(--mono);font-size:12px;color:var(--ink-faint);margin:-14px 0 26px 4px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<button class="menu-btn" id="menuBtn" aria-label="Open contents">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">
+    <div class="brand-mark">PT</div>
+    <div class="brand-text"><strong>PyTorch Under the Hood</strong><span>Supplement · pairs with Layers 1–4</span></div>
+  </div>
+  <nav>
+  <ul class="toc">
+    <li><a class="chap" href="#ch1"><span class="num">01</span><span>Tensors &amp; Memory</span></a>
+      <ul class="subs">
+        <li><a href="#tensor">The tensor object</a></li>
+        <li><a href="#strides">Storage &amp; strides</a></li>
+        <li><a href="#broadcast">Broadcasting</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch2"><span class="num">02</span><span>Autograd: The Tape</span></a>
+      <ul class="subs">
+        <li><a href="#graph">The dynamic graph</a></li>
+        <li><a href="#reverse">Why reverse mode</a></li>
+        <li><a href="#gotchas">Rules of the tape</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch3"><span class="num">03</span><span>Modules &amp; Optimizers</span></a>
+      <ul class="subs">
+        <li><a href="#module">nn.Module anatomy</a></li>
+        <li><a href="#stable">Losses &amp; numerical safety</a></li>
+        <li><a href="#optim">Optimizer anatomy</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch4"><span class="num">04</span><span>The Training Loop</span></a>
+      <ul class="subs">
+        <li><a href="#loop">The canonical loop</a></li>
+        <li><a href="#data">Datasets &amp; DataLoaders</a></li>
+        <li><a href="#bugs">Classic bugs, live</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch5"><span class="num">05</span><span>GPUs &amp; Execution</span></a>
+      <ul class="subs">
+        <li><a href="#whygpu">Why GPUs win</a></li>
+        <li><a href="#async">The async queue</a></li>
+        <li><a href="#amp">Mixed precision</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch6"><span class="num">06</span><span>torch.compile</span></a>
+      <ul class="subs">
+        <li><a href="#dynamo">Dynamo, AOTAutograd, Inductor</a></li>
+        <li><a href="#fusion">Kernel fusion, quantified</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch7"><span class="num">07</span><span>The Ecosystem</span></a>
+      <ul class="subs">
+        <li><a href="#science">The scientific stack</a></li>
+        <li><a href="#frameworks">Training frameworks</a></li>
+        <li><a href="#robotics">The robotics stack</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch8"><span class="num">08</span><span>Capstone</span></a>
+      <ul class="subs">
+        <li><a href="#capstone">A real script, annotated</a></li>
+        <li><a href="#practice">Shape mastery &amp; practice</a></li>
+      </ul></li>
+  </ul>
+  </nav>
+  <div class="side-foot">Supplement · PyTorch &amp; tooling<br>the workshop for <em>Layers 1–6</em></div>
+</aside>
+<div id="scrim"></div>
+
+<div class="content">
+
+  <header class="hero">
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero-inner">
+      <div class="eyebrow">Robotics &amp; VLA Curriculum · Supplement</div>
+      <h1>PyTorch: <em>under the hood</em></h1>
+      <p class="lead">Layers 1–4 derived the equations; this is the workshop where they run. Tensors and the stride trick, the autograd tape, modules and optimizers, the CUDA execution model, torch.compile — plus the ecosystem of tools around them. Not just how to call the API: how the machine underneath actually works.</p>
+      <div class="scroll-cue">Scroll to begin · 8 chapters</div>
+    </div>
+  </header>
+
+  <section class="wrap" id="preface">
+    <p class="intro">PyTorch won research because it commits to one idea: <em>a neural network is just a Python program</em>. Tensors are values, layers are objects, training is a for-loop you can print from and step through in a debugger. But beneath that friendly surface sits serious machinery — a memory model that makes transposes free, a gradient tape recording every operation, an asynchronous GPU queue, and a compiler. Knowing the machinery is what separates "I can run the tutorial" from "I can fix it at 2 a.m. when the loss is NaN." Every concept links back to where its math was built in Layers 1–4.</p>
+    <div class="box note">
+      <div class="box-label">How to read this</div>
+      <p>Dark panels are <strong>code</strong> — real, runnable PyTorch. Blue panels are <span class="term">definitions</span>; green panels build <span style="color:var(--teal);font-weight:600">intuition</span>; black-edged panels are <strong>derivations</strong> (yes, systems have derivations too); coral elements are <strong style="color:var(--coral)">interactive</strong> — several demos implement the actual internals (a stride engine, a gradient tape) in your browser so you can watch them work.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 1 ===================== -->
+  <section class="wrap chapter" id="ch1">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 01</div>
+      <h2>Tensors &amp; Memory</h2>
+    </div>
+    <p class="intro">Everything in PyTorch is a tensor: Layer 1's vectors and matrices, made executable, with two extra coordinates the math never mentioned — a <em>dtype</em> and a <em>device</em>. Understanding how a tensor actually sits in memory explains half of PyTorch's surprising behaviors, and makes the other half predictable.</p>
+
+    <h3 id="tensor">1.1 · The tensor object</h3>
+<pre><span class="k">import</span> torch
+
+x = torch.tensor([[1., 2., 3.],
+                  [4., 5., 6.]])        <span class="c"># 2×3 matrix (Layer 1, Ch 2)</span>
+x.shape      <span class="c"># torch.Size([2, 3])</span>
+x.dtype      <span class="c"># torch.float32  — 4 bytes per number</span>
+x.device     <span class="c"># cpu             — or cuda:0, mps, ...</span>
+
+torch.randn(32, 3, 224, 224)             <span class="c"># a batch of images: N×C×H×W</span>
+torch.zeros(10, dtype=torch.long)        <span class="c"># integer tensors for indices/labels</span>
+x.to(<span class="s">"cuda"</span>)                             <span class="c"># copy to GPU (returns a NEW tensor)</span></pre>
+    <p>A tensor is an n-dimensional array plus bookkeeping. The <span class="term">dtype</span> sets precision and cost (<code>float32</code> default; <code>bfloat16</code> for speed, Ch 5; <code>long</code> for indices). The <span class="term">device</span> says which processor's memory holds the bytes — and operations require all operands on the same device, the source of the beloved <code>Expected all tensors to be on the same device</code> error.</p>
+
+    <h3 id="strides">1.2 · Storage &amp; strides — the trick behind free transposes</h3>
+    <div class="box def">
+      <div class="box-label">Definition — storage + strides</div>
+      <p>A tensor is a <em>view</em> onto a flat 1-D <span class="term">storage</span> buffer, described by three numbers per dimension: shape, <span class="term">stride</span> (how many storage slots one step along that dimension jumps), and a storage <span class="term">offset</span>. The element at index $(i_0,i_1,\dots)$ lives at:</p>
+      $$\text{position}=\text{offset}+\sum_{d} i_d\cdot \text{stride}_d$$
+      <p>A fresh $4\times6$ tensor is row-major: strides $(6,1)$ — step a row, jump 6 slots; step a column, jump 1.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why transpose costs nothing and view sometimes refuses</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><strong>Transpose = swap the strides.</strong> $x^{\top}[i,j]=x[j,i]$ means position $=j\cdot6+i\cdot1$ — which is just the same storage read with strides $(1,6)$ and shape $(6,4)$. <em>Zero bytes move.</em> The same trick powers slicing: <code>x[:, 1:5:2]</code> is offset 1, strides $(6,2)$. Indexing arithmetic replaced copying — this is why slicing huge tensors is instant.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>The price: the storage is now visited <em>out of order</em> — the tensor is no longer <span class="term">contiguous</span>. <code>.view()</code> only re-labels shape/strides assuming row-major layout, so on a transposed tensor it raises the famous error; <code>.reshape()</code> or <code>.contiguous()</code> quietly performs the real copy that re-packs memory.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Corollary that bites everyone once: <strong>views share storage.</strong> Write through a slice and the original changes too. (NumPy interop inherits this: <code>torch.from_numpy(a)</code> wraps the <em>same</em> buffer — fast precisely because nothing is copied.)</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The stride engine — one buffer, many tensors</h4></div>
+      <div class="demo-body">
+        <canvas id="strideCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>view of the same storage</label><div class="seg" id="strideSeg"><button class="on" data-v="orig">x</button><button data-v="t">x.T</button><button data-v="rows">x[::2]</button><button data-v="cols">x[:,1:5:2]</button></div></div>
+        </div>
+        <div class="readout" id="strideReadout"></div>
+      </div>
+    </div>
+    <p><strong>Hover any cell</strong> of the logical tensor (top) and watch the stride formula light up its true home in the flat storage (bottom). Switch views: the logical grid reshapes, strides change, the storage never moves. <code>x.T</code> walks the buffer column-wise — same 24 floats, different walking order. This one picture is the mental model behind <code>view</code>/<code>reshape</code>/<code>contiguous</code>/<code>permute</code> and most "why is this slow" mysteries.</p>
+
+    <h3 id="broadcast">1.3 · Broadcasting — stride 0, the free expansion</h3>
+    <div class="box def">
+      <div class="box-label">Definition — broadcasting rules</div>
+      <p>When shapes differ, align them from the right; dimensions match if equal or if either is 1; size-1 dimensions are (virtually) stretched. $(4,1,6)+(3,1)\to(4,3,6)$.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — and the under-the-hood punchline</div>
+      <p>How does PyTorch "stretch" a size-1 dimension without allocating? <strong>Stride 0.</strong> Stepping along that dimension jumps zero slots — every index reads the same element. Broadcasting is the stride trick at its most elegant: an illusion of a bigger tensor, manufactured purely in the index arithmetic. (It is also a bug factory: add a $(N,)$ vector to a $(N,1)$ column and you silently get $(N,N)$ — when training is mysteriously wrong, <em>print your shapes first</em>. Chapter 8's quiz drills exactly this reflex.)</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 2 ===================== -->
+  <section class="wrap chapter" id="ch2">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 02</div>
+      <h2>Autograd: The Tape</h2>
+    </div>
+    <p class="intro">Layer 1 derived the chain rule; Layer 2 turned it into backpropagation. Autograd is that mathematics as infrastructure: every operation you run is silently recorded on a tape, and <code>backward()</code> plays the tape in reverse. This chapter opens the recorder.</p>
+
+    <h3 id="graph">2.1 · The dynamic graph</h3>
+<pre>x = torch.tensor(2.0, requires_grad=<span class="k">True</span>)
+w = torch.tensor(3.0, requires_grad=<span class="k">True</span>)
+b = torch.tensor(1.0, requires_grad=<span class="k">True</span>)
+
+y = (w * x + b).relu() ** 2     <span class="c"># forward pass — and the recording</span>
+
+y.grad_fn                        <span class="c"># &lt;PowBackward0&gt;</span>
+y.grad_fn.next_functions         <span class="c"># (&lt;ReluBackward0&gt;, ...) — the tape, exposed</span>
+
+y.backward()                     <span class="c"># play the tape in reverse</span>
+x.grad, w.grad, b.grad           <span class="c"># tensor(42.), tensor(28.), tensor(14.)</span></pre>
+    <p>Each operation on a <code>requires_grad</code> tensor creates a node holding (1) a <span class="term">backward function</span> — the local derivative rule — and (2) <em>saved tensors</em>, the forward values that rule will need (this is where activation memory goes, and what gradient checkpointing trades for recompute). The graph is <span class="term">dynamic</span>: built fresh by simply running Python, so loops, branches, and <code>print()</code> all just work — the property that won researchers over.</p>
+
+    <h3 id="reverse">2.2 · Why <em>reverse</em> mode — one pass, all gradients</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the asymmetry that makes deep learning affordable</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>A network is $f:\R^{n}\to\R$ — millions of parameters in, <em>one loss out</em>. The chain rule (Layer 1, Ch 3) composes Jacobians; the only question is the order of multiplication.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>Forward mode</strong> carries a directional derivative along with the computation: one pass yields $J\mathbf{v}$ — the sensitivity to <em>one input direction</em>. Recovering all $n$ partials needs $n$ passes. At $n=10^9$ parameters: dead on arrival.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Reverse mode</strong> propagates from the output backward, computing the vector–Jacobian product $\mathbf{u}^{\top}J$ in one pass. For a scalar loss, $\mathbf{u}=1$ and that single product <em>is the entire gradient</em> — all $n$ partials for roughly one extra forward's cost. The shape of the problem (many→one) picks the direction of differentiation. That is why training giant models is possible at all, and why each node stores a <em>VJP</em> rule: upstream-gradient in, local-Jacobian-transpose times it, out.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>A working tape — step the backward pass yourself</h4></div>
+      <div class="demo-body">
+        <canvas id="tapeCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>expression</label><div class="seg" id="tapeSeg"><button class="on" data-e="sq">(wx+b)²</button><button data-e="relu">relu(wx+b)</button><button data-e="sin">sin(wx)·x</button></div></div>
+          <div class="ctrl"><label>$x$ <span class="val" id="tapeXv">2.0</span></label><input type="range" id="tapeX" min="-3" max="3" step="0.1" value="2"></div>
+          <div class="ctrl"><label>$w$ <span class="val" id="tapeWv">1.5</span></label><input type="range" id="tapeW" min="-3" max="3" step="0.1" value="1.5"></div>
+          <div class="ctrl"><label>$b$ <span class="val" id="tapeBv">0.5</span></label><input type="range" id="tapeB" min="-3" max="3" step="0.1" value="0.5"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="tapeStep">▸ Step backward()</button> <button class="btn ghost" id="tapeReset">Reset grads</button></div>
+        </div>
+        <div class="readout" id="tapeReadout"></div>
+      </div>
+    </div>
+    <p>This demo runs a real (30-line) autograd engine. Forward values fill as you drag sliders; each <strong>Step</strong> processes one tape node in reverse topological order — upstream gradient × local derivative, <em>accumulated</em> into each parent (watch a node that feeds two consumers receive two contributions and add them: that <code>+=</code> is exactly why PyTorch needs <code>zero_grad()</code>). Switch to relu with $wx+b\lt0$ and watch the gradient die at the kink — Layer 1's |x| lesson, now operational.</p>
+
+    <h3 id="gotchas">2.3 · Rules of the tape</h3>
+<pre><span class="k">with</span> torch.no_grad():            <span class="c"># don't record: inference, metric computation</span>
+    preds = model(x)
+
+z = y.detach()                    <span class="c"># same data, severed from the graph</span>
+loss.item()                       <span class="c"># python float — also a GPU sync point (Ch 5!)</span>
+
+x += 1                            <span class="c"># in-place on a recorded tensor: autograd may raise —</span>
+                                  <span class="c"># a saved tensor was modified; version counters catch it</span></pre>
+    <p>Three rules cover daily life. (1) <strong>Gradients accumulate</strong> — by design (shared weights legitimately receive multiple contributions), so the training loop must zero them. (2) <strong>What isn't recorded can't backprop</strong>: <code>no_grad</code>/<code>detach</code> are how you say "this path is not part of learning" (the EMA teachers of Layer 3 and target networks of Layer 4 live behind <code>no_grad</code>). (3) <strong>Don't mutate what the tape saved</strong> — in-place ops on tensors needed for backward trip a version-counter error, autograd's tamper seal.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 3 ===================== -->
+  <section class="wrap chapter" id="ch3">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 03</div>
+      <h2>Modules &amp; Optimizers</h2>
+    </div>
+    <p class="intro">Above the tape sits the part of PyTorch everyone meets first: <code>nn.Module</code>, losses, optimizers. They look like magic containers; they are three small, inspectable mechanisms.</p>
+
+    <h3 id="module">3.1 · nn.Module — a parameter registry with a forward()</h3>
+<pre><span class="k">class</span> <span class="f">Linear</span>(nn.Module):                       <span class="c"># nn.Linear, reimplemented</span>
+    <span class="k">def</span> <span class="f">__init__</span>(self, n_in, n_out):
+        super().__init__()
+        self.W = nn.Parameter(torch.randn(n_out, n_in) * n_in**-0.5)
+        self.b = nn.Parameter(torch.zeros(n_out))
+    <span class="k">def</span> <span class="f">forward</span>(self, x):
+        <span class="k">return</span> x @ self.W.T + self.b              <span class="c"># Layer 2, Ch 1 — one layer</span>
+
+model = nn.Sequential(Linear(784, 256), nn.ReLU(), Linear(256, 10))
+<span class="k">sum</span>(p.numel() <span class="k">for</span> p <span class="k">in</span> model.parameters())     <span class="c"># 203,530</span>
+model.state_dict().keys()                          <span class="c"># '0.W', '0.b', '2.W', '2.b'</span></pre>
+    <div class="box intuition">
+      <div class="box-label">Under the hood — the __setattr__ trick</div>
+      <p>How does <code>model.parameters()</code> find every weight in an arbitrarily nested model with no registration code from you? <code>nn.Module</code> overrides Python's <code>__setattr__</code>: the moment you assign an <code>nn.Parameter</code> (or a sub-module) as an attribute, it is intercepted and filed into an internal <code>_parameters</code>/<code>_modules</code> dict. <code>.parameters()</code> just walks the tree of dicts; <code>.state_dict()</code> snapshots it as <em>name → tensor</em> (the checkpoint format — which is why renaming a layer breaks old checkpoints); <code>.to(device)</code>, <code>.train()</code>/<code>.eval()</code> walk the same tree. One dunder method powers the whole module system.</p>
+    </div>
+    <p>One subtlety earns its keep daily: <code>model(x)</code> calls <code>__call__</code>, which runs hooks and dispatch <em>around</em> your <code>forward()</code> — so always call the module, never <code>model.forward(x)</code>. And <code>.eval()</code> doesn't disable gradients; it flips behavior flags (dropout off, batch-norm uses running stats — Layer 2, Ch 2). Inference wants both <code>.eval()</code> <em>and</em> <code>no_grad</code>.</p>
+
+    <h3 id="stable">3.2 · Losses — and the log-sum-exp safety rail</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why cross_entropy refuses to let you softmax first</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><code>float32</code> overflows at $\approx3.4\times10^{38}$, and $e^{z}$ crosses that at $z\approx88.7$. Logits of ±90 — entirely normal mid-training — make a naive $\operatorname{softmax}=e^{z_i}/\sum e^{z_j}$ return <code>inf/inf = nan</code>, and one NaN gradient poisons every parameter in a single step.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>The fix is an identity. For any constant $m$:</p>$$\log\sum_i e^{z_i}=\log\Big(e^{m}\sum_i e^{z_i-m}\Big)=m+\log\sum_i e^{z_i-m}$$<p>Choose $m=\max_i z_i$: every exponent becomes $\le0$, so every $e^{(\cdot)}\in(0,1]$ — overflow is impossible, and the math is <em>exactly</em> unchanged.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>This is why <code>F.cross_entropy</code> takes raw logits and fuses log-softmax + NLL internally (Layer 1 Ch 8's cross-entropy, armored for float32), and why the cardinal API rule exists: <strong>never put a softmax before cross_entropy.</strong> Numerical safety in PyTorch is mostly "use the fused op that contains the identity."</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Watch float32 die — and log-sum-exp shrug</h4></div>
+      <div class="demo-body">
+        <canvas id="lseCanvas" width="640" height="300"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>logit magnitude $z$ <span class="val" id="lseZv">40</span></label><input type="range" id="lseZ" min="0" max="150" step="1" value="40"></div>
+        </div>
+        <div class="readout" id="lseReadout"></div>
+      </div>
+    </div>
+    <p>Slide the logits toward the cliff at $z\approx88.7$. The naive pipeline's $e^{z}$ shoots toward the float32 ceiling and detonates into <code>inf → nan</code>; the stabilized path computes the <em>same value</em> serenely at $z=150$, because after subtracting the max its biggest exponent is $e^{0}=1$. One algebra trick, production-critical.</p>
+
+    <h3 id="optim">3.3 · Optimizer anatomy</h3>
+<pre>opt = torch.optim.AdamW(model.parameters(), lr=3e-4, weight_decay=0.01)
+
+opt.param_groups[0].keys()    <span class="c"># params, lr, betas, eps, weight_decay ... (the dials)</span>
+opt.state[some_param]          <span class="c"># {'exp_avg': m, 'exp_avg_sq': v, 'step': t}  — Layer 2 Ch 2's</span>
+                               <span class="c"># Adam moments, living in a dict keyed by parameter</span></pre>
+    <p>An optimizer is two dictionaries and a rule. <span class="term">param_groups</span> holds parameter lists with their hyperparameters (multiple groups = different learning rates per part of the model — how fine-tuning freezes or slows a backbone). <span class="term">state</span> holds per-parameter buffers: Adam's $m$ and $v$ are literally here, which is why optimizer checkpoints are ~2× model size and why resuming without them briefly destabilizes training. <code>step()</code> reads each <code>p.grad</code> and applies the update rule you derived in Layer 2 — nothing more mystical than a for-loop over the registry from 3.1. Schedulers just rewrite <code>param_groups[i]['lr']</code> on a timetable.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 4 ===================== -->
+  <section class="wrap chapter" id="ch4">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 04</div>
+      <h2>The Training Loop</h2>
+    </div>
+    <p class="intro">Five lines repeat across all of deep learning — the same five whether the model is a linear probe or a 70B VLA. Here is the loop as a Rosetta stone, each line mapped to the layer that derived it, followed by the machinery that feeds it and the bugs that haunt it.</p>
+
+    <h3 id="loop">4.1 · The canonical loop, annotated</h3>
+<pre><span class="k">for</span> xb, yb <span class="k">in</span> loader:                       <span class="c"># minibatch ≈ sampled expectation   (L1 Ch5)</span>
+    xb, yb = xb.to(dev), yb.to(dev)
+
+    logits = model(xb)                       <span class="c"># forward: matrices + nonlinearity  (L2 Ch1)</span>
+    loss = F.cross_entropy(logits, yb)       <span class="c"># NLL of a categorical              (L1 Ch8)</span>
+
+    opt.zero_grad()                          <span class="c"># the tape accumulates — clear it   (Ch 2)</span>
+    loss.backward()                          <span class="c"># reverse-mode chain rule           (L1 Ch3 → L2)</span>
+    opt.step()                               <span class="c"># gradient descent, refined         (L1 Ch3, L2 Ch2)</span></pre>
+    <p class="cd-cap">The entire curriculum, in seven lines of Python.</p>
+    <p>Evaluation wraps the forward in <code>model.eval()</code> + <code>torch.no_grad()</code>, and logging uses <code>loss.item()</code> — pulling a Python float out (and, as Chapter 5 explains, quietly synchronizing the GPU; log every N steps, not every step).</p>
+
+    <h3 id="data">4.2 · Datasets &amp; DataLoaders</h3>
+<pre><span class="k">class</span> <span class="f">Demos</span>(torch.utils.data.Dataset):     <span class="c"># e.g. robot demonstrations (L4 Ch7)</span>
+    <span class="k">def</span> <span class="f">__len__</span>(self): <span class="k">return</span> len(self.episodes)
+    <span class="k">def</span> <span class="f">__getitem__</span>(self, i):                <span class="c"># ONE example: load, decode, augment</span>
+        <span class="k">return</span> self.obs[i], self.action[i]
+
+loader = DataLoader(ds, batch_size=64, shuffle=<span class="k">True</span>,
+                    num_workers=8, pin_memory=<span class="k">True</span>)</pre>
+    <p>The division of labor: <code>Dataset</code> defines <em>one</em> example; <code>DataLoader</code> turns it into an industrial pipeline — shuffling (the i.i.d. assumption of Layer 1, enforced), batching via a collate function that stacks tensors, and <span class="term">worker processes</span>. Workers are separate <em>processes</em>, not threads, because Python's GIL allows only one thread to run Python at a time; loading therefore overlaps with GPU compute. <code>pin_memory</code> puts batches in page-locked RAM so the host-to-GPU copy can run asynchronously (Ch 5). When the GPU sits idle, the dataloader is the suspect: starved GPUs, not slow models, are the most common training-speed bug.</p>
+
+    <h3 id="bugs">4.3 · Classic bugs, made visible</h3>
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The forgotten zero_grad() — watch accumulation wreck a fit</h4></div>
+      <div class="demo-body">
+        <canvas id="bugCanvas" width="640" height="340"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>the loop contains</label><div class="seg" id="bugSeg"><button class="on" data-m="zero">opt.zero_grad() ✓</button><button data-m="nozero">zero_grad forgotten</button></div></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="bugRun">▸ Train 80 steps</button></div>
+        </div>
+        <div class="readout" id="bugReadout"></div>
+      </div>
+    </div>
+    <p>Same data, same model, same learning rate — one line deleted. With the bug, every step applies the <em>sum of all gradients so far</em>: an accidental, ever-growing momentum that overshoots, oscillates, and detonates (compare the gray ghost of your previous run). Now you know the diagnostic smell: a loss that improves briefly then explodes for no visible reason. Honorable mentions in the same family: softmax-before-cross_entropy (Ch 3), the $(N,)$ vs $(N,1)$ broadcast bug (Ch 1), train/eval mode left in the wrong state, and device mismatches — together they cover most 2 a.m. debugging sessions.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 5 ===================== -->
+  <section class="wrap chapter" id="ch5">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 05</div>
+      <h2>GPUs &amp; the Execution Model</h2>
+    </div>
+    <p class="intro">A GPU is not a faster CPU; it is a different bargain — thousands of slow workers instead of a few fast ones, profitable only when work comes in wide, regular slabs. PyTorch hides the machinery well enough that you can ignore it right up until you try to make anything fast. Two ideas explain almost everything: the roofline, and the queue.</p>
+
+    <h3 id="whygpu">5.1 · Why GPUs win — and when they don't</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — arithmetic intensity, and the roofline law</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Every kernel needs two resources: arithmetic (FLOPs) and memory traffic (bytes moved). Define <span class="term">arithmetic intensity</span> $I=\text{FLOPs}/\text{bytes}$. Hardware supplies compute at peak $P$ (FLOP/s) and memory at bandwidth $B$ (bytes/s), so the achievable rate is whichever resource runs out first:</p>$$\text{attainable}=\min\big(P,\;B\cdot I\big)$$<p>— the <span class="term">roofline</span>: a bandwidth-sloped ramp meeting a flat compute ceiling at the ridge $I^{\ast}=P/B$.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Now compute $I$ for the two workloads that matter. <strong>Elementwise add</strong> on $n$ floats: $n$ FLOPs, $12n$ bytes (two reads, one write, 4 B each) → $I=1/12$, hopelessly below any modern ridge: <em>memory-bound</em>, no matter the GPU. <strong>Matmul</strong> of $n\times n$: $2n^3$ FLOPs over $12n^2$ bytes → $I=n/6$, growing <em>with size</em> — big matmuls sail past the ridge into compute-bound paradise, which is precisely the regime tensor cores were built for.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The two corollaries that organize all performance work: (a) deep learning is fast because its core op is the one whose intensity scales; (b) everything <em>around</em> the matmuls — activations, norms, residual adds — is memory-bound, so the only cure is to move fewer bytes: fuse kernels (Ch 6) and shrink dtypes (5.3).</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The roofline — find the ridge, place your ops</h4></div>
+      <div class="demo-body">
+        <canvas id="roofCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>peak compute $P$ <span class="val" id="roofPv">100 TFLOP/s</span></label><input type="range" id="roofP" min="10" max="400" step="5" value="100"></div>
+          <div class="ctrl"><label>memory bandwidth $B$ <span class="val" id="roofBv">2.0 TB/s</span></label><input type="range" id="roofB" min="0.3" max="5" step="0.1" value="2"></div>
+          <div class="ctrl"><label>matmul size $n$ <span class="val" id="roofNv">512</span></label><input type="range" id="roofN" min="6" max="13" step="0.2" value="9"></div>
+        </div>
+        <div class="readout" id="roofReadout"></div>
+      </div>
+    </div>
+    <p>The dots are real workloads at their intensities: elementwise ops pinned to the ramp's far left, matmul sliding right as $n$ grows. Drag $n$ down to 64 and watch even the GPU's favorite op go memory-bound — the small-batch / small-model regime where GPUs disappoint. Raise bandwidth and the ridge slides left, rescuing them. Every "why is my model slow" investigation starts by locating the workload on this picture.</p>
+
+    <h3 id="async">5.2 · The async queue — your Python is just placing orders</h3>
+<pre>t0 = time.time()
+y = model(x)                       <span class="c"># returns almost instantly — kernels merely ENQUEUED</span>
+print(time.time() - t0)            <span class="c"># ~0 ms: you timed order-placement, not cooking</span>
+
+torch.cuda.synchronize()           <span class="c"># wait for the kitchen to actually finish</span>
+loss.item()                        <span class="c"># needs the real number → implicit synchronize</span></pre>
+    <p>CUDA calls are <span class="term">asynchronous</span>: Python enqueues kernels onto a stream and races ahead; the GPU consumes the queue at its own pace. This is a feature — CPU-side Python overhead hides behind GPU work — but it makes naive <code>time.time()</code> measurements lies, and it means every <code>.item()</code>, <code>.cpu()</code>, or print of a GPU value is a <em>sync point</em> that stalls the pipeline. The classic slow-training culprit isn't compute; it's a metric logged every step draining the queue.</p>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The queue — async pipelining vs. a sync point every step</h4></div>
+      <div class="demo-body">
+        <canvas id="syncCanvas" width="640" height="320"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>loop style</label><div class="seg" id="syncSeg"><button class="on" data-m="async">async (log every N)</button><button data-m="sync">.item() every step</button></div></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="syncRun">▸ Run 8 steps</button></div>
+        </div>
+        <div class="readout" id="syncReadout"></div>
+      </div>
+    </div>
+    <p>Top lane: CPU (Python) launching work. Bottom: GPU executing it. Async, the CPU sprints ahead and the GPU runs wall-to-wall. Add a sync every step and the lanes must rendezvous: bubbles appear on both, and the same eight steps take visibly longer. The fix costs nothing — accumulate metrics on-GPU, sync once per hundred steps.</p>
+
+    <h3 id="amp">5.3 · Mixed precision</h3>
+<pre><span class="k">with</span> torch.autocast(<span class="s">"cuda"</span>, dtype=torch.bfloat16):
+    loss = F.cross_entropy(model(xb), yb)     <span class="c"># matmuls in bf16, reductions in fp32</span>
+loss.backward()</pre>
+    <p>Half-precision halves every byte moved — a direct 2× on the memory-bound ramp, plus tensor cores run low-precision matmuls several times faster. The catch is range: <code>float16</code>'s tiny exponent underflows small gradients to zero, requiring the <code>GradScaler</code> loss-scaling dance. <code>bfloat16</code> keeps float32's full exponent range by sacrificing mantissa — gradients survive, no scaler needed — which is why bf16 autocast is the modern default and fp16 a legacy mode. (Inference pushes further: int8/fp8 quantization, Layer 6 territory for fitting VLAs onto robot-side hardware.)</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 6 ===================== -->
+  <section class="wrap chapter" id="ch6">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 06</div>
+      <h2>torch.compile — Eager Code, Compiled Speed</h2>
+    </div>
+    <p class="intro">PyTorch's superpower — it's just Python — is also its tax: the interpreter dispatches one kernel at a time, blind to the next line. <code>torch.compile</code> (PyTorch 2.x) removes the tax without removing the Python: it watches your function run, captures what it does, and rebuilds it as fused machine code. One line, and the compiler stack below wakes up.</p>
+
+    <h3 id="dynamo">6.1 · The stack: Dynamo → AOTAutograd → Inductor</h3>
+<pre>model = torch.compile(model)        <span class="c"># that's the whole API</span>
+
+<span class="c"># Under the hood, three machines:</span>
+<span class="c"># 1. Dynamo      — hooks CPython bytecode, traces tensor ops into an FX graph,</span>
+<span class="c">#                  installs GUARDS (shapes, dtypes); re-traces if a guard fails</span>
+<span class="c"># 2. AOTAutograd — runs the tape logic of Ch 2 AHEAD of time → a backward graph too</span>
+<span class="c"># 3. Inductor    — fuses ops and emits Triton kernels (GPU) / C++ (CPU)</span></pre>
+    <div class="box intuition">
+      <div class="box-label">Intuition — a stenographer, not a straitjacket</div>
+      <p><span class="term">Dynamo</span> solves the problem that killed earlier attempts (TorchScript asked you to rewrite code in a Python subset): it captures the program <em>by watching the real interpreter run it</em>, at the bytecode level. Lines it can't capture — a <code>print</code>, an <code>.item()</code>, control flow that branches on a tensor's <em>value</em> — don't crash anything; they cause a <span class="term">graph break</span>: the compiled region ends, plain Python handles the odd line, a new compiled region begins. <span class="term">Guards</span> are the honesty mechanism: the captured graph assumed your batch was 64×784 float32, so cheap shape/dtype checks run each call, and a violation triggers recompilation. Your dynamic Python is still dynamic; you just pay compile cost the first time each <em>variant</em> runs — which is why compiled training feels slow for a step, then fast forever.</p>
+    </div>
+
+    <h3 id="fusion">6.2 · Kernel fusion, quantified</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — fusing k memory-bound ops buys ~k×</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>An elementwise chain — <code>x.mul(a).add(b).relu()</code>, the connective tissue between matmuls — runs as $k$ separate kernels in eager mode. Each reads $n$ elements from DRAM and writes $n$ back: total traffic $2kn$ elements, and Ch 5 proved these ops are memory-bound, so <em>traffic is time</em>.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>A fused kernel loads each element <em>once</em>, does all $k$ operations in registers, writes once: traffic $2n$. Speedup:</p>$$\frac{2kn}{2n}=k$$<p>Three fused ops ≈ 3× on that segment, for free. (The celebrity case: FlashAttention is this idea applied inside attention — never materialize the $n\times n$ score matrix in DRAM — which is why it beats "optimized" eager attention by large factors.)</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><span class="term">Inductor</span> does this automatically — pattern-matching the FX graph, generating <span class="term">Triton</span> kernels (a Python-syntax GPU language that has become the lingua franca of custom kernels), and autotuning tile sizes per shape and device. The compiler is doing roofline reasoning so you don't have to.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Fusion economics — bytes moved, eager vs. compiled</h4></div>
+      <div class="demo-body">
+        <canvas id="fuseCanvas" width="640" height="320"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>elementwise ops in the chain $k$ <span class="val" id="fuseKv">4</span></label><input type="range" id="fuseK" min="1" max="12" step="1" value="4"></div>
+        </div>
+        <div class="readout" id="fuseReadout"></div>
+      </div>
+    </div>
+    <p>Each block is one pass over the tensor in DRAM. Eager mode pays the round trip $k$ times; the fused kernel pays once. Slide $k$ up and watch the speedup track it linearly — then recall how many <code>add / mul / norm / activation</code> lines sit between the matmuls of a transformer block, and the headline "torch.compile made training 1.5–2× faster" stops being mysterious.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 7 ===================== -->
+  <section class="wrap chapter" id="ch7">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 07</div>
+      <h2>The Ecosystem</h2>
+    </div>
+    <p class="intro">Nobody trains a robot with PyTorch alone. Around the core sits a stack of tools — scientific, training, and robotic — each solving one layer of the problem. Here is the map, with the under-the-hood thread continued: most of these tools are thin, inspectable conventions over the mechanisms you now know.</p>
+
+    <h3 id="science">7.1 · The scientific stack</h3>
+<pre><span class="k">import</span> numpy <span class="k">as</span> np
+a = np.random.randn(1000, 1000)
+t = torch.from_numpy(a)        <span class="c"># ZERO-copy: wraps the SAME buffer (Ch 1 strides!)</span>
+t[0, 0] = 99.0                  <span class="c"># ...so a[0,0] is now 99.0 too</span>
+back = t.numpy()                <span class="c"># zero-copy in reverse (CPU tensors only)</span></pre>
+    <p><span class="term">NumPy</span> is the lingua franca PyTorch deliberately mirrors (same slicing, same broadcasting — Ch 1 was secretly a NumPy lesson too), and interop is free because both sides agree on the storage-plus-strides memory model. Around it: <span class="term">matplotlib</span> for looking at everything (loss curves before dashboards, always), <span class="term">pandas</span> for tabular wrangling, and <span class="term">einops</span> — <code>rearrange(x, 'b (h w) c -&gt; b c h w', h=14)</code> — which replaces error-prone <code>view/permute</code> chains with self-documenting shape algebra. Many ViT implementations (Layer 3) read better in einops than in math.</p>
+
+    <h3 id="frameworks">7.2 · Training &amp; experiment frameworks</h3>
+    <table>
+      <tr><th>Layer of the problem</th><th>Tool</th><th>What it actually is</th></tr>
+      <tr><td>Pretrained models</td><td>Hugging Face <em>transformers</em>, <em>timm</em></td><td>A model zoo + the Hub: the LLMs/ViTs/VLMs of Layers 2–3 as <code>from_pretrained()</code> one-liners (state_dicts with a naming convention, Ch 3)</td></tr>
+      <tr><td>Data at scale</td><td>HF <em>datasets</em>, WebDataset</td><td>Memory-mapped/streaming Datasets (Ch 4) for corpora that don't fit in RAM</td></tr>
+      <tr><td>Loop boilerplate</td><td>Lightning, HF <em>Accelerate</em></td><td>Your Ch-4 loop, factored: device moves, AMP, checkpointing, multi-GPU handled; Accelerate stays closest to raw PyTorch</td></tr>
+      <tr><td>Multi-GPU / multi-node</td><td>DDP, FSDP</td><td>DDP: replicate the model, all-reduce gradients each step. FSDP: <em>shard</em> params/grads/optimizer state across GPUs — how models bigger than one GPU get trained</td></tr>
+      <tr><td>Experiment tracking</td><td>Weights &amp; Biases, TensorBoard</td><td>Log loss/metrics/configs per run; the searchable lab notebook that makes runs comparable</td></tr>
+      <tr><td>Configuration</td><td>Hydra / OmegaConf</td><td>Experiments as composable YAML — change lr from the CLI, keep every run reproducible</td></tr>
+    </table>
+    <div class="box intuition">
+      <div class="box-label">Intuition — and the honest contrast: JAX</div>
+      <p>PyTorch's worldview is <em>imperative</em>: run the program, record the tape (Ch 2). <span class="term">JAX</span> — the other serious framework — is <em>functional</em>: write pure functions, and transformations (<code>grad</code>, <code>jit</code>, <code>vmap</code>) rewrite them; compilation isn't an add-on, it's the premise. JAX rewards you in large-scale and TPU settings and in research that composes transformations (meta-learning, per-sample gradients); PyTorch rewards debuggability and ecosystem gravity. Notice the convergence, though: <code>torch.compile</code> is PyTorch adopting JAX's bet, and both compile to the same class of fused kernels. The concepts in this book transfer wholesale.</p>
+    </div>
+
+    <h3 id="robotics">7.3 · The robotics stack</h3>
+<pre><span class="k">import</span> gymnasium <span class="k">as</span> gym          <span class="c"># the MDP of Layer 4, as an API</span>
+env = gym.make(<span class="s">"HalfCheetah-v5"</span>)
+obs, info = env.reset()
+<span class="k">for</span> _ <span class="k">in</span> range(1000):
+    action = policy(torch.as_tensor(obs))    <span class="c"># your π_θ (L4 Ch5)</span>
+    obs, reward, term, trunc, info = env.step(action.numpy())
+    <span class="k">if</span> term <span class="k">or</span> trunc: obs, info = env.reset()</pre>
+    <p>The agent loop of Layer 4, as five lines. Around it: <span class="term">Stable-Baselines3</span> (reference PPO/SAC implementations — the Layer 4 algorithms, productionized), <span class="term">MuJoCo</span> and <span class="term">Isaac Lab</span> (the hand-built world models of Layer 4 Ch 8: physics simulators, with Isaac running thousands of environments in parallel on GPU for locomotion-scale RL), and <span class="term">LeRobot</span> — Hugging Face's robotics library, where the policies this curriculum keeps citing (ACT, Diffusion Policy, π0-style VLAs) exist as trainable PyTorch code with shared dataset formats. For deployment, <code>torch.export</code> → <span class="term">ONNX</span> / <span class="term">TensorRT</span> compiles the policy for the robot-side computer (a Jetson, typically) — Layer 6's latency budgets, met with Chapter 5–6's tools.</p>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>When Layer 5 trains locomotion in simulation, the stack is Isaac + PPO-from-SB3-or-custom + this chapter's logging; when Layer 6 fine-tunes a VLA, it is LeRobot/transformers + FSDP + bf16 + torch.compile. Every line of those future chapters' tooling has now been introduced.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 8 ===================== -->
+  <section class="wrap chapter" id="ch8">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 08</div>
+      <h2>Capstone — Reading Real Code</h2>
+    </div>
+    <p class="intro">Here is a complete, modern training script — the kind you'll actually encounter — with every idea from this supplement in play. Read it slowly once; after this book it should feel less like an incantation and more like a checklist.</p>
+
+    <h3 id="capstone">8.1 · A real script, annotated</h3>
+<pre><span class="k">import</span> torch, torch.nn.functional <span class="k">as</span> F
+<span class="k">from</span> torch.utils.data <span class="k">import</span> DataLoader
+
+dev    = <span class="s">"cuda"</span> <span class="k">if</span> torch.cuda.is_available() <span class="k">else</span> <span class="s">"cpu"</span>
+model  = build_model().to(dev)                       <span class="c"># Ch 3: module tree → device</span>
+model  = torch.compile(model)                        <span class="c"># Ch 6: Dynamo+Inductor</span>
+opt    = torch.optim.AdamW(model.parameters(), lr=3e-4, weight_decay=0.01)
+sched  = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=10_000)
+loader = DataLoader(ds, batch_size=128, shuffle=<span class="k">True</span>,
+                    num_workers=8, pin_memory=<span class="k">True</span>)  <span class="c"># Ch 4: feed the GPU</span>
+
+<span class="k">for</span> step, (xb, yb) <span class="k">in</span> enumerate(loader):
+    xb = xb.to(dev, non_blocking=<span class="k">True</span>)               <span class="c"># Ch 5: async H2D copy</span>
+    yb = yb.to(dev, non_blocking=<span class="k">True</span>)
+
+    <span class="k">with</span> torch.autocast(dev, dtype=torch.bfloat16):  <span class="c"># Ch 5: mixed precision</span>
+        loss = F.cross_entropy(model(xb), yb)        <span class="c"># Ch 3: fused, LSE-stable</span>
+
+    opt.zero_grad(set_to_none=<span class="k">True</span>)                  <span class="c"># Ch 2: the tape accumulates</span>
+    loss.backward()                                  <span class="c"># Ch 2: reverse-mode VJPs</span>
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+    opt.step(); sched.step()                         <span class="c"># Ch 3: registry + state dicts</span>
+
+    <span class="k">if</span> step % 100 == 0:                              <span class="c"># Ch 5: don't sync every step</span>
+        print(f<span class="s">"step {step}  loss {loss.item():.4f}"</span>)
+    <span class="k">if</span> step % 1000 == 0:
+        torch.save({<span class="s">"model"</span>: model.state_dict(),     <span class="c"># Ch 3: names → tensors</span>
+                    <span class="s">"opt"</span>:   opt.state_dict(),       <span class="c"># Adam moments live here too</span>
+                    <span class="s">"step"</span>:  step}, <span class="s">"ckpt.pt"</span>)</pre>
+    <p class="cd-cap">Twenty-five lines; six chapters; zero magic remaining.</p>
+
+    <h3 id="practice">8.2 · Shape mastery — the daily skill</h3>
+    <p>The single most practiced PyTorch skill is predicting shapes in your head — broadcasting, matmuls, convolutions, reductions. Train the reflex:</p>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The shape quiz — predict the output, build the reflex</h4></div>
+      <div class="demo-body">
+        <canvas id="shapeCanvas" width="640" height="340"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn ghost" id="shapeReset">Restart quiz</button></div>
+        </div>
+        <div class="readout" id="shapeReadout"></div>
+      </div>
+    </div>
+    <p><strong>Click your answer.</strong> Eight questions cover the patterns that account for most real shape bugs — broadcasting's silent outer products, transpose vs. view, reductions, embeddings. Score 8/8 twice and you have the reflex.</p>
+
+    <div class="box intuition">
+      <div class="box-label">The whole supplement, in one paragraph</div>
+      <p>A tensor is <strong>a view over flat storage</strong> — strides make transposes free, stride-0 makes broadcasting free, and contiguity explains the rest. Every op writes to <strong>a tape</strong>; <code>backward()</code> replays it as vector–Jacobian products, accumulating into <code>.grad</code> — which is why you zero it. <strong>Modules</strong> are parameter registries caught by <code>__setattr__</code>; <strong>optimizers</strong> are two dicts and an update rule; <strong>losses</strong> hide the numerical identities (log-sum-exp) that keep float32 alive. The <strong>loop</strong> is seven lines, fed by worker processes. The <strong>GPU</strong> is an async queue obeying the roofline — move fewer bytes (fusion, bf16) and sync rarely. <code>torch.compile</code> watches your Python and does the byte-economics for you. Around it all, an ecosystem of thin conventions — and now none of it is magic.</p>
+    </div>
+
+    <div class="endcard">
+      <div class="eyebrow">You've finished the supplement</div>
+      <h3>The workshop is stocked</h3>
+      <p>Best next step: reopen Layers 1–4 and reimplement their demos as real PyTorch — least squares (L1 Ch 6) in five lines of autograd, the MLP and attention head of Layer 2, REINFORCE on a gymnasium pendulum (L4 Ch 5). Derive once, implement twice, and the knowledge becomes permanent. Layer 5's simulators and Layer 6's VLA training recipes will assume exactly the fluency you now have.</p>
+      <p style="margin-top:18px;font-family:var(--mono);font-size:13px;color:#9A9DD0">storage+strides → tensors · tape → gradients · registry → modules · queue+roofline → speed · compile → free lunch.</p>
+    </div>
+
+    <footer class="page">An interactive supplement for the Robotics &amp; VLA curriculum · pairs with Layers 1–6 · Built to be read next to a terminal.</footer>
+  </section>
+
+</div><!-- /content -->
+
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  /* ---------- KaTeX (robust, polling) ---------- */
+  window.__doRender=function(el){
+    if(!window.renderMathInElement) return;
+    renderMathInElement(el||document.body,{
+      delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'\\[',right:'\\]',display:true},
+        {left:'$',right:'$',display:false},
+        {left:'\\(',right:'\\)',display:false}
+      ],
+      throwOnError:false,
+      macros:{"\\R":"\\mathbb{R}","\\E":"\\mathbb{E}"}
+    });
+  };
+  (function(){
+    if(window.renderMathInElement){ window.__doRender(); return; }
+    var tries=0, iv=setInterval(function(){
+      if(window.renderMathInElement){ clearInterval(iv); window.__doRender(); }
+      else if(++tries>200){ clearInterval(iv); }
+    },50);
+  })();
+
+  var C={ink:'#14162A',inkSoft:'#474B66',faint:'#878BA6',indigo:'#4338CA',indigoDeep:'#2A2090',
+         coral:'#FF5C49',coralDeep:'#E8412E',teal:'#0E9C92',line:'#DBDDE8',wash:'#EEEEF8',amber:'#C98314'};
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var DISP='600 13px "Space Grotesk",sans-serif', MONO='12px "JetBrains Mono",monospace';
+
+  var redraws=[];
+  function fit(cv,aspect){
+    var dpr=window.devicePixelRatio||1;
+    cv.style.width='100%';
+    var w=cv.clientWidth||cv.parentElement.clientWidth;
+    var h=Math.round(w/aspect);
+    cv.style.height=h+'px';
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+    var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {w:w,h:h,ctx:ctx};
+  }
+  function register(fn){ redraws.push(fn); fn(); }
+  window.addEventListener('resize',function(){clearTimeout(window._rt);window._rt=setTimeout(function(){redraws.forEach(function(f){f();});},160);});
+
+  /* ---------- NAV ---------- */
+  var prog=document.getElementById('progress');
+  var chapLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .chap'));
+  var chapSecs=chapLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  var subLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .subs a'));
+  var subTargets=subLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  function onScroll(){
+    var st=window.scrollY||document.documentElement.scrollTop;
+    var docH=document.documentElement.scrollHeight-window.innerHeight;
+    prog.style.width=(docH>0?(st/docH*100):0)+'%';
+    var active=-1;
+    for(var i=0;i<chapSecs.length;i++){ if(chapSecs[i]&&chapSecs[i].offsetTop-140<=st) active=i; }
+    chapLinks.forEach(function(a,i){a.classList.toggle('active',i===active);});
+    var sa=-1;
+    for(var j=0;j<subTargets.length;j++){ if(subTargets[j]&&subTargets[j].offsetTop-160<=st) sa=j; }
+    subLinks.forEach(function(a,i){a.classList.toggle('active',i===sa);});
+  }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+  var sidebar=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),menuBtn=document.getElementById('menuBtn');
+  function closeMenu(){sidebar.classList.remove('open');scrim.classList.remove('show');}
+  menuBtn.addEventListener('click',function(){sidebar.classList.toggle('open');scrim.classList.toggle('show');});
+  scrim.addEventListener('click',closeMenu);
+  document.querySelectorAll('.toc a').forEach(function(a){a.addEventListener('click',closeMenu);});
+
+  /* ---------- HERO: forward/backward pulses through a graph ---------- */
+  (function(){
+    var cv=document.getElementById('heroCanvas'); if(!cv) return;
+    var ctx,W,H,nodes=[],edges=[],t=0;
+    function build(){
+      var hdr=cv.parentElement,dpr=window.devicePixelRatio||1;
+      W=hdr.clientWidth;H=hdr.clientHeight;
+      cv.width=W*dpr;cv.height=H*dpr;ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+      nodes=[];edges=[];
+      var cols=6,rows=4;
+      for(var c2=0;c2<cols;c2++)for(var r=0;r<rows;r++){
+        nodes.push({x:W*(0.08+0.84*c2/(cols-1))+(Math.random()-0.5)*14,
+                    y:H*(0.18+0.64*r/(rows-1))+(Math.random()-0.5)*16,c:c2});
+      }
+      for(var i=0;i<nodes.length;i++)for(var j=0;j<nodes.length;j++){
+        if(nodes[j].c===nodes[i].c+1&&Math.random()<0.45)edges.push([i,j]);
+      }
+    }
+    function draw(){
+      ctx.fillStyle='rgba(20,18,52,1)';ctx.fillRect(0,0,W,H);
+      t+=0.012;
+      var phase=(t%2), fwd=phase<1, p=fwd?phase:phase-1;
+      edges.forEach(function(e){
+        var a=nodes[e[0]],b=nodes[e[1]];
+        ctx.strokeStyle='rgba(120,122,200,0.16)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      });
+      // pulse wave: column index ~ progress
+      var wave=p*6-0.5;
+      edges.forEach(function(e){
+        var a=nodes[e[0]],b=nodes[e[1]];
+        var col=fwd? a.c : 5-(b.c);
+        var d=Math.abs((fwd?a.c:5-b.c)-wave);
+        if(d<0.8){
+          var al=(0.8-d)/0.8;
+          ctx.strokeStyle= fwd? 'rgba(150,160,255,'+(0.7*al)+')' : 'rgba(255,120,104,'+(0.8*al)+')';
+          ctx.lineWidth=1.8;
+          ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+        }
+      });
+      nodes.forEach(function(n){
+        var idx=fwd?n.c:5-n.c, d=Math.abs(idx-wave);
+        var hot=d<0.6;
+        ctx.fillStyle= hot? (fwd?'rgba(170,178,255,0.95)':'rgba(255,130,112,0.95)') : 'rgba(130,132,210,0.4)';
+        ctx.beginPath();ctx.arc(n.x,n.y,hot?3.6:2.4,0,7);ctx.fill();
+      });
+      ctx.font='500 11px "JetBrains Mono"';
+      ctx.fillStyle= fwd?'rgba(170,178,255,0.6)':'rgba(255,130,112,0.65)';
+      ctx.fillText(fwd?'forward()':'backward()',16,H-16);
+    }
+    build();
+    if(REDUCE){draw();}
+    else{(function loop(){draw();requestAnimationFrame(loop);})();}
+    window.addEventListener('resize',function(){clearTimeout(window._hr);window._hr=setTimeout(build,160);});
+  })();
+
+  /* ================= 1. STRIDE ENGINE ================= */
+  (function(){
+    var cv=document.getElementById('strideCanvas'); if(!cv) return;
+    var rd=document.getElementById('strideReadout');
+    var W,H,ctx,S,mode='orig',hover=null; // hover = [i,j] logical
+    var VIEWS={
+      orig:{shape:[4,6],strides:[6,1],off:0,label:'x',contig:true,
+            note:'Row-major: step a row, jump 6; step a column, jump 1. The walk matches memory order — contiguous.'},
+      t:{shape:[6,4],strides:[1,6],off:0,label:'x.T',contig:false,
+            note:'Transpose swapped the strides — zero bytes moved. But the walk now jumps around memory: NOT contiguous, so .view() here raises and .reshape() would copy.'},
+      rows:{shape:[2,6],strides:[12,1],off:0,label:'x[::2]',contig:false,
+            note:'Every other row: the row-stride doubled to 12. Rows 1 and 3 of storage are simply never visited — and the slice still shares storage with x.'},
+      cols:{shape:[4,2],strides:[6,2],off:1,label:'x[:, 1:5:2]',contig:false,
+            note:'Offset 1 (start at column 1), column-stride 2 (every other column). Slicing = pure index arithmetic: offset + i·6 + j·2.'}
+    };
+    function pos(v,i,j){return v.off+i*v.strides[0]+j*v.strides[1];}
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var v=VIEWS[mode];
+      // logical grid
+      var rows=v.shape[0],cols=v.shape[1];
+      var cell=Math.min((W-40)/Math.max(cols,6)*0.9,(H-180)/rows,42);
+      var gx=(W-cell*cols)/2, gy=34;
+      ctx.font=DISP;ctx.fillStyle=C.ink;
+      ctx.fillText('logical tensor  '+v.label+'   shape ('+v.shape.join(', ')+')   strides ('+v.strides.join(', ')+')   offset '+v.off,Math.max(12,gx-40),20);
+      var used={};
+      for(var i=0;i<rows;i++)for(var j=0;j<cols;j++){
+        var p=pos(v,i,j);used[p]=true;
+        var x=gx+j*cell,y=gy+i*cell;
+        var isH=hover&&hover[0]===i&&hover[1]===j;
+        ctx.fillStyle= isH? C.coral : 'rgba(67,56,202,0.10)';
+        ctx.fillRect(x,y,cell-3,cell-3);
+        ctx.strokeStyle= isH? C.coralDeep : C.line;ctx.lineWidth=isH?2:1;
+        ctx.strokeRect(x,y,cell-3,cell-3);
+        ctx.fillStyle= isH? '#fff' : C.indigoDeep;
+        ctx.font='600 '+Math.max(10,cell*0.34)+'px "JetBrains Mono"';ctx.textAlign='center';
+        ctx.fillText(''+p,x+(cell-3)/2,y+cell*0.58);ctx.textAlign='left';
+      }
+      // storage row
+      var sy=gy+rows*cell+52;
+      var sw=Math.min((W-28)/24,26);
+      var sx=(W-sw*24)/2;
+      ctx.font=DISP;ctx.fillStyle=C.ink;ctx.fillText('flat storage (24 floats — never moves)',sx,sy-12);
+      var hp= hover? pos(v,hover[0],hover[1]) : -1;
+      for(var k=0;k<24;k++){
+        var x2=sx+k*sw;
+        var inView=!!used[k];
+        ctx.fillStyle= k===hp? C.coral : inView? 'rgba(14,156,146,0.18)':'#FBFBFD';
+        ctx.fillRect(x2,sy,sw-2,30);
+        ctx.strokeStyle= k===hp? C.coralDeep : C.line;ctx.lineWidth=k===hp?2:1;
+        ctx.strokeRect(x2,sy,sw-2,30);
+        ctx.fillStyle= k===hp?'#fff': inView? C.teal : C.faint;
+        ctx.font='600 10px "JetBrains Mono"';ctx.textAlign='center';
+        ctx.fillText(''+k,x2+(sw-2)/2,sy+19);ctx.textAlign='left';
+      }
+      if(hover){
+        var f=v.off+'+'+hover[0]+'·'+v.strides[0]+'+'+hover[1]+'·'+v.strides[1]+' = '+hp;
+        ctx.font=MONO;ctx.fillStyle=C.coralDeep;
+        ctx.fillText('position = offset + i·stride₀ + j·stride₁ = '+f,sx,sy+52);
+      } else {
+        ctx.font=MONO;ctx.fillStyle=C.faint;
+        ctx.fillText('hover a logical cell to trace it into storage',sx,sy+52);
+      }
+      rd.innerHTML='<b>'+v.label+'</b> — contiguous: <b>'+(v.contig?'yes':'no')+'</b> · data copied: <b>no, ever</b>. '+v.note;
+    }
+    cv.addEventListener('pointermove',function(e){
+      var r=cv.getBoundingClientRect();
+      var v=VIEWS[mode],rows=v.shape[0],cols=v.shape[1];
+      var cell=Math.min((W-40)/Math.max(cols,6)*0.9,(H-180)/rows,42);
+      var gx=(W-cell*cols)/2, gy=34;
+      var x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+      var j=Math.floor((x-gx)/cell), i=Math.floor((y-gy)/cell);
+      var nh=(i>=0&&i<rows&&j>=0&&j<cols)?[i,j]:null;
+      if(JSON.stringify(nh)!==JSON.stringify(hover)){hover=nh;draw();}
+    });
+    cv.addEventListener('pointerleave',function(){hover=null;draw();});
+    document.querySelectorAll('#strideSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#strideSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      mode=btn.dataset.v;hover=null;draw();});});
+    register(draw);
+  })();
+
+  /* ================= 2. AUTOGRAD TAPE ================= */
+  (function(){
+    var cv=document.getElementById('tapeCanvas'); if(!cv) return;
+    var sx=document.getElementById('tapeX'),sw=document.getElementById('tapeW'),sb=document.getElementById('tapeB');
+    var xv=document.getElementById('tapeXv'),wv=document.getElementById('tapeWv'),bv=document.getElementById('tapeBv');
+    var rd=document.getElementById('tapeReadout');
+    var W,H,ctx,S,expr='sq',stepIdx=0;
+    // tiny autograd: nodes with parents [{n, local()}]
+    function buildGraph(){
+      var x={id:'x',val:+sx.value,grad:0,parents:[],leaf:true};
+      var w={id:'w',val:+sw.value,grad:0,parents:[],leaf:true};
+      var b={id:'b',val:+sb.value,grad:0,parents:[],leaf:true};
+      var nodes=[x,w,b],order=[];
+      function mk(id,val,parents){var n={id:id,val:val,grad:0,parents:parents,leaf:false};nodes.push(n);order.push(n);return n;}
+      var out;
+      if(expr==='sq'){
+        var m=mk('w·x',w.val*x.val,[{n:w,local:x.val},{n:x,local:w.val}]);
+        var a=mk('+b',m.val+b.val,[{n:m,local:1},{n:b,local:1}]);
+        out=mk('(·)²',a.val*a.val,[{n:a,local:2*a.val}]);
+      }else if(expr==='relu'){
+        var m2=mk('w·x',w.val*x.val,[{n:w,local:x.val},{n:x,local:w.val}]);
+        var a2=mk('+b',m2.val+b.val,[{n:m2,local:1},{n:b,local:1}]);
+        out=mk('relu',Math.max(0,a2.val),[{n:a2,local:a2.val>0?1:0}]);
+      }else{
+        var m3=mk('w·x',w.val*x.val,[{n:w,local:x.val},{n:x,local:w.val}]);
+        var s3=mk('sin',Math.sin(m3.val),[{n:m3,local:Math.cos(m3.val)}]);
+        out=mk('·x',s3.val*x.val,[{n:s3,local:x.val},{n:x,local:s3.val}]);
+      }
+      out.isOut=true;
+      return {nodes:nodes,order:order,out:out,x:x,w:w,b:b};
+    }
+    var G=buildGraph();
+    function layout(){
+      // columns: leaves 0; then order index+1
+      var posMap={};
+      var leaves=['x','w','b'];
+      leaves.forEach(function(id,i){posMap[id]=[0.10,0.22+0.28*i];});
+      G.order.forEach(function(n,i){posMap[n.id+'#'+i]=[0.32+0.20*i,0.5];n._k=n.id+'#'+i;});
+      G.nodes.forEach(function(n){if(n.leaf)n._k=n.id;});
+      return posMap;
+    }
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      xv.textContent=(+sx.value).toFixed(1);wv.textContent=(+sw.value).toFixed(1);bv.textContent=(+sb.value).toFixed(1);
+      var pm=layout();
+      function P(n){var p=pm[n._k];return [p[0]*W,p[1]*H];}
+      // edges
+      G.order.forEach(function(n,i){
+        var done=stepIdx>G.order.length-1-i; // processed in reverse order
+        n.parents.forEach(function(pa){
+          var a=P(pa.n),b2=P(n);
+          ctx.strokeStyle= done? 'rgba(232,65,46,0.7)':'rgba(67,56,202,0.45)';
+          ctx.lineWidth= done?2.2:1.6;
+          ctx.beginPath();ctx.moveTo(a[0]+34,a[1]);ctx.lineTo(b2[0]-34,b2[1]);ctx.stroke();
+          var mx=(a[0]+b2[0])/2,my=(a[1]+b2[1])/2;
+          ctx.font='10px "JetBrains Mono"';
+          ctx.fillStyle=C.inkSoft;
+          ctx.fillText('∂='+(+pa.local).toFixed(2),mx-18,my-6);
+        });
+      });
+      // nodes
+      G.nodes.forEach(function(n){
+        var p=P(n);
+        var processed = n.isOut? stepIdx>0 : (n.leaf? stepIdx>=G.order.length+1 : false);
+        ctx.fillStyle=n.isOut?'#14162A':(n.leaf?'#EEEEF8':'#FFFFFF');
+        ctx.strokeStyle=n.isOut?C.ink:(n.grad!==0||processed)?C.coralDeep:C.line;
+        ctx.lineWidth=1.6;
+        var w2=68,h2=46;
+        ctx.fillRect(p[0]-w2/2,p[1]-h2/2,w2,h2);ctx.strokeRect(p[0]-w2/2,p[1]-h2/2,w2,h2);
+        ctx.textAlign='center';
+        ctx.font='600 12px "Space Grotesk"';
+        ctx.fillStyle=n.isOut?'#fff':C.ink;
+        ctx.fillText(n.isOut?'y = '+n.id:n.id,p[0],p[1]-8);
+        ctx.font='10px "JetBrains Mono"';
+        ctx.fillStyle=n.isOut?'#C9CCE8':C.inkSoft;
+        ctx.fillText('v='+n.val.toFixed(2),p[0],p[1]+6);
+        ctx.fillStyle=C.coralDeep;
+        ctx.fillText((n.grad!==0||n.isOut&&stepIdx>0)?('g='+(n.isOut?1:+n.grad.toFixed(2))):'g=·',p[0],p[1]+19);
+        ctx.textAlign='left';
+      });
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('tape order (reverse): '+G.order.slice().reverse().map(function(n){return n.id;}).join(' → ')+' → leaves',14,H-12);
+    }
+    function rebuild(){G=buildGraph();stepIdx=0;draw();
+      rd.innerHTML='Forward done: y = <b>'+G.out.val.toFixed(3)+'</b>. Press <b>Step backward()</b> to process the tape in reverse — out-node seeds grad 1.';}
+    function stepBack(){
+      var rev=G.order.slice().reverse();
+      if(stepIdx>=rev.length){rd.innerHTML='Tape exhausted. Leaf grads: ∂y/∂x=<b>'+G.x.grad.toFixed(3)+'</b>, ∂y/∂w=<b>'+G.w.grad.toFixed(3)+'</b>, ∂y/∂b=<b>'+G.b.grad.toFixed(3)+'</b>. Note any node feeding two consumers (x in the sin preset) — its grad is a <b>sum</b> of contributions: the += that zero_grad() exists for.';return;}
+      var n=rev[stepIdx];
+      var up= n.isOut? 1 : n.grad;
+      var parts=[];
+      n.parents.forEach(function(pa){pa.n.grad+=up*pa.local;parts.push(pa.n.id+' += '+up.toFixed(2)+'×'+(+pa.local).toFixed(2));});
+      stepIdx++;draw();
+      rd.innerHTML='Processed <b>'+n.id+'</b>: upstream '+up.toFixed(2)+' × local ∂ → '+parts.join(' ; ')+'.'+(stepIdx>=rev.length?' Tape done — leaf grads are final: ∂y/∂x='+G.x.grad.toFixed(3)+', ∂y/∂w='+G.w.grad.toFixed(3)+', ∂y/∂b='+G.b.grad.toFixed(3)+'.':'');
+    }
+    [sx,sw,sb].forEach(function(s){s.addEventListener('input',rebuild);});
+    document.getElementById('tapeReset').addEventListener('click',rebuild);
+    document.getElementById('tapeStep').addEventListener('click',stepBack);
+    document.querySelectorAll('#tapeSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#tapeSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      expr=btn.dataset.e;rebuild();});});
+    register(draw);
+    rebuild();
+  })();
+
+  /* ================= 3. LOG-SUM-EXP ================= */
+  (function(){
+    var cv=document.getElementById('lseCanvas'); if(!cv) return;
+    var sz=document.getElementById('lseZ'),zv=document.getElementById('lseZv'),rd=document.getElementById('lseReadout');
+    var W,H,ctx,S,CLIFF=88.72;
+    function draw(){
+      S=fit(cv,640/300);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var z=+sz.value;zv.textContent=z;
+      var pad=46,axY=H-70;
+      function PX(v){return pad+(v/150)*(W-pad-20);}
+      // overflow zone
+      ctx.fillStyle='rgba(232,65,46,0.10)';
+      ctx.fillRect(PX(CLIFF),26,W-20-PX(CLIFF),axY-26);
+      ctx.strokeStyle=C.coralDeep;ctx.setLineDash([6,5]);ctx.lineWidth=1.6;
+      ctx.beginPath();ctx.moveTo(PX(CLIFF),26);ctx.lineTo(PX(CLIFF),axY);ctx.stroke();ctx.setLineDash([]);
+      ctx.font=MONO;ctx.fillStyle=C.coralDeep;
+      ctx.fillText('e^z overflows float32 (z≈88.7)',PX(CLIFF)+6,40);
+      // axis
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(pad,axY);ctx.lineTo(W-20,axY);ctx.stroke();
+      ctx.fillStyle=C.faint;ctx.textAlign='center';
+      [0,50,100,150].forEach(function(v){ctx.fillText(''+v,PX(v),axY+18);});
+      ctx.fillText('logit magnitude z →',W/2,axY+36);ctx.textAlign='left';
+      // marker
+      var over=z>CLIFF;
+      ctx.fillStyle= over? C.coralDeep : C.indigo;
+      ctx.beginPath();ctx.arc(PX(z),axY,8,0,7);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+      // values: logits [z, z-1, z-2]
+      var naiveE= over? 'inf' : Math.exp(z).toExponential(2);
+      var m=z; // max
+      var stable= m + Math.log(Math.exp(0)+Math.exp(-1)+Math.exp(-2));
+      ctx.font=DISP;
+      ctx.fillStyle= over? C.coralDeep : C.ink;
+      ctx.fillText('naive:  e^z = '+naiveE+(over?'  →  softmax = inf/inf = nan':''),pad,60+(over?0:0));
+      ctx.fillStyle=C.teal;
+      ctx.fillText('stable: LSE = z + log(e⁰+e⁻¹+e⁻²) = '+stable.toFixed(3)+'   (largest exponent: e⁰ = 1)',pad,84);
+      rd.innerHTML= over?
+        '<b style="color:'+C.coralDeep+'">Detonated.</b> Logits ['+z+', '+(z-1)+', '+(z-2)+']: naive exp overflowed, the softmax is NaN, and one backward() from here poisons every parameter. The stable path computed the identical quantity — '+stable.toFixed(2)+' — without blinking.'
+        : 'Logits ['+z+', '+(z-1)+', '+(z-2)+']: still safe, but e^z = '+naiveE+' is climbing exponentially toward the float32 ceiling at 3.4×10³⁸. The stable path is flat-out immune: after subtracting the max, its largest exponent is always e⁰ = 1.';
+    }
+    sz.addEventListener('input',draw);
+    register(draw);
+  })();
+
+  /* ================= 4. ZERO_GRAD BUG ================= */
+  (function(){
+    var cv=document.getElementById('bugCanvas'); if(!cv) return;
+    var rd=document.getElementById('bugReadout');
+    var W,H,ctx,S,mode='zero',anim=null;
+    var data=[];(function(){for(var i=0;i<40;i++){var x=Math.random();data.push([x,0.25+0.5*x+(Math.random()-0.5)*0.07]);}})();
+    var cur=null,prev=null,prevMode=null;
+    function trainRun(){
+      var w=0,b=0,gw_acc=0,gb_acc=0,losses=[],lr=0.5;
+      for(var t=0;t<80;t++){
+        var gw=0,gb=0,L=0;
+        data.forEach(function(d){var e=w*d[0]+b-d[1];gw+=2*e*d[0];gb+=2*e;L+=e*e;});
+        gw/=data.length;gb/=data.length;L/=data.length;
+        losses.push(L);
+        if(mode==='zero'){gw_acc=gw;gb_acc=gb;}
+        else{gw_acc+=gw;gb_acc+=gb;}     // the bug: grads accumulate
+        w-=lr*gw_acc;b-=lr*gb_acc;
+        if(!isFinite(w)||Math.abs(w)>1e6){losses.push(1e6);break;}
+      }
+      return {losses:losses,w:w,b:b};
+    }
+    function draw(){
+      S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      // left: data + fit
+      var lw2=W*0.46;
+      ctx.strokeStyle=C.line;ctx.strokeRect(0.5,0.5,lw2,H-1);
+      data.forEach(function(d){
+        ctx.fillStyle=C.indigoDeep;ctx.beginPath();ctx.arc(d[0]*lw2,H-(d[1])*H,3.5,0,7);ctx.fill();
+      });
+      if(cur&&isFinite(cur.w)&&Math.abs(cur.w)<100){
+        ctx.strokeStyle=C.coralDeep;ctx.lineWidth=2.4;
+        ctx.beginPath();ctx.moveTo(0,H-(cur.b)*H);ctx.lineTo(lw2,H-(cur.w+cur.b)*H);ctx.stroke();
+      }
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText('data + final fit',12,20);
+      // right: loss curves (log scale)
+      var rx=lw2+28,rw=W-rx-14,r0=H-40,rh=H-78;
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(rx,r0);ctx.lineTo(rx+rw,r0);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText('loss (log scale) vs step',rx,20);
+      function plot(run,col,label,yy){
+        if(!run)return;
+        ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();
+        run.losses.forEach(function(L,i){
+          var x=rx+i/79*rw;
+          var y=r0-Math.max(0,Math.min(1,(Math.log10(Math.max(L,1e-5))+5)/11))*rh;
+          if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        });
+        ctx.stroke();
+        ctx.fillStyle=col;ctx.fillText(label,rx,yy);
+      }
+      plot(prev,'rgba(135,139,166,0.8)','prev: '+(prevMode==='zero'?'with zero_grad':'bug'),36);
+      plot(cur,C.indigo,'this: '+(mode==='zero'?'with zero_grad':'zero_grad forgotten'),52);
+      rd.innerHTML= !cur? 'Choose a loop variant and press Train. Run both and compare curves.'
+        : (mode==='zero'? 'Healthy: each step applies only THIS step\u2019s gradient; the loss glides down and stays down.'
+          : '<b style="color:'+C.coralDeep+'">The bug in action:</b> step t applies the SUM of gradients 1..t — an unintended, ever-growing momentum. Brief improvement, then overshoot, oscillation, blow-up. If you\u2019ve seen this loss shape in real life, you now know the first line to check.');
+    }
+    function run(){
+      if(anim)cancelAnimationFrame(anim);
+      if(cur){prev=cur;prevMode=curMode;}
+      cur=trainRun();curMode=mode;draw();
+    }
+    var curMode=mode;
+    document.querySelectorAll('#bugSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#bugSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      mode=btn.dataset.m;});});
+    document.getElementById('bugRun').addEventListener('click',run);
+    register(draw);
+  })();
+
+  /* ================= 5. ROOFLINE ================= */
+  (function(){
+    var cv=document.getElementById('roofCanvas'); if(!cv) return;
+    var sp=document.getElementById('roofP'),pv=document.getElementById('roofPv'),
+        sb2=document.getElementById('roofB'),bvv=document.getElementById('roofBv'),
+        sn=document.getElementById('roofN'),nvv=document.getElementById('roofNv'),rd=document.getElementById('roofReadout');
+    var W,H,ctx,S;
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var P=+sp.value*1e12, B=+sb2.value*1e12, n=Math.round(Math.pow(2,+sn.value));
+      pv.textContent=(+sp.value)+' TFLOP/s';bvv.textContent=(+sb2.value).toFixed(1)+' TB/s';nvv.textContent=''+n;
+      var pad=56;
+      // log axes: I from 0.03..300, perf from 1e10..6e14
+      function PX(I){return pad+(Math.log10(I)-Math.log10(0.03))/(Math.log10(300)-Math.log10(0.03))*(W-pad-18);}
+      function PY(F){return (H-46)-(Math.log10(F)-10)/(Math.log10(6e14)-10)*(H-78);}
+      ctx.strokeStyle=C.line;
+      ctx.beginPath();ctx.moveTo(pad,H-46);ctx.lineTo(W-18,H-46);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(pad,H-46);ctx.lineTo(pad,30);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.textAlign='center';
+      [0.1,1,10,100].forEach(function(I){ctx.fillText(''+I,PX(I),H-28);});
+      ctx.fillText('arithmetic intensity (FLOPs/byte, log) →',W/2,H-10);
+      ctx.textAlign='left';
+      // roofline
+      var ridge=P/B;
+      ctx.strokeStyle=C.indigo;ctx.lineWidth=2.6;
+      ctx.beginPath();
+      ctx.moveTo(PX(0.03),PY(B*0.03));
+      ctx.lineTo(PX(ridge),PY(P));
+      ctx.lineTo(PX(300),PY(P));
+      ctx.stroke();
+      ctx.fillStyle=C.indigo;ctx.font=MONO;
+      ctx.fillText('ridge I*=P/B='+ridge.toFixed(1),Math.min(PX(ridge)+6,W-150),PY(P)-8);
+      // ops
+      function dot(I,label,col){
+        var perf=Math.min(P,B*I);
+        ctx.fillStyle=col;ctx.beginPath();ctx.arc(PX(I),PY(perf),6,0,7);ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=1.6;ctx.stroke();
+        ctx.fillStyle=col;ctx.fillText(label,PX(I)+9,PY(perf)+4);
+        return perf;
+      }
+      dot(1/12,'add','rgba(135,139,166,1)');
+      dot(0.25,'layernorm','rgba(201,131,20,1)');
+      var Im=n/6;
+      var pm=dot(Im,'matmul n='+n,C.coralDeep);
+      var bound= Im<ridge? 'memory-bound' : 'compute-bound';
+      rd.innerHTML='Matmul intensity I = n/6 = <b>'+Im.toFixed(1)+'</b> FLOPs/byte vs ridge '+ridge.toFixed(1)+' → <b>'+bound+'</b>, attaining '+(pm/1e12).toFixed(1)+' of '+(P/1e12).toFixed(0)+' TFLOP/s. '+(bound==='memory-bound'?'Below the ridge, a faster chip buys NOTHING — only more bandwidth (or fewer bytes: fusion, bf16) helps. This is the small-matmul regime where GPUs underwhelm.':'Above the ridge the FLOP ceiling is the limit — tensor-core territory, the regime deep learning was economically built on. Note: add and layernorm never leave the ramp; that is Chapter 6\u2019s entire reason to exist.');
+    }
+    [sp,sb2,sn].forEach(function(s){s.addEventListener('input',draw);});
+    register(draw);
+  })();
+
+  /* ================= 6. ASYNC QUEUE ================= */
+  (function(){
+    var cv=document.getElementById('syncCanvas'); if(!cv) return;
+    var rd=document.getElementById('syncReadout');
+    var W,H,ctx,S,mode='async',progress=0,anim=null;
+    var Ns=8, CPU=16, GPU=42; // time units
+    function totals(){
+      var asyncT=Ns*GPU+CPU;     // cpu hides behind gpu after first
+      var syncT=Ns*(CPU+GPU);
+      return {a:asyncT,s:syncT};
+    }
+    function draw(){
+      S=fit(cv,640/320);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var T=totals(), full=T.s, scale=(W-110)/full;
+      var yC=70,yG=150,bh=34;
+      ctx.font=DISP;ctx.fillStyle=C.ink;
+      ctx.fillText('CPU (python)',14,yC-10);
+      ctx.fillText('GPU',14,yG-10);
+      var tlim=progress*( mode==='async'? T.a : T.s );
+      function box(x0,len,y,col,label){
+        var x=60+x0*scale, w2=len*scale;
+        var shown=Math.max(0,Math.min(w2,(tlim-x0)*scale));
+        if(shown<=0)return;
+        ctx.fillStyle=col;ctx.fillRect(x,y,shown,bh);
+        ctx.strokeStyle='rgba(20,22,42,0.3)';ctx.strokeRect(x,y,Math.min(w2,shown),bh);
+        if(shown>16){ctx.fillStyle='#fff';ctx.font='10px "JetBrains Mono"';ctx.fillText(label,x+4,y+21);}
+      }
+      for(var i=0;i<Ns;i++){
+        if(mode==='async'){
+          box(i*CPU,CPU,yC,'rgba(67,56,202,0.85)','enq'+(i+1));
+          box(Math.max((i)*GPU, i===0?CPU:0)+ (i===0?0:CPU), GPU, yG, 'rgba(14,156,146,0.9)','k'+(i+1));
+        }else{
+          var start=i*(CPU+GPU);
+          box(start,CPU,yC,'rgba(67,56,202,0.85)','enq'+(i+1));
+          box(start+CPU,GPU,yG,'rgba(14,156,146,0.9)','k'+(i+1));
+          // stall marker on cpu while waiting
+          var sx2=60+(start+CPU)*scale, sw2=GPU*scale;
+          var shown=Math.max(0,Math.min(sw2,(tlim-start-CPU)*scale));
+          if(shown>0){ctx.fillStyle='rgba(232,65,46,0.18)';ctx.fillRect(sx2,yC,shown,bh);
+            if(shown>30){ctx.fillStyle=C.coralDeep;ctx.font='10px "JetBrains Mono"';ctx.fillText('wait (.item)',sx2+4,yC+21);}}
+        }
+      }
+      // wall clock markers
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(60,210);ctx.lineTo(W-40,210);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.inkSoft;
+      ctx.fillText('async total: '+T.a+'  ·  sync-every-step total: '+T.s+'  ('+(T.s/T.a).toFixed(2)+'× slower)',60,232);
+      rd.innerHTML= progress===0? 'Press Run. Watch where the time goes in each mode.'
+        : mode==='async'? 'Async: the CPU finishes enqueueing while the GPU is still on kernel 2 — Python overhead vanishes behind GPU work, and the GPU lane is wall-to-wall.'
+        : 'Sync every step: each .item() drains the queue — the CPU stalls (coral) until the GPU finishes, then the GPU idles while Python wakes up. Same kernels, '+(totals().s/totals().a).toFixed(2)+'× the wall-clock.';
+    }
+    function run(){
+      if(anim)cancelAnimationFrame(anim);
+      progress=0;
+      function frame(){progress=Math.min(1,progress+0.02);draw();if(progress<1)anim=requestAnimationFrame(frame);}
+      frame();
+    }
+    document.querySelectorAll('#syncSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#syncSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      mode=btn.dataset.m;progress=0;draw();});});
+    document.getElementById('syncRun').addEventListener('click',run);
+    register(draw);
+  })();
+
+  /* ================= 7. FUSION ECONOMICS ================= */
+  (function(){
+    var cv=document.getElementById('fuseCanvas'); if(!cv) return;
+    var fk=document.getElementById('fuseK'),kvv=document.getElementById('fuseKv'),rd=document.getElementById('fuseReadout');
+    var W,H,ctx,S;
+    function draw(){
+      S=fit(cv,640/320);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var k=+fk.value;kvv.textContent=k;
+      var y1=64,y2=170,bh=42;
+      ctx.font=DISP;ctx.fillStyle=C.ink;
+      ctx.fillText('eager: '+k+' kernels — '+(2*k)+'n bytes moved',14,y1-12);
+      ctx.fillText('fused (torch.compile): 1 kernel — 2n bytes moved',14,y2-12);
+      var unit=(W-40)/(2*12);
+      for(var i=0;i<k;i++){
+        var x=20+i*2*unit;
+        ctx.fillStyle='rgba(67,56,202,0.8)';ctx.fillRect(x,y1,unit-3,bh);            // read
+        ctx.fillStyle='rgba(232,65,46,0.75)';ctx.fillRect(x+unit,y1,unit-3,bh);      // write
+      }
+      ctx.fillStyle='rgba(67,56,202,0.8)';ctx.fillRect(20,y2,unit-3,bh);
+      ctx.fillStyle='rgba(232,65,46,0.75)';ctx.fillRect(20+unit,y2,unit-3,bh);
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('indigo = read n from DRAM · coral = write n to DRAM',14,y2+bh+26);
+      rd.innerHTML='Chain of '+k+' memory-bound ops: eager moves <b>'+(2*k)+'n</b> bytes; fused moves <b>2n</b>. Predicted speedup on this segment: <b>'+k+'×</b> — the compiler\u2019s win is byte-economics, not cleverer math. (FlashAttention is this exact argument applied inside attention.)';
+    }
+    fk.addEventListener('input',draw);
+    register(draw);
+  })();
+
+  /* ================= 8. SHAPE QUIZ ================= */
+  (function(){
+    var cv=document.getElementById('shapeCanvas'); if(!cv) return;
+    var rd=document.getElementById('shapeReadout');
+    var W,H,ctx,S,qi=0,score=0,answered=false,zones=[];
+    var QS=[
+      {code:['x = torch.randn(8, 10)','W = torch.randn(10, 5)','(x @ W).shape'],
+       opts:['(8, 5)','(10, 10)','(8, 10, 5)'],ans:0,
+       why:'Matmul contracts the inner dims: (8,10)@(10,5) → (8,5). Layer 1 Ch 2, executable.'},
+      {code:['a = torch.randn(4, 1, 6)','b = torch.randn(3, 1)','(a + b).shape'],
+       opts:['(4, 3, 6)','(4, 1, 6)','error'],ans:0,
+       why:'Align right: (4,1,6) vs (·,3,1). The 1s stretch (stride 0): → (4,3,6). Silent — and a classic bug when unintended.'},
+      {code:['x = torch.randn(2, 3, 4)','x.transpose(0, 2).shape'],
+       opts:['(4, 3, 2)','(2, 4, 3)','(3, 2, 4)'],ans:0,
+       why:'Swap dims 0 and 2 → (4,3,2). Under the hood: just the strides swapped (Ch 1).'},
+      {code:['x = torch.randn(5, 4)','x.sum(dim=0).shape'],
+       opts:['(4,)','(5,)','(5, 4)'],ans:0,
+       why:'Reducing dim 0 removes it: sum DOWN the rows leaves one value per column → (4,).'},
+      {code:['x = torch.randn(7)','x.unsqueeze(0).shape'],
+       opts:['(1, 7)','(7, 1)','(7,)'],ans:0,
+       why:'unsqueeze(0) inserts a new size-1 dim at position 0 → (1,7). The standard "make it a batch of one."'},
+      {code:['emb = nn.Embedding(1000, 64)','ids = torch.randint(0, 1000, (16, 12))','emb(ids).shape'],
+       opts:['(16, 12, 64)','(16, 64)','(1000, 64)'],ans:0,
+       why:'Embedding appends the feature dim to the index shape: (16,12) of token ids → (16,12,64). Layer 3\u2019s token embeddings.'},
+      {code:['x = torch.randn(8, 16, 32)','x.view(8, -1).shape'],
+       opts:['(8, 512)','(8, 48)','error'],ans:0,
+       why:'-1 means "whatever fits": 16×32=512 → (8,512). Works because x is contiguous; after a transpose it would raise (Ch 1).'},
+      {code:['x = torch.randn(32, 3, 224, 224)','conv = nn.Conv2d(3, 16, 3, padding=1)','conv(x).shape'],
+       opts:['(32, 16, 224, 224)','(32, 16, 222, 222)','(32, 3, 224, 224)'],ans:0,
+       why:'Channels 3→16; kernel 3 with padding 1 preserves H,W → (32,16,224,224). Layer 2 Ch 3\u2019s arithmetic.'}
+    ];
+    function draw(){
+      S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      zones=[];
+      var q=QS[qi];
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('question '+(qi+1)+' / '+QS.length+'   ·   score '+score,14,22);
+      // code box
+      ctx.fillStyle='#14162A';
+      var cw=W-28,ch=q.code.length*22+24;
+      ctx.fillRect(14,34,cw,ch);
+      ctx.font='13px "JetBrains Mono"';ctx.fillStyle='#E7E8F2';
+      q.code.forEach(function(line,i){ctx.fillText(line,30,58+i*22);});
+      // options
+      var oy=34+ch+26;
+      var ow=(W-28-24)/3;
+      q.opts.forEach(function(o,i){
+        var x=14+i*(ow+12);
+        var state= answered? (i===q.ans?'right':(i===picked?'wrong':'idle')) : 'idle';
+        ctx.fillStyle= state==='right'?'rgba(14,156,146,0.16)':state==='wrong'?'rgba(232,65,46,0.13)':'#FBFBFD';
+        ctx.strokeStyle= state==='right'?C.teal:state==='wrong'?C.coralDeep:C.line;
+        ctx.lineWidth= state==='idle'?1:2;
+        ctx.fillRect(x,oy,ow,46);ctx.strokeRect(x,oy,ow,46);
+        ctx.fillStyle= state==='right'?C.teal:state==='wrong'?C.coralDeep:C.indigoDeep;
+        ctx.font='600 14px "JetBrains Mono"';ctx.textAlign='center';
+        ctx.fillText(o,x+ow/2,oy+29);ctx.textAlign='left';
+        zones.push({x:x,y:oy,w:ow,h:46,i:i});
+      });
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText(answered?'click anywhere to continue':'click the output shape',14,oy+76);
+    }
+    var picked=-1;
+    cv.addEventListener('click',function(e){
+      var r=cv.getBoundingClientRect();
+      var x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+      if(answered){
+        qi++;answered=false;picked=-1;
+        if(qi>=QS.length){
+          rd.innerHTML='<b>Quiz complete: '+score+' / '+QS.length+'.</b> '+(score===QS.length?'Perfect — the reflex is forming. Run it again tomorrow.':'Re-run and chase 8/8; the explanations tell you which chapter to revisit.');
+          qi=0;score=0;draw();return;
+        }
+        rd.innerHTML='Question '+(qi+1)+' of '+QS.length+'.';
+        draw();return;
+      }
+      for(var k=0;k<zones.length;k++){
+        var z=zones[k];
+        if(x>=z.x&&x<=z.x+z.w&&y>=z.y&&y<=z.y+z.h){
+          picked=z.i;answered=true;
+          var q=QS[qi];
+          if(picked===q.ans){score++;rd.innerHTML='<b style="color:'+C.teal+'">Correct.</b> '+q.why;}
+          else{rd.innerHTML='<b style="color:'+C.coralDeep+'">Not quite — it\u2019s '+q.opts[q.ans]+'.</b> '+q.why;}
+          draw();return;
+        }
+      }
+    });
+    document.getElementById('shapeReset').addEventListener('click',function(){qi=0;score=0;answered=false;picked=-1;rd.innerHTML='Question 1 of '+QS.length+'.';draw();});
+    register(draw);
+    rd.innerHTML='Question 1 of '+QS.length+'. Click the output shape.';
+  })();
+
+});
+</script>
+</body>
+</html>

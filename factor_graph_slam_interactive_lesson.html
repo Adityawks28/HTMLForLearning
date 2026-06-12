@@ -1,0 +1,1426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factor Graph SLAM — Interactive Lesson (ECE276A · L5)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+:root{
+  --bg:#0A0D13; --panel:#10151F; --panel2:#0D121B; --raise:#161D2A;
+  --line:#222B3A; --line2:#2c374a;
+  --ink:#E4E9F1; --muted:#909CB2; --faint:#5d6a80;
+  --x:#FF5D5D; --y:#46D17C; --z:#5398FF;
+  --amber:#FFB454; --amber-dim:rgba(255,180,84,.10);
+  --maxw:920px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:17px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+/* subtle engineering grid + scanline atmosphere */
+body::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(transparent 0 31px, rgba(255,255,255,.014) 32px),
+    linear-gradient(90deg, transparent 0 31px, rgba(255,255,255,.014) 32px);
+  background-size:32px 32px;
+  mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 90%);
+}
+.wrap{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding:0 22px}
+
+/* ---------- nav ---------- */
+nav{
+  position:sticky; top:0; z-index:50; backdrop-filter:blur(9px);
+  background:linear-gradient(180deg, rgba(10,13,19,.94), rgba(10,13,19,.78));
+  border-bottom:1px solid var(--line);
+}
+.navrow{max-width:var(--maxw); margin:0 auto; padding:10px 22px; display:flex; align-items:center; gap:16px}
+.brand{font-family:"Space Grotesk"; font-weight:700; letter-spacing:.02em; font-size:15px; white-space:nowrap}
+.brand b{color:var(--amber)}
+.navlinks{display:flex; gap:2px; overflow-x:auto; scrollbar-width:none; margin-left:auto}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks a{
+  color:var(--muted); text-decoration:none; font-size:12.5px; font-family:"IBM Plex Mono";
+  padding:5px 9px; border-radius:6px; white-space:nowrap; letter-spacing:.02em;
+}
+.navlinks a:hover{color:var(--ink); background:var(--raise)}
+.navlinks a.on{color:var(--amber); background:var(--amber-dim)}
+
+/* ---------- hero ---------- */
+header.hero{padding:62px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono"; font-size:13px; letter-spacing:.22em; text-transform:uppercase; color:var(--amber); margin:0 0 14px}
+h1.title{
+  font-family:"Space Grotesk"; font-weight:700; font-size:clamp(46px,11vw,104px);
+  line-height:.92; letter-spacing:-.02em; margin:0;
+}
+h1.title .so{display:block; font-size:clamp(15px,3.4vw,22px); font-family:"IBM Plex Mono"; color:var(--faint); letter-spacing:.04em; margin-top:18px; font-weight:400}
+.lede{max-width:62ch; color:var(--muted); margin:22px 0 0; font-size:18px}
+.herogrid{display:grid; grid-template-columns:1.3fr .9fr; gap:30px; align-items:center}
+@media(max-width:720px){.herogrid{grid-template-columns:1fr}}
+.triad-card{
+  border:1px solid var(--line); border-radius:16px; background:
+   radial-gradient(120% 120% at 70% 10%, rgba(83,152,255,.10), transparent 60%),
+   var(--panel2);
+  padding:18px; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+}
+.triad-card .cap{position:absolute; bottom:12px; left:14px; font-family:"IBM Plex Mono"; font-size:11px; color:var(--faint); letter-spacing:.08em}
+.spin{transform-origin:center; animation:spin 26s linear infinite}
+@media(prefers-reduced-motion:reduce){.spin{animation:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- sections ---------- */
+section{padding:46px 0; border-bottom:1px solid var(--line)}
+.kicker{display:flex; align-items:baseline; gap:12px; margin:0 0 6px}
+.kicker .num{font-family:"IBM Plex Mono"; color:var(--amber); font-size:13px; letter-spacing:.12em}
+h2{font-family:"Space Grotesk"; font-weight:700; font-size:clamp(26px,5vw,38px); letter-spacing:-.01em; margin:0 0 18px; line-height:1.08}
+h3{font-family:"Space Grotesk"; font-weight:600; font-size:21px; margin:34px 0 10px; color:var(--ink)}
+h4{font-family:"IBM Plex Sans"; font-weight:600; font-size:15px; letter-spacing:.02em; margin:22px 0 6px; color:var(--amber)}
+p{margin:12px 0}
+ul{margin:12px 0; padding-left:22px} li{margin:7px 0}
+a.link{color:var(--z); text-decoration:none; border-bottom:1px dotted var(--z)}
+strong{color:#fff; font-weight:600}
+.axx{color:var(--x); font-weight:600} .ayy{color:var(--y); font-weight:600} .azz{color:var(--z); font-weight:600}
+code{font-family:"IBM Plex Mono"; font-size:.9em; background:var(--raise); padding:1px 6px; border-radius:5px; color:#cfe0ff}
+
+/* katex base color */
+.katex{color:var(--ink); font-size:1.04em}
+.katex-display{margin:18px 0; overflow-x:auto; overflow-y:hidden; padding:4px 0}
+
+/* callouts */
+.card{border:1px solid var(--line); background:var(--panel); border-radius:12px; padding:16px 18px; margin:18px 0}
+.key{border-left:3px solid var(--amber); background:linear-gradient(90deg,var(--amber-dim),transparent 60%)}
+.key .lab{font-family:"IBM Plex Mono"; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--amber); margin-bottom:6px}
+.note{border-left:3px solid var(--z)}
+.warn{border-left:3px solid var(--x)}
+
+/* ---------- explorer widgets ---------- */
+.lab{border:1px solid var(--line); border-radius:16px; background:var(--panel2); overflow:hidden; margin:22px 0}
+.lab-head{display:flex; align-items:center; gap:10px; padding:11px 16px; border-bottom:1px solid var(--line); background:var(--panel)}
+.lab-head .dot{width:9px; height:9px; border-radius:50%; background:var(--amber); box-shadow:0 0 10px var(--amber)}
+.lab-head .t{font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.08em; color:var(--muted)}
+.lab-head .t b{color:var(--ink)}
+.lab-body{display:grid; grid-template-columns:1fr 320px; gap:0}
+@media(max-width:760px){.lab-body{grid-template-columns:1fr}}
+.canvas-host{position:relative; min-height:320px; background:
+  radial-gradient(120% 120% at 60% 0%, rgba(83,152,255,.06), transparent 55%);}
+.canvas-host canvas{display:block; width:100%; height:100%}
+.canvas-host .hint{position:absolute; left:12px; bottom:10px; font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--faint); letter-spacing:.06em}
+.fallback{padding:30px; color:var(--muted); font-size:14px; text-align:center}
+.panelside{border-left:1px solid var(--line); padding:16px; background:var(--panel)}
+@media(max-width:760px){.panelside{border-left:none; border-top:1px solid var(--line)}}
+
+.ctrl{margin:0 0 13px}
+.ctrl .row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px}
+.ctrl label{font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:.04em}
+.ctrl .val{font-family:"IBM Plex Mono"; font-size:12px; color:var(--amber)}
+input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:4px; background:var(--line2); outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:15px; height:15px; border-radius:50%; background:var(--ink); border:2px solid var(--bg); cursor:pointer}
+input[type=range]::-moz-range-thumb{width:15px; height:15px; border-radius:50%; background:var(--ink); border:2px solid var(--bg); cursor:pointer}
+input.sx::-webkit-slider-thumb{background:var(--x)} input.sx::-moz-range-thumb{background:var(--x)}
+input.sy::-webkit-slider-thumb{background:var(--y)} input.sy::-moz-range-thumb{background:var(--y)}
+input.sz::-webkit-slider-thumb{background:var(--z)} input.sz::-moz-range-thumb{background:var(--z)}
+input.sa::-webkit-slider-thumb{background:var(--amber)} input.sa::-moz-range-thumb{background:var(--amber)}
+
+.btnrow{display:flex; flex-wrap:wrap; gap:7px; margin:10px 0 4px}
+button.btn{font-family:"IBM Plex Mono"; font-size:11.5px; letter-spacing:.04em; color:var(--muted); background:var(--raise); border:1px solid var(--line2); padding:6px 10px; border-radius:7px; cursor:pointer}
+button.btn:hover{color:var(--ink); border-color:var(--amber)}
+button.btn:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visible{outline:2px solid var(--amber); outline-offset:2px}
+
+/* numeric matrix */
+.matwrap{margin-top:14px}
+.matwrap .cap{font-family:"IBM Plex Mono"; font-size:11px; color:var(--faint); letter-spacing:.06em; margin-bottom:6px}
+.mat{display:inline-grid; grid-template-columns:repeat(3,1fr); gap:3px 8px; font-family:"IBM Plex Mono"; font-size:13px; padding:8px 12px; border:1px solid var(--line2); border-radius:8px; background:var(--panel2)}
+.mat span{text-align:right; min-width:52px; font-variant-numeric:tabular-nums}
+.mat .cx{color:var(--x)} .mat .cy{color:var(--y)} .mat .cz{color:var(--z)}
+.readout{font-family:"IBM Plex Mono"; font-size:12.5px; color:var(--muted); margin-top:12px; line-height:1.9}
+.readout b{color:var(--ink)} .readout .hi{color:var(--amber)}
+.statusbad{color:var(--x)} .statusgood{color:var(--y)}
+
+/* ---------- practice ---------- */
+.prob{border:1px solid var(--line); border-radius:12px; margin:16px 0; background:var(--panel); overflow:hidden}
+.prob>.q{padding:16px 18px}
+.prob .pno{font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:.1em; color:var(--amber); text-transform:uppercase}
+details.sol{border-top:1px solid var(--line)}
+details.sol>summary{cursor:pointer; list-style:none; padding:11px 18px; font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.06em; color:var(--z); background:var(--panel2)}
+details.sol>summary::-webkit-details-marker{display:none}
+details.sol>summary::before{content:"▸ "; color:var(--amber)}
+details.sol[open]>summary::before{content:"▾ "}
+details.sol .body{padding:6px 18px 18px}
+.tag{display:inline-block; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:.06em; color:var(--faint); border:1px solid var(--line2); padding:2px 7px; border-radius:20px; margin-left:8px}
+
+footer{padding:40px 0 70px; color:var(--faint); font-size:13px; font-family:"IBM Plex Mono"}
+.legend{display:flex; gap:18px; flex-wrap:wrap; font-family:"IBM Plex Mono"; font-size:12px; color:var(--muted); margin:6px 0 0}
+.legend .li{display:flex; align-items:center; gap:7px}
+.legend .sw{width:13px; height:13px; border-radius:3px}
+hr.soft{border:none; border-top:1px solid var(--line); margin:26px 0}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="navrow">
+    <span class="brand">ECE276A · <b>Factor Graph SLAM</b></span>
+    <div class="navlinks" id="navlinks">
+      <a href="#slam">SLAM</a>
+      <a href="#linear">least squares</a>
+      <a href="#orient">orientation</a>
+      <a href="#pano">panorama</a>
+      <a href="#factor">factor graphs</a>
+      <a href="#frontback">front/back end</a>
+      <a href="#posegraph">pose graph</a>
+      <a href="#solve">solving · LM</a>
+      <a href="#sparsity">sparsity</a>
+      <a href="#landmark">landmark SLAM</a>
+      <a href="#schur">marginalization</a>
+      <a href="#spectrum">smoothing vs filtering</a>
+      <a href="#summary">summary</a>
+      <a href="#practice">practice</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="herogrid">
+    <div>
+      <p class="eyebrow">Lecture 5 · Sensing &amp; Estimation in Robotics</p>
+      <h1 class="title">Factor Graph SLAM<span class="so">estimation as optimization on a graph</span></h1>
+      <p class="lede">Lectures 3 and 4 built the parts: poses, motion models \(f\), observation models \(h\). This lesson assembles them into the central problem of mobile robotics — <em>simultaneous localization and mapping</em> — and shows that the whole thing is one big least-squares problem on a graph. You will derive it, watch gradient descent solve it live, close a loop and see a drifted trajectory snap back into shape, and eliminate variables with the Schur complement.</p>
+      <div class="legend">
+        <span class="li"><span class="sw" style="background:var(--x)"></span> measurements / residuals</span>
+        <span class="li"><span class="sw" style="background:var(--y)"></span> ground truth</span>
+        <span class="li"><span class="sw" style="background:var(--z)"></span> factors / structure</span>
+        <span class="li"><span class="sw" style="background:var(--amber)"></span> estimate</span>
+      </div>
+    </div>
+    <div class="triad-card">
+      <svg viewBox="-110 -110 220 220" width="100%" height="100%" aria-label="factor graph emblem">
+        <!-- edges with factor dots -->
+        <g stroke="var(--line2)" stroke-width="1.6">
+          <line x1="-70" y1="50" x2="0" y2="50"/><line x1="0" y1="50" x2="70" y2="50"/>
+          <line x1="-70" y1="50" x2="-35" y2="-40"/><line x1="0" y1="50" x2="-35" y2="-40"/>
+          <line x1="0" y1="50" x2="45" y2="-40"/><line x1="70" y1="50" x2="45" y2="-40"/>
+          <line x1="-98" y1="50" x2="-70" y2="50"/>
+        </g>
+        <g fill="var(--ink)">
+          <circle cx="-35" cy="50" r="4"/><circle cx="35" cy="50" r="4"/>
+          <circle cx="-52" cy="5" r="4"/><circle cx="-17" cy="5" r="4"/>
+          <circle cx="22" cy="5" r="4"/><circle cx="58" cy="5" r="4"/>
+          <circle cx="-98" cy="50" r="4"/>
+        </g>
+        <!-- pose nodes -->
+        <g fill="var(--panel)" stroke="var(--amber)" stroke-width="2.4">
+          <circle cx="-70" cy="50" r="15"/><circle cx="0" cy="50" r="15"/><circle cx="70" cy="50" r="15"/>
+        </g>
+        <!-- landmark nodes -->
+        <g fill="var(--panel)" stroke="var(--z)" stroke-width="2.4">
+          <circle cx="-35" cy="-40" r="13"/><circle cx="45" cy="-40" r="13"/>
+        </g>
+        <g font-family="IBM Plex Mono" font-size="11" fill="var(--ink)" text-anchor="middle">
+          <text x="-70" y="54">x₁</text><text x="0" y="54">x₂</text><text x="70" y="54">x₃</text>
+          <text x="-35" y="-36">m₁</text><text x="45" y="-36">m₂</text>
+        </g>
+      </svg>
+      <span class="cap">circles = variables · dots = factors</span>
+    </div>
+  </div>
+</header>
+
+<!-- =================== 01 SLAM =================== -->
+<section id="slam">
+  <div class="kicker"><span class="num">01</span></div>
+  <h2>SLAM: the chicken-and-egg problem</h2>
+  <p>To do anything at all, a mobile robot needs two pieces of basic information:</p>
+  <ul>
+    <li><strong>Where am I?</strong> ⟹ <strong>Localization</strong></li>
+    <li><strong>What is around me?</strong> ⟹ <strong>Mapping</strong></li>
+  </ul>
+  <p>The trouble is that each answer assumes the other. Localizing is easy <em>if you have a map</em> to match your sensor readings against; mapping is easy <em>if you know where you are</em> when each measurement was taken. A robot dropped into an unknown building has neither — it must estimate both at once. That joint problem is <strong>Simultaneous Localization and Mapping</strong>:</p>
+  <div class="card key">
+    <div class="lab">The SLAM problem</div>
+    Given sensor measurements \(\mathbf z_{0:T}\) (e.g., images) and control inputs \(\mathbf u_{0:T-1}\) (e.g., velocity), estimate the robot state trajectory \(\mathbf x_{0:T}\) (e.g., pose) and build a map \(\mathbf m\) of the environment.
+  </div>
+
+  <h3>All three problems as optimization</h3>
+  <p>Here is the idea that powers this whole lecture: each problem can be written as <em>minimize how much your variables disagree with your data</em>. The motion model \(f\) and observation model \(h\) from Lecture 4 tell us what the data <em>should</em> look like; the residual between prediction and reality, squared and summed, is the objective.</p>
+  <p><strong>Mapping</strong> (trajectory known, map unknown) — find the map that best explains the measurements:</p>
+  $$\min_{\mathbf m}\ \sum_{t=0}^{T}\lVert\mathbf z_t-h(\mathbf x_t,\mathbf m)\rVert_2^2$$
+  <p><strong>Localization</strong> (map known, trajectory unknown) — find the trajectory that explains the measurements <em>and</em> is consistent with the controls:</p>
+  $$\min_{\mathbf x_{0:T}}\ \sum_{t=0}^{T}\lVert\mathbf z_t-h(\mathbf x_t,\mathbf m)\rVert_2^2+\sum_{t=0}^{T-1}\lVert\mathbf x_{t+1}-f(\mathbf x_t,\mathbf u_t)\rVert_2^2$$
+  <p><strong>SLAM</strong> (both unknown, initial state \(\mathbf x_0\) given) — optimize over everything at once:</p>
+  $$\boxed{\ \min_{\mathbf x_{1:T},\,\mathbf m}\ \sum_{t=1}^{T}\lVert\mathbf z_t-h(\mathbf x_t,\mathbf m)\rVert_2^2+\sum_{t=0}^{T-1}\lVert\mathbf x_{t+1}-f(\mathbf x_t,\mathbf u_t)\rVert_2^2\ }$$
+  <div class="card note">Read each term as a <strong>tug-of-war</strong>. The first sum pulls the variables toward agreeing with the <em>sensors</em>; the second pulls consecutive states toward agreeing with the <em>motion model</em>. Neither can be satisfied perfectly when the data are noisy, so the optimum is the compromise that displeases everyone the least — that is exactly what least squares means. (Why squares? They are smooth, they punish big errors hard, and — as we will see — they are what maximum-likelihood estimation under Gaussian noise demands.)</div>
+</section>
+
+<!-- =================== 02 LINEAR LEAST SQUARES =================== -->
+<section id="linear">
+  <div class="kicker"><span class="num">02</span></div>
+  <h2>Warm-up: localization with linear models</h2>
+  <p>Before tackling poses on manifolds, solve the simplest honest version — everything linear, everything in \(\mathbb R^n\):</p>
+  <ul>
+    <li><strong>State</strong>: \(\mathbf x_t\in\mathbb R^n\)</li>
+    <li><strong>Motion model</strong>: \(\mathbf x_{t+1}=f(\mathbf x_t,\mathbf u_t)=F\mathbf x_t+G\mathbf u_t\)</li>
+    <li><strong>Observation model</strong>: \(\mathbf z_t=h(\mathbf x_t)=H\mathbf x_t\)</li>
+  </ul>
+  <p>Given \(\mathbf x_0=\mathbf 0\), measurements \(\mathbf z_{1:T}\), and inputs \(\mathbf u_{0:T-1}\), the localization objective is:</p>
+  $$\min_{\mathbf x_{1:T}}\ c(\mathbf x_{1:T}):=\sum_{t=1}^{T}\lVert\mathbf z_t-H\mathbf x_t\rVert_2^2+\sum_{t=0}^{T-1}\lVert\mathbf x_{t+1}-F\mathbf x_t-G\mathbf u_t\rVert_2^2$$
+
+  <h3>Step 1 — Stack everything into one big vector</h3>
+  <p>The key bookkeeping fact is that splitting a squared norm over stacked blocks changes nothing:</p>
+  $$\left\lVert\begin{bmatrix}\mathbf x_1\\\mathbf x_2\end{bmatrix}-\begin{bmatrix}\mathbf y_1\\\mathbf y_2\end{bmatrix}\right\rVert_2^2=\lVert\mathbf x_1-\mathbf y_1\rVert_2^2+\lVert\mathbf x_2-\mathbf y_2\rVert_2^2$$
+  <p>So run it backwards: a <em>sum</em> of squared residuals is the squared norm of <em>one stacked residual vector</em>. Stack all measurement residuals, then all motion residuals:</p>
+  $$c(\mathbf x_{1:T})=\left\lVert\begin{bmatrix}\mathbf z_1-H\mathbf x_1\\\vdots\\\mathbf z_T-H\mathbf x_T\end{bmatrix}\right\rVert_2^2+\left\lVert\begin{bmatrix}\mathbf x_1-F\mathbf x_0-G\mathbf u_0\\\vdots\\\mathbf x_T-F\mathbf x_{T-1}-G\mathbf u_{T-1}\end{bmatrix}\right\rVert_2^2$$
+  <h3>Step 2 — Pull the unknowns out front</h3>
+  <p>Each stacked residual is linear in the unknown super-vector \(\mathbf x_{1:T}=(\mathbf x_1,\dots,\mathbf x_T)\), so it factors as a block matrix times \(\mathbf x_{1:T}\) plus a constant. The measurement block is block-diagonal in \(H\); the motion block has \(-I\) on the diagonal and \(F\) below it (each motion residual couples two consecutive states — remember this shape, it is the sparsity story of section 09):</p>
+  $$c(\mathbf x_{1:T})=\left\lVert\begin{bmatrix}H&&\\&\ddots&\\&&H\\\hline -I&&\\ F&\ddots&\\&\ddots&-I\end{bmatrix}\begin{bmatrix}\mathbf x_1\\\vdots\\\mathbf x_T\end{bmatrix}+\begin{bmatrix}-\mathbf z_1\\\vdots\\-\mathbf z_T\\\hline F\mathbf x_0+G\mathbf u_0\\ G\mathbf u_1\\\vdots\\ G\mathbf u_{T-1}\end{bmatrix}\right\rVert_2^2=\lVert A\,\mathbf x_{1:T}+\mathbf b\rVert_2^2$$
+  <p>(The motion rows got multiplied by \(-1\) to put the \(-I\) on the diagonal — harmless inside a norm.) The entire estimation problem is now one quadratic in one vector.</p>
+
+  <h3>Step 3 — Differentiate and descend</h3>
+  <p>Expanding \(\lVert A\mathbf x+\mathbf b\rVert_2^2=(A\mathbf x+\mathbf b)^\top(A\mathbf x+\mathbf b)\) and using \(\nabla_{\mathbf x}(\mathbf x^\top M\mathbf x)=2M\mathbf x\) for symmetric \(M\):</p>
+  $$\nabla c(\mathbf x_{1:T})=2A^\top(A\,\mathbf x_{1:T}+\mathbf b)$$
+  <p><strong>Gradient descent</strong>: initialize \(\mathbf x_{1:T}^{(0)}\) (dead reckoning is the natural choice) and iterate downhill with step size \(\alpha^{(k)}\):</p>
+  $$\boxed{\ \mathbf x_{1:T}^{(k+1)}=\mathbf x_{1:T}^{(k)}-2\alpha^{(k)}A^\top\big(A\,\mathbf x_{1:T}^{(k)}+\mathbf b\big)\ }$$
+  <div class="card note">Since the objective is a convex quadratic, the minimum also has a closed form — set the gradient to zero and get the <strong>normal equations</strong> \(A^\top A\,\mathbf x_{1:T}=-A^\top\mathbf b\). Gradient descent is shown here because it survives the jump to <em>nonlinear</em> models later, where no closed form exists. The widget below shows both: descent crawling, and the normal-equation answer waiting for it.</div>
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>Descent lab</b> · 1D localization, F=G=H=1 · watch x<sup>(k)</sup> crawl to the normal-equation optimum</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="hostG" style="min-height:330px"><canvas id="cvG"></canvas><span class="hint">red = measurements · amber = estimate x⁽ᵏ⁾ · dashed blue = exact optimum x*</span></div>
+      <div class="panelside">
+        <div class="ctrl"><div class="row"><label>measurement noise σ</label><span class="val" id="vGsig">0.40 m</span></div><input type="range" class="sx" id="sGsig" min="5" max="100" value="40" step="5"></div>
+        <div class="ctrl"><div class="row"><label>motion-model weight w</label><span class="val" id="vGw">1.0</span></div><input type="range" class="sz" id="sGw" min="1" max="60" value="10" step="1"></div>
+        <div class="ctrl"><div class="row"><label>step size α</label><span class="val" id="vGal">0.050</span></div><input type="range" class="sa" id="sGal" min="1" max="40" value="10" step="1"></div>
+        <div class="btnrow">
+          <button class="btn" id="bG1">step ×1</button>
+          <button class="btn" id="bG50">step ×50</button>
+          <button class="btn" id="bGreset">reset x⁽⁰⁾</button>
+          <button class="btn" id="bGnoise">new noise</button>
+        </div>
+        <div class="readout" id="rG"></div>
+      </div>
+    </div>
+  </div>
+  <p>Things to try: crank the motion weight \(w\) and watch the estimate stiffen into a straight line that ignores the measurements; lower it and the estimate chases every noisy dot. Then raise \(\alpha\) past the stability limit and watch the cost <em>explode</em> — gradient descent diverges when the step exceeds what the curvature allows. That fragility is one reason real solvers prefer Newton-style steps (section 08).</p>
+</section>
+<!-- =================== 03 ORIENTATION TRACKING =================== -->
+<section id="orient">
+  <div class="kicker"><span class="num">03</span></div>
+  <h2>Case study: orientation tracking (Project 1)</h2>
+  <p>Now the same least-squares recipe on a <em>curved</em> space — the unit quaternions of Lecture 3. A rigid body undergoes pure rotation; we want its orientation over time from an IMU:</p>
+  <ul>
+    <li><strong>State</strong>: orientation \(q_t\in\mathbb H_*\) of the body frame relative to the world frame.</li>
+    <li><strong>Control</strong>: body-frame angular velocity \(\mathbf u_t\in\mathbb R^3\) from <strong>gyroscope</strong> measurements (rad/s) over the interval \(\tau_t\).</li>
+    <li><strong>Motion model</strong> — quaternion kinematics from Lecture 4, discretized with the exponential:
+      $$q_{t+1}=f(q_t,\tau_t\mathbf u_t):=q_t\circ\exp\big(\big[0,\ \tau_t\mathbf u_t/2\big]\big)$$</li>
+    <li><strong>Observation model</strong> — the <strong>accelerometer</strong> \(\mathbf z_t\in\mathbb R^3\) (m/s²) should approximately match the world-frame gravity acceleration \(-g\mathbf e_3\) expressed in the body frame:
+      $$\mathbf z_t\approx h(q_t):=q_t^{-1}\circ[0,\ -g\mathbf e_3]\circ q_t$$</li>
+  </ul>
+  <div class="card note">Decode \(h\): the sandwich \(q\circ[0,\mathbf x]\circ q^{-1}\) rotates \(\mathbf x\) by \(R(q)\) (Lecture 3), so the <em>reversed</em> sandwich \(q^{-1}\circ[0,\mathbf x]\circ q\) applies \(R(q)^\top\) — world to body. Hence \(h(q_t)=-gR(q_t)^\top\mathbf e_3\): exactly the strapdown IMU model of Lecture 4 with zero body acceleration and zero bias. The accelerometer acts as a noisy "which way is down" sensor; the gyro stitches orientations together between those hints.</div>
+
+  <h3>Measuring error between orientations</h3>
+  <p>The motion residual \(\mathbf x_{t+1}-f(\mathbf x_t,\mathbf u_t)\) made sense in \(\mathbb R^n\). Subtracting quaternions does not — the difference of two unit quaternions is not a rotation. The right notion of distance comes straight from Lecture 3's log map: measure the <strong>angle of the relative rotation</strong>:</p>
+  $$d(q_1,q_2)=\lVert\boldsymbol\theta_{12}\rVert_2=\big\lVert\,2\log\!\big(q_1^{-1}\circ q_2\big)\big\rVert_2$$
+  <p>where \(q_{12}=q_1^{-1}q_2\) is the relative rotation and \(2\log\) extracts its axis–angle vector \(\boldsymbol\theta_{12}\). Two identical orientations give \(d=0\); orientations \(30^\circ\) apart give \(d=\pi/6\), no matter about which axis.</p>
+
+  <h3>The optimization problem</h3>
+  <p>Starting at \(q_0=[1,\mathbf 0]\), estimate \(q_{1:T}\) from gyro inputs \(\mathbf u_{0:T-1}\) and accelerometer measurements \(\mathbf z_{1:T}\). Because every \(q_t\) must remain a valid orientation, the problem is <strong>constrained</strong>:</p>
+  $$\min_{q_{1:T}}\ c(q_{1:T}):=\sum_{t=1}^{T}\lVert\mathbf z_t-h(q_t)\rVert_2^2+\sum_{t=0}^{T-1}\big\lVert 2\log\!\big(q_{t+1}^{-1}\circ f(q_t,\tau_t\mathbf u_t)\big)\big\rVert_2^2\qquad\text{s.t. }\ \lVert q_t\rVert_2=1\ \ \forall t$$
+  <p>Same anatomy as before — an observation term and a motion term — but the motion residual now uses the geometric difference \(2\log(q_{t+1}^{-1}\circ f(\cdot))\), which is zero exactly when \(q_{t+1}\) equals the gyro prediction.</p>
+  <div class="card key">
+    <div class="lab">Projected gradient descent</div>
+    A simple way to honor the constraint: take an ordinary gradient step, then <em>project back</em> onto the unit sphere (normalize each quaternion):
+    $$q_{1:T}^{(k+1)}=\Pi_{\mathbb H_*}\Big(q_{1:T}^{(k)}-\alpha^{(k)}\nabla c\big(q_{1:T}^{(k)}\big)\Big)$$
+    The step drifts slightly off the manifold of unit quaternions; \(\Pi_{\mathbb H_*}\) (division by the norm) puts it back. This is the flat-space/curved-space dance of Lecture 3 in optimization form.
+  </div>
+</section>
+
+<!-- =================== 04 PANORAMA =================== -->
+<section id="pano">
+  <div class="kicker"><span class="num">04</span></div>
+  <h2>Case study: building a panorama (Project 1)</h2>
+  <p>Once orientations \(R_t\) are tracked, the camera images can be stitched into a panorama. The trick: pretend every image lies on a <strong>unit sphere</strong> around the camera, use the orientation to place it, then unwrap the sphere onto a flat rectangle. Two pipelines, straight from the lecture:</p>
+  <h3>Image → sphere → world</h3>
+  <ol>
+    <li>Find the <strong>longitude</strong> \(\lambda\) and <strong>latitude</strong> \(\phi\) of each pixel from its row and column, using the horizontal (\(60^\circ\)) and vertical (\(45^\circ\)) fields of view — pixels are evenly spread across the FOV.</li>
+    <li>Convert spherical \((\lambda,\phi,1)\) to Cartesian coordinates assuming depth 1:
+      $$\mathbf v=(\cos\phi\cos\lambda,\ \cos\phi\sin\lambda,\ \sin\phi)$$</li>
+    <li><strong>Rotate to the world frame</strong> with the tracked orientation: \(\mathbf v_W=R\,\mathbf v\).</li>
+  </ol>
+  <h3>World → cylinder → flat image</h3>
+  <ol>
+    <li>Convert the world Cartesian directions back to spherical \((\lambda,\phi)\).</li>
+    <li>Inscribe the sphere in a cylinder: the point at \((\lambda,\phi)\) maps to <strong>height \(\phi\)</strong> on the cylinder at <strong>longitude \(\lambda\)</strong> along its circumference.</li>
+    <li>Unwrap the cylinder to a rectangle of width \(2\pi\) and height \(\pi\) radians. (This equidistant choice is one of many sphere-to-plane projections — equal-area, Miller, and friends trade distortions differently.)</li>
+  </ol>
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>Panorama painter</b> · one 60°×45° image placed on the equirectangular canvas by its orientation</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="hostP" style="min-height:320px"><canvas id="cvP"></canvas><span class="hint">full canvas = 360°×180° panorama · colored patch = where the image lands</span></div>
+      <div class="panelside">
+        <div class="ctrl"><div class="row"><label>yaw ψ</label><span class="val" id="vPyaw">0°</span></div><input type="range" class="sz" id="sPyaw" min="-180" max="180" value="0" step="1"></div>
+        <div class="ctrl"><div class="row"><label>pitch θ</label><span class="val" id="vPpit">0°</span></div><input type="range" class="sy" id="sPpit" min="-80" max="80" value="0" step="1"></div>
+        <div class="ctrl"><div class="row"><label>roll φ</label><span class="val" id="vPro">0°</span></div><input type="range" class="sx" id="sPro" min="-90" max="90" value="0" step="1"></div>
+        <div class="btnrow">
+          <button class="btn" data-pan="level">level</button>
+          <button class="btn" data-pan="up">look up 50°</button>
+          <button class="btn" data-pan="rolled">rolled 30°</button>
+        </div>
+        <div class="readout" id="rP"></div>
+      </div>
+    </div>
+  </div>
+  <p>Notice the geometry doing exactly what the math says: <strong>yaw</strong> slides the image horizontally (it changes \(\lambda\) and preserves \(\phi\) — Practice 5 proves it); <strong>pitch</strong> lifts it toward a pole, where the equirectangular unwrap stretches it sideways into a banana; <strong>roll</strong> twists it in place. Sweep yaw across the range and you have painted a panorama strip — that is the whole project, one image at a time.</p>
+</section>
+<!-- =================== 05 FACTOR GRAPHS =================== -->
+<section id="factor">
+  <div class="kicker"><span class="num">05</span></div>
+  <h2>Factor graphs: drawing the problem</h2>
+  <p>Look back at the SLAM objective. It is a sum of small terms, and each term touches only <em>one or two</em> variables: a motion term touches \((\mathbf x_t,\mathbf x_{t+1})\); an observation term touches \((\mathbf x_t,\mathbf m_j)\). That locality is structure worth drawing:</p>
+  <div class="card key">
+    <div class="lab">Definition</div>
+    A <strong>factor graph</strong> is a bipartite graph describing the data (observations \(\mathbf z_t\), inputs \(\mathbf u_t\)) and the variables (states \(\mathbf x_t\), landmarks \(\mathbf m_j\)) of a SLAM problem.
+    <ul style="margin-bottom:0">
+      <li><strong>Nodes</strong> — the variables to be estimated: robot states \(\mathbf x_t\) and landmark states \(\mathbf m_j\).</li>
+      <li><strong>Factors</strong> — small black dots on edges, each relating two variables through one piece of data and its model.</li>
+    </ul>
+  </div>
+
+  <figure style="margin:22px 0">
+  <svg viewBox="0 0 560 200" width="100%" style="max-width:560px; display:block; margin:0 auto" aria-label="bipartite factor graph">
+    <g stroke="var(--line2)" stroke-width="1.6">
+      <line x1="40" y1="150" x2="130" y2="150"/>
+      <line x1="130" y1="150" x2="300" y2="150"/><line x1="300" y1="150" x2="470" y2="150"/>
+      <line x1="130" y1="150" x2="250" y2="45"/><line x1="300" y1="150" x2="250" y2="45"/>
+      <line x1="300" y1="150" x2="455" y2="45"/><line x1="470" y1="150" x2="455" y2="45"/>
+    </g>
+    <g fill="var(--ink)">
+      <circle cx="40" cy="150" r="5"/>
+      <circle cx="215" cy="150" r="5"/><circle cx="385" cy="150" r="5"/>
+      <circle cx="190" cy="98" r="5"/><circle cx="275" cy="98" r="5"/>
+      <circle cx="377" cy="98" r="5"/><circle cx="462" cy="98" r="5"/>
+    </g>
+    <g fill="var(--panel)" stroke="var(--amber)" stroke-width="2.4">
+      <circle cx="130" cy="150" r="22"/><circle cx="300" cy="150" r="22"/><circle cx="470" cy="150" r="22"/>
+    </g>
+    <g fill="var(--panel)" stroke="var(--z)" stroke-width="2.4">
+      <circle cx="250" cy="45" r="20"/><circle cx="455" cy="45" r="20"/>
+    </g>
+    <g font-family="IBM Plex Mono" font-size="14" fill="var(--ink)" text-anchor="middle">
+      <text x="130" y="155">x₁</text><text x="300" y="155">x₂</text><text x="470" y="155">x₃</text>
+      <text x="250" y="50">m₁</text><text x="455" y="50">m₂</text>
+    </g>
+    <g font-family="IBM Plex Mono" font-size="11" fill="var(--faint)">
+      <text x="14" y="178">prior</text>
+      <text x="180" y="178">odometry factors</text>
+      <text x="300" y="80">measurement factors</text>
+      <text x="20" y="30" fill="var(--z)">landmarks</text>
+      <text x="20" y="120" fill="var(--amber)">robot poses</text>
+    </g>
+  </svg>
+  <figcaption style="text-align:center; font-family:'IBM Plex Mono'; font-size:11px; color:var(--faint)">bipartite: variables (circles) on one side of every connection, factors (dots) on the other</figcaption>
+  </figure>
+
+  <h3>The two factor types</h3>
+  <p>Each factor stores an <strong>error function</strong> — how much its two variables disagree with its datum:</p>
+  <ul>
+    <li><strong>Motion factor</strong>: error between the state \(\mathbf x_{t+1}\) and its motion prediction \(f(\mathbf x_t,\mathbf u_t)\):
+    $$\mathbf e_f(\mathbf x_{t+1},\mathbf x_t)=\mathbf x_{t+1}\ominus f(\mathbf x_t,\mathbf u_t)$$</li>
+    <li><strong>Observation factor</strong>: error between the observation \(\mathbf z_{t,j}\) and its prediction \(h(\mathbf x_t,\mathbf m_j)\):
+    $$\mathbf e_h(\mathbf x_t,\mathbf m_j)=\mathbf z_{t,j}\ominus h(\mathbf x_t,\mathbf m_j)$$</li>
+  </ul>
+  <div class="card note">The symbol \(\ominus\) means "<strong>difference that respects the geometry of the space</strong>". For flat vectors it is ordinary subtraction, \(\mathbf y\ominus\mathbf x=\mathbf y-\mathbf x\) for \(\mathbf x,\mathbf y\in\mathbb R^d\); for orientations it is the relative-rotation vector \(\mathbf y\ominus\mathbf x=2\log(\mathbf x^{-1}\mathbf y)\) for \(\mathbf x,\mathbf y\in\mathbb H_*\) — precisely the quaternion distance of section 03. One symbol, so that every formula below works on flat <em>and</em> curved variables alike.</div>
+</section>
+
+<!-- =================== 06 FRONT-END / BACK-END =================== -->
+<section id="frontback">
+  <div class="kicker"><span class="num">06</span></div>
+  <h2>Factor graph SLAM: front-end and back-end</h2>
+  <p>A complete SLAM system is a loop between two modules:</p>
+  <ul>
+    <li><strong>Front-end</strong>: <em>constructs</em> the factor graph from raw data — odometry, laser-scan matching, image feature matching decide which nodes exist and which factors connect them.</li>
+    <li><strong>Back-end</strong>: <em>optimizes</em> the graph to estimate the variables \((\mathbf x_{0:T},\{\mathbf m_j\})\), feeding the refined node positions back to the front-end.</li>
+  </ul>
+
+  <figure style="margin:20px 0">
+  <svg viewBox="0 0 600 130" width="100%" style="max-width:600px; display:block; margin:0 auto" aria-label="front-end back-end pipeline">
+    <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker></defs>
+    <g font-family="IBM Plex Mono" font-size="12" fill="var(--ink)">
+      <rect x="120" y="40" width="150" height="56" rx="10" fill="var(--panel)" stroke="var(--amber)" stroke-width="1.6"/>
+      <text x="195" y="63" text-anchor="middle">graph construction</text>
+      <text x="195" y="82" text-anchor="middle" fill="var(--faint)" font-size="11">(front-end)</text>
+      <rect x="380" y="40" width="150" height="56" rx="10" fill="var(--panel)" stroke="var(--z)" stroke-width="1.6"/>
+      <text x="455" y="63" text-anchor="middle">graph optimization</text>
+      <text x="455" y="82" text-anchor="middle" fill="var(--faint)" font-size="11">(back-end)</text>
+    </g>
+    <g stroke="var(--muted)" stroke-width="1.4" fill="none">
+      <line x1="20" y1="68" x2="115" y2="68" marker-end="url(#arr)"/>
+      <line x1="270" y1="68" x2="375" y2="68" marker-end="url(#arr)"/>
+      <path d="M455 40 C455 8, 195 8, 195 36" marker-end="url(#arr)"/>
+    </g>
+    <g font-family="IBM Plex Mono" font-size="10.5" fill="var(--faint)">
+      <text x="22" y="58">raw data</text>
+      <text x="282" y="58">graph (nodes &amp; edges)</text>
+      <text x="268" y="20">node positions</text>
+    </g>
+  </svg>
+  </figure>
+
+  <h3>The back-end optimization problem</h3>
+  <p>Strip away the SLAM specifics and the back-end sees only a graph: variables \(\mathbf x_i\) on the vertices \(i\in\mathcal V\), and error functions \(\mathbf e(\mathbf x_i,\mathbf x_j)\) on the edges \((i,j)\in\mathcal E\). The general problem:</p>
+  $$\boxed{\ \min_{\{\mathbf x_i\}}\ \sum_{(i,j)\in\mathcal E}\phi_{ij}\big(\mathbf e(\mathbf x_i,\mathbf x_j)\big)\ }$$
+  <p>where \(\phi_{ij}:\mathbb R^d\to\mathbb R\) is a <strong>distance function</strong> turning each error vector into a scalar penalty — typically the quadratic form \(\phi_{ij}(\mathbf e)=\mathbf e^\top\Omega_{ij}\,\mathbf e\) with a positive-definite matrix \(\Omega_{ij}\).</p>
+  <div class="card key">
+    <div class="lab">What Ω buys you</div>
+    \(\Omega_{ij}\) is a <strong>trust dial</strong> per factor, and even per direction. Writing \(\Omega_{ij}=W_{ij}^\top W_{ij}\) gives \(\phi_{ij}(\mathbf e)=\lVert W_{ij}\mathbf e\rVert_2^2\) — a <em>weighted</em> least squares. A precise lidar factor gets a large \(\Omega\) (its errors are expensive); a sloppy wheel-odometry factor gets a small one. Probabilistically, \(\Omega_{ij}\) is the <strong>inverse covariance (information) matrix</strong> of that measurement's noise, and \(\mathbf e^\top\Omega\mathbf e\) is its Mahalanobis distance — minimizing the sum is then exactly maximum-a-posteriori estimation under Gaussian noise. Least squares is not a hack; it is Gaussian inference.
+  </div>
+</section>
+
+<!-- =================== 07 POSE GRAPH =================== -->
+<section id="posegraph">
+  <div class="kicker"><span class="num">07</span></div>
+  <h2>Pose graphs &amp; loop closure</h2>
+  <p>The most common factor graph has no landmarks at all — just poses tied together by relative-pose measurements:</p>
+  <ul>
+    <li><strong>Variables</strong>: robot poses \(T_i\in SE(3)\).</li>
+    <li><strong>Measurements</strong>: relative poses \(\bar T_{ij}\) from odometry and <strong>loop closures</strong>.</li>
+    <li><strong>Factors</strong>: relative pose error vectors
+      $$\mathbf e(T_i,T_j)=\log\big(\bar T_{ij}^{-1}\,T_i^{-1}\,T_j\big)^\vee$$</li>
+  </ul>
+  <p>Read the factor inside-out, with Lecture 3 in hand: \(T_i^{-1}T_j\) is the relative pose your current <em>estimates</em> predict; \(\bar T_{ij}^{-1}(T_i^{-1}T_j)\) is the leftover transform between prediction and <em>measurement</em> — the identity if they agree; and \(\log(\cdot)^\vee\) converts that leftover into a flat 6-vector (a twist) suitable for least squares. It is \(\ominus\) for \(SE(3)\).</p>
+  <div class="card key">
+    <div class="lab">Loop closure — the moment SLAM earns its keep</div>
+    Odometry factors only chain <em>consecutive</em> poses, and a chain can be perfectly self-consistent while drifting arbitrarily far from the truth. A <strong>loop closure</strong> — recognizing a previously seen place — creates a factor between <em>non-successive</em> poses. That single edge contradicts the accumulated drift, and the optimizer must resolve the contradiction by bending the whole trajectory back into shape.
+  </div>
+  <p><strong>Pose graph optimization</strong>, with \(\phi_{ij}(\mathbf e)=\mathbf e^\top W_{ij}^\top W_{ij}\mathbf e=\lVert W_{ij}\mathbf e\rVert_2^2\):</p>
+  $$\min_{\{T_i\}}\ \sum_{(i,j)\in\mathcal E}\big\lVert W_{ij}\log\big(\bar T_{ij}^{-1}T_i^{-1}T_j\big)^\vee\big\rVert_2^2$$
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>Pose-graph optimizer</b> · 12-pose loop in SE(2), biased odometry · Levenberg–Marquardt live</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="hostO" style="min-height:360px"><canvas id="cvO"></canvas><span class="hint">green = truth · gray = dead reckoning · amber = estimate · dashed blue = loop closure factor</span></div>
+      <div class="panelside">
+        <div class="ctrl"><div class="row"><label>heading drift / step</label><span class="val" id="vObias">2.0°</span></div><input type="range" class="sx" id="sObias" min="0" max="60" value="20" step="1"></div>
+        <div class="ctrl"><div class="row"><label>odometry noise</label><span class="val" id="vOnoise">0.02</span></div><input type="range" class="sy" id="sOnoise" min="0" max="10" value="2" step="1"></div>
+        <div class="btnrow">
+          <button class="btn" id="bOclose">closure: ON</button>
+          <button class="btn" id="bOopt">optimize</button>
+          <button class="btn" id="bOstep">1 LM step</button>
+          <button class="btn" id="bOreset">reset</button>
+        </div>
+        <div class="readout" id="rO"></div>
+      </div>
+    </div>
+  </div>
+  <p>The experiment that matters: hit <b>reset</b>, turn the <b>closure OFF</b>, and optimize — <em>nothing happens</em>, and the cost is already (near) zero. The drifted trajectory satisfies every odometry factor perfectly; drift is invisible from inside the chain. Turn the closure ON and optimize again: the cost jumps (the contradiction appears) and then the trajectory visibly snaps back as LM spreads the accumulated error around the loop. This is the before/after magic of the lecture's KITTI example, in miniature.</p>
+</section>
+
+<!-- =================== 08 SOLVING =================== -->
+<section id="solve">
+  <div class="kicker"><span class="num">08</span></div>
+  <h2>Solving the graph: from descent to Levenberg–Marquardt</h2>
+  <p>Collect all variables into one super-vector \(\mathbf x=\begin{bmatrix}\mathbf x_1^\top\cdots\mathbf x_n^\top\end{bmatrix}^\top\) and face the back-end problem \(\min_{\mathbf x}\sum\phi_{ij}(\mathbf e(\mathbf x_i,\mathbf x_j))\). The models are nonlinear now, so no normal equations solve it in one shot. Instead:</p>
+  <ul>
+    <li><strong>Initial guess</strong> \(\mathbf x^{(0)}\): from odometry (encoders, point-cloud registration) for poses and landmark initialization (e.g., triangulation of image features) for the map. Nonconvex problems need a decent start.</li>
+    <li><strong>Descent method</strong>: iterate \(\ \mathbf x^{(k+1)}=\mathbf x^{(k)}+\alpha^{(k)}\,\delta\mathbf x^{(k)}\) with some downhill direction \(\delta\mathbf x^{(k)}\).</li>
+  </ul>
+  <h3>Where the LM equation comes from</h3>
+  <p>Take \(\phi_{ij}(\mathbf e)=\lVert W_{ij}\mathbf e\rVert_2^2\) and <strong>linearize each error</strong> around the current iterate: \(\mathbf e(\mathbf x^{(k)}+\delta\mathbf x)\approx\mathbf e(\mathbf x^{(k)})+J_{ij}\,\delta\mathbf x\), where</p>
+  $$J_{ij}=\frac{\partial\,\mathbf e(\mathbf x_i,\mathbf x_j)}{\partial\mathbf x}\bigg|_{\mathbf x=\mathbf x^{(k)}}$$
+  <p>is the Jacobian of that factor with respect to <em>all</em> variables (mostly zeros — only the \(\mathbf x_i,\mathbf x_j\) columns are alive). The objective becomes a quadratic in \(\delta\mathbf x\); setting its derivative to zero gives the Gauss–Newton normal equations, and adding a damping term \(\lambda D\) gives the <strong>Levenberg–Marquardt algorithm</strong>:</p>
+  $$\boxed{\ \Big(\sum_{ij}J_{ij}^\top W_{ij}^\top W_{ij}J_{ij}+\lambda D\Big)\,\delta\mathbf x^{(k)}=-\sum_{ij}J_{ij}^\top W_{ij}^\top\,\mathbf e\big(\mathbf x_i^{(k)},\mathbf x_j^{(k)}\big)\ }$$
+  <div class="card note">The damping \(\lambda\) is a <strong>confidence dial on the linearization</strong>. \(\lambda\to0\): pure Gauss–Newton — huge, bold steps that solve the linearized problem exactly (one step suffices if the true problem is linear, as Practice 8 shows). \(\lambda\) large: the \(\lambda D\) term dominates and the step shrinks toward a small gradient-descent step — slow but safe. LM adapts \(\lambda\) on the fly: shrink it when a step lowers the cost, grow it when a step fails. That is exactly what the widget above runs.</div>
+  <div class="card">
+    <div class="lab" style="font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--amber); margin-bottom:6px">You do not have to build this yourself</div>
+    Mature factor-graph optimization libraries implement all of it — sparse linear algebra included:
+    <ul style="margin-bottom:0">
+      <li><strong>GTSAM</strong> — Georgia Tech Smoothing and Mapping: <a class="link" href="https://github.com/borglab/gtsam">github.com/borglab/gtsam</a></li>
+      <li><strong>g2o</strong> — General Graph Optimization: <a class="link" href="https://github.com/RainerKuemmerle/g2o">github.com/RainerKuemmerle/g2o</a></li>
+      <li><strong>Ceres Solver</strong>: <a class="link" href="https://github.com/ceres-solver/ceres-solver">github.com/ceres-solver/ceres-solver</a></li>
+      <li><strong>SymForce</strong>: <a class="link" href="https://github.com/symforce-org/symforce">github.com/symforce-org/symforce</a></li>
+      <li><strong>miniSAM</strong>: <a class="link" href="https://github.com/dongjing3309/minisam">github.com/dongjing3309/minisam</a></li>
+    </ul>
+  </div>
+</section>
+<!-- =================== 09 SPARSITY =================== -->
+<section id="sparsity">
+  <div class="kicker"><span class="num">09</span></div>
+  <h2>Sparsity: the structure that makes SLAM fast</h2>
+  <p>Why can libraries optimize graphs with millions of variables? Because almost every entry of the linear system is zero, and the zeros come straight from the graph. Each factor touches two variables, so each block-row of the stacked Jacobian \(J\) has exactly <strong>two nonzero blocks</strong>. For the lecture's 7-pose graph — odometry chain \(\bar T_{12},\dots,\bar T_{67}\) plus one loop closure \(\bar T_{52}\):</p>
+
+  <figure style="margin:20px 0">
+  <svg viewBox="0 0 620 270" width="100%" style="max-width:620px; display:block; margin:0 auto" aria-label="Jacobian and Hessian sparsity patterns">
+    <g font-family="IBM Plex Mono" font-size="12" fill="var(--ink)">
+      <text x="120" y="18" text-anchor="middle">Jacobian J</text>
+      <text x="460" y="18" text-anchor="middle">Hessian J&#8868;J</text>
+    </g>
+    <!-- J grid: 7 rows (T12..T67, T52), 7 cols -->
+    <g font-family="IBM Plex Mono" font-size="9.5" fill="var(--faint)">
+      <text x="52" y="56">T̄12</text><text x="52" y="82">T̄23</text><text x="52" y="108">T̄34</text>
+      <text x="52" y="134">T̄45</text><text x="52" y="160">T̄56</text><text x="52" y="186">T̄67</text><text x="52" y="212">T̄52</text>
+      <text x="86" y="38">1</text><text x="112" y="38">2</text><text x="138" y="38">3</text><text x="164" y="38">4</text><text x="190" y="38">5</text><text x="216" y="38">6</text><text x="242" y="38">7</text>
+    </g>
+    <g>
+      <!-- background cells -->
+      <g fill="none" stroke="var(--line)" stroke-width="1">
+        <rect x="78" y="44" width="182" height="182"/>
+      </g>
+      <!-- filled: row r (0..6) col c -->
+      <g fill="var(--z)" opacity=".85">
+        <rect x="79" y="45" width="25" height="25"/><rect x="105" y="45" width="25" height="25"/>
+        <rect x="105" y="71" width="25" height="25"/><rect x="131" y="71" width="25" height="25"/>
+        <rect x="131" y="97" width="25" height="25"/><rect x="157" y="97" width="25" height="25"/>
+        <rect x="157" y="123" width="25" height="25"/><rect x="183" y="123" width="25" height="25"/>
+        <rect x="183" y="149" width="25" height="25"/><rect x="209" y="149" width="25" height="25"/>
+        <rect x="209" y="175" width="25" height="25"/><rect x="235" y="175" width="25" height="25"/>
+        <rect x="105" y="201" width="25" height="25" fill="var(--amber)"/><rect x="183" y="201" width="25" height="25" fill="var(--amber)"/>
+      </g>
+    </g>
+    <!-- Hessian: tridiagonal + (2,5),(5,2) -->
+    <g font-family="IBM Plex Mono" font-size="9.5" fill="var(--faint)">
+      <text x="426" y="38">1</text><text x="452" y="38">2</text><text x="478" y="38">3</text><text x="504" y="38">4</text><text x="530" y="38">5</text><text x="556" y="38">6</text><text x="582" y="38">7</text>
+      <text x="400" y="62">1</text><text x="400" y="88">2</text><text x="400" y="114">3</text><text x="400" y="140">4</text><text x="400" y="166">5</text><text x="400" y="192">6</text><text x="400" y="218">7</text>
+    </g>
+    <g fill="none" stroke="var(--line)" stroke-width="1"><rect x="418" y="44" width="182" height="182"/></g>
+    <g fill="var(--z)" opacity=".85">
+      <rect x="419" y="45" width="25" height="25"/><rect x="445" y="45" width="25" height="25"/>
+      <rect x="419" y="71" width="25" height="25"/><rect x="445" y="71" width="25" height="25"/><rect x="471" y="71" width="25" height="25"/>
+      <rect x="445" y="97" width="25" height="25"/><rect x="471" y="97" width="25" height="25"/><rect x="497" y="97" width="25" height="25"/>
+      <rect x="471" y="123" width="25" height="25"/><rect x="497" y="123" width="25" height="25"/><rect x="523" y="123" width="25" height="25"/>
+      <rect x="497" y="149" width="25" height="25"/><rect x="523" y="149" width="25" height="25"/><rect x="549" y="149" width="25" height="25"/>
+      <rect x="523" y="175" width="25" height="25"/><rect x="549" y="175" width="25" height="25"/><rect x="575" y="175" width="25" height="25"/>
+      <rect x="549" y="201" width="25" height="25"/><rect x="575" y="201" width="25" height="25"/>
+      <rect x="523" y="71" width="25" height="25" fill="var(--amber)"/>
+      <rect x="445" y="149" width="25" height="25" fill="var(--amber)"/>
+    </g>
+    <text x="460" y="252" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--faint)">a.k.a. the information matrix of the estimate</text>
+    <text x="120" y="252" text-anchor="middle" font-family="IBM Plex Mono" font-size="10.5" fill="var(--faint)">two blocks per factor row · amber = loop closure</text>
+  </svg>
+  </figure>
+
+  <p>The Hessian \(J^\top J\) inherits the pattern: its \((i,j)\) block is nonzero only if poses \(i\) and \(j\) <em>share a factor</em> — the Hessian sparsity pattern <strong>is the adjacency matrix of the graph</strong>. An odometry chain gives a tridiagonal Hessian; the loop closure adds the two amber off-diagonal blocks at \((2,5)\) and \((5,2)\). And \(J^\top J\) is exactly the <strong>information matrix</strong> of the estimate — large where the data pin variables down, structured where they are coupled. Sparse Cholesky solvers feast on this structure; that is the entire reason million-variable SLAM runs in real time.</p>
+</section>
+
+<!-- =================== 10 LANDMARK SLAM =================== -->
+<section id="landmark">
+  <div class="kicker"><span class="num">10</span></div>
+  <h2>Landmark-based SLAM</h2>
+  <p>Put the map back in. The variables are now poses \(\{T_t\}\) <em>and</em> landmarks \(\{\mathbf m_j\}\), and the objective combines both factor types — relative-pose factors between consecutive poses, observation factors between a pose and each landmark it saw:</p>
+  $$\min_{\{T_t\},\{\mathbf m_j\}}\ \sum_t\big\lVert W_{ij}\log\big(\bar T_{t,t+1}^{-1}T_t^{-1}T_{t+1}\big)^\vee\big\rVert_2^2+\sum_{t,j}\big\lVert V_{ij}\big(\mathbf z_{t,j}-h(T_t,\mathbf m_j)\big)\big\rVert_2^2$$
+  <p>with \(h\) being, e.g., the camera or lidar observation model of Lecture 4, and \(W,V\) the weight (square-root information) matrices of each factor type.</p>
+  <h3>The arrow-shaped Hessian</h3>
+  <p>Order the variables poses-first, landmarks-second, and the Hessian takes a characteristic shape:</p>
+  <figure style="margin:18px 0">
+  <svg viewBox="0 0 300 230" width="100%" style="max-width:300px; display:block; margin:0 auto" aria-label="arrow shaped Hessian">
+    <g fill="none" stroke="var(--line)" stroke-width="1"><rect x="40" y="20" width="190" height="190"/></g>
+    <!-- pose-pose block: tridiagonal band -->
+    <g fill="var(--z)" opacity=".85">
+      <rect x="41" y="21" width="22" height="22"/><rect x="63" y="21" width="22" height="22"/>
+      <rect x="41" y="43" width="22" height="22"/><rect x="63" y="43" width="22" height="22"/><rect x="85" y="43" width="22" height="22"/>
+      <rect x="63" y="65" width="22" height="22"/><rect x="85" y="65" width="22" height="22"/><rect x="107" y="65" width="22" height="22"/>
+      <rect x="85" y="87" width="22" height="22"/><rect x="107" y="87" width="22" height="22"/>
+    </g>
+    <!-- pose-landmark strips -->
+    <g fill="var(--amber)" opacity=".75">
+      <rect x="131" y="21" width="98" height="88"/>
+      <rect x="41" y="111" width="88" height="98"/>
+    </g>
+    <!-- landmark-landmark diagonal -->
+    <g fill="var(--y)" opacity=".85">
+      <rect x="131" y="111" width="19" height="19"/><rect x="151" y="131" width="19" height="19"/>
+      <rect x="171" y="151" width="19" height="19"/><rect x="191" y="171" width="19" height="19"/><rect x="211" y="191" width="18" height="18"/>
+    </g>
+    <g font-family="IBM Plex Mono" font-size="10" fill="var(--faint)">
+      <text x="60" y="14">poses</text><text x="150" y="14">landmarks</text>
+    </g>
+  </svg>
+  <figcaption style="text-align:center; font-family:'IBM Plex Mono'; font-size:10.5px; color:var(--faint)">blue: tridiagonal pose chain · amber: pose–landmark coupling · green: landmarks never observe each other → diagonal</figcaption>
+  </figure>
+  <p>The huge landmark–landmark block is <strong>block-diagonal</strong> — no factor ever connects two landmarks directly. That makes it trivially invertible, which is exactly what the Schur complement of the next section exploits: real systems eliminate the (cheap) landmark block first and solve a small pose system. With thousands of poses and landmarks the overall Hessian is overwhelmingly empty — the lecture shows a real one that is white space except for a thin diagonal and a fringe of pose–landmark couplings.</p>
+</section>
+
+<!-- =================== 11 MARGINALIZATION / SCHUR =================== -->
+<section id="schur">
+  <div class="kicker"><span class="num">11</span></div>
+  <h2>Variable marginalization: the Schur complement</h2>
+  <p>What if we only need a <em>subset</em> of the variables — say the poses but not the landmarks, or the current pose but not the old ones? We could solve the full system and throw the rest away, but there is a cheaper, exact route. Start from the Gauss–Newton <strong>normal equations</strong> \(J^\top J\,\delta\mathbf x=-J^\top\mathbf e\), and split the variables into the part to keep, \(\tilde{\mathbf x}_a\), and the part to remove, \(\tilde{\mathbf x}_b\):</p>
+  $$\begin{bmatrix}\Omega_{aa}&\Omega_{ab}\\\Omega_{ab}^\top&\Omega_{bb}\end{bmatrix}\begin{bmatrix}\tilde{\mathbf x}_a\\\tilde{\mathbf x}_b\end{bmatrix}=\begin{bmatrix}\mathbf c_a\\\mathbf c_b\end{bmatrix}$$
+  <h3>Block Gaussian elimination, step by step</h3>
+  <p><strong>Step 1.</strong> The second block row says \(\Omega_{ab}^\top\tilde{\mathbf x}_a+\Omega_{bb}\tilde{\mathbf x}_b=\mathbf c_b\) — so \(\tilde{\mathbf x}_b\) could be expressed from \(\tilde{\mathbf x}_a\). To remove it from the <em>first</em> row, pre-multiply the whole system by a block elimination matrix:</p>
+  $$\begin{bmatrix}I&-\Omega_{ab}\Omega_{bb}^{-1}\\0&I\end{bmatrix}\begin{bmatrix}\Omega_{aa}&\Omega_{ab}\\\Omega_{ab}^\top&\Omega_{bb}\end{bmatrix}\begin{bmatrix}\tilde{\mathbf x}_a\\\tilde{\mathbf x}_b\end{bmatrix}=\begin{bmatrix}I&-\Omega_{ab}\Omega_{bb}^{-1}\\0&I\end{bmatrix}\begin{bmatrix}\mathbf c_a\\\mathbf c_b\end{bmatrix}$$
+  <p><strong>Step 2.</strong> Multiply out. The first row becomes \(\big(\Omega_{aa}-\Omega_{ab}\Omega_{bb}^{-1}\Omega_{ab}^\top\big)\tilde{\mathbf x}_a+\big(\Omega_{ab}-\Omega_{ab}\Omega_{bb}^{-1}\Omega_{bb}\big)\tilde{\mathbf x}_b\) — and the \(\tilde{\mathbf x}_b\) coefficient cancels to zero by construction:</p>
+  $$\begin{bmatrix}\Omega_{aa}-\Omega_{ab}\Omega_{bb}^{-1}\Omega_{ab}^\top&0\\\Omega_{ab}^\top&\Omega_{bb}\end{bmatrix}\begin{bmatrix}\tilde{\mathbf x}_a\\\tilde{\mathbf x}_b\end{bmatrix}=\begin{bmatrix}\mathbf c_a-\Omega_{ab}\Omega_{bb}^{-1}\mathbf c_b\\\mathbf c_b\end{bmatrix}$$
+  <p><strong>Step 3.</strong> Read off the decoupled small system — \(\tilde{\mathbf x}_a\) solves it alone:</p>
+  $$\boxed{\ \big(\Omega_{aa}-\Omega_{ab}\Omega_{bb}^{-1}\Omega_{ab}^\top\big)\,\tilde{\mathbf x}_a=\mathbf c_a-\Omega_{ab}\Omega_{bb}^{-1}\mathbf c_b\ }$$
+  <p>The matrix \(\Omega_{aa}-\Omega_{ab}\Omega_{bb}^{-1}\Omega_{ab}^\top\) is the <strong>Schur complement</strong> of \(\Omega_{bb}\). Solving it gives <em>exactly</em> the same \(\tilde{\mathbf x}_a\) as the full system — nothing is approximated, the \(b\) variables are merely eliminated.</p>
+
+  <h3>The probabilistic reading: marginalization</h3>
+  <p>The same algebra has a probability meaning. The normal equations describe a Gaussian over \((\tilde{\mathbf x}_a,\tilde{\mathbf x}_b)\) with information matrix \(\Omega\) and information vector \(\mathbf c\):</p>
+  $$\begin{bmatrix}\tilde{\mathbf x}_a\\\tilde{\mathbf x}_b\end{bmatrix}\sim\mathcal N\!\left(\begin{bmatrix}\Omega_{aa}&\Omega_{ab}\\\Omega_{ab}^\top&\Omega_{bb}\end{bmatrix}^{-1}\!\begin{bmatrix}\mathbf c_a\\\mathbf c_b\end{bmatrix},\ \begin{bmatrix}\Omega_{aa}&\Omega_{ab}\\\Omega_{ab}^\top&\Omega_{bb}\end{bmatrix}^{-1}\right)$$
+  <p>Integrating \(\tilde{\mathbf x}_b\) out gives the <strong>marginal</strong> of \(\tilde{\mathbf x}_a\) — and its information matrix is precisely the Schur complement:</p>
+  $$p(\tilde{\mathbf x}_a)=\int p(\tilde{\mathbf x}_a,\tilde{\mathbf x}_b)\,d\tilde{\mathbf x}_b=\phi\Big(\tilde{\mathbf x}_a;\ \big(\Omega_{aa}-\Omega_{ab}\Omega_{bb}^{-1}\Omega_{ab}^\top\big)^{-1}\big(\mathbf c_a-\Omega_{ab}\Omega_{bb}^{-1}\mathbf c_b\big),\ \big(\Omega_{aa}-\Omega_{ab}\Omega_{bb}^{-1}\Omega_{ab}^\top\big)^{-1}\Big)$$
+  <div class="card warn">
+    <strong>The price: fill-in.</strong> The correction term \(\Omega_{ab}\Omega_{bb}^{-1}\Omega_{ab}^\top\) is generally dense over the neighbors of the eliminated variable: marginalizing creates nonzero off-diagonals between <em>every pair of variables</em> that touched it. In graph terms, eliminating a node connects all of its neighbors into a <strong>clique</strong>. Sparsity — the thing that made SLAM fast — erodes with every marginalization. Try it below.
+  </div>
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>Marginalization lab</b> · 3 poses + 2 landmarks · eliminate a variable, watch the clique and fill-in appear</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="hostM" style="min-height:330px"><canvas id="cvM"></canvas><span class="hint">left: graph (amber = new fill-in edges) · right: information matrix Ω</span></div>
+      <div class="panelside">
+        <div class="btnrow" style="margin-top:2px">
+          <button class="btn" data-marg="x1">⊖ x1</button>
+          <button class="btn" data-marg="x2">⊖ x2</button>
+          <button class="btn" data-marg="x3">⊖ x3</button>
+          <button class="btn" data-marg="L1">⊖ L1</button>
+          <button class="btn" data-marg="L2">⊖ L2</button>
+          <button class="btn" id="bMreset">reset</button>
+        </div>
+        <div class="readout" id="rM"></div>
+      </div>
+    </div>
+  </div>
+  <p>Eliminate <code>L1</code> (seen by x1 and x2): its neighbors were already connected by odometry, so the structure barely changes. Now reset and eliminate <code>x2</code> instead — four neighbors, a four-way clique, and the matrix visibly densifies. That asymmetry is why systems marginalize <em>landmarks</em> happily but think twice before marginalizing <em>poses</em>.</p>
+</section>
+
+<!-- =================== 12 SMOOTHING VS FILTERING =================== -->
+<section id="spectrum">
+  <div class="kicker"><span class="num">12</span></div>
+  <h2>Smoothing vs filtering</h2>
+  <p>Marginalization defines a spectrum of estimators — trade variables for density:</p>
+  <div class="card">
+    <table style="width:100%; border-collapse:collapse; font-size:14.5px">
+      <tr style="color:var(--amber); font-family:'IBM Plex Mono'; font-size:12px; text-align:left">
+        <th style="padding:6px 8px">approach</th><th style="padding:6px 8px">variables kept</th><th style="padding:6px 8px">Hessian</th></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)"><strong style="color:#fff">Smoothing</strong><br><span style="font-size:12px">≡ MAP optimization</span></td><td style="padding:8px"><strong>many</strong> — entire robot trajectory and map</td><td style="padding:8px"><strong>sparse</strong> \(J^\top J\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)"><strong style="color:#fff">Fixed-lag smoothing</strong></td><td style="padding:8px"><strong>fewer</strong> — only a recent time window</td><td style="padding:8px"><strong>denser</strong>, after Schur-marginalizing old variables</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)"><strong style="color:#fff">Filtering</strong></td><td style="padding:8px"><strong>fewest</strong> — only the current pose and landmarks</td><td style="padding:8px"><strong>densest</strong>, after marginalizing all old variables</td></tr>
+    </table>
+  </div>
+  <p>Smoothing keeps every variable and enjoys maximal sparsity — modern SLAM's default, and exactly the factor-graph optimization of this lecture. Filtering (the Kalman family, coming in later lectures) keeps almost nothing and pays with a dense information matrix — every marginalized pose smeared its correlations onto whatever remained. Fixed-lag smoothing sits in between. There is no free lunch: <strong>fewer variables ⇔ denser couplings</strong>, by the fill-in mechanism you just played with.</p>
+</section>
+
+<!-- =================== 13 SUMMARY =================== -->
+<section id="summary">
+  <div class="kicker"><span class="num">13</span></div>
+  <h2>Everything on one card</h2>
+  <div class="card">
+    <table style="width:100%; border-collapse:collapse; font-size:14.5px">
+      <tr style="color:var(--amber); font-family:'IBM Plex Mono'; font-size:12px; text-align:left">
+        <th style="padding:6px 8px">idea</th><th style="padding:6px 8px">formula / takeaway</th></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">SLAM</td><td style="padding:8px">\(\min_{\mathbf x_{1:T},\mathbf m}\sum_t\lVert\mathbf z_t-h(\mathbf x_t,\mathbf m)\rVert^2+\sum_t\lVert\mathbf x_{t+1}-f(\mathbf x_t,\mathbf u_t)\rVert^2\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">linear case</td><td style="padding:8px">\(c=\lVert A\mathbf x+\mathbf b\rVert^2\), \(\nabla c=2A^\top(A\mathbf x+\mathbf b)\), optimum \(A^\top A\mathbf x=-A^\top\mathbf b\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">factor graph</td><td style="padding:8px">variables on nodes, data on factors; \(\mathbf e_f=\mathbf x_{t+1}\ominus f\), \(\mathbf e_h=\mathbf z\ominus h\); \(\ominus\) respects geometry</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">pose-graph factor</td><td style="padding:8px">\(\mathbf e(T_i,T_j)=\log(\bar T_{ij}^{-1}T_i^{-1}T_j)^\vee\); loop closures defeat drift</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">back-end / LM</td><td style="padding:8px">\(\big(\sum J^\top W^\top WJ+\lambda D\big)\delta\mathbf x=-\sum J^\top W^\top\mathbf e\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">sparsity</td><td style="padding:8px">Hessian pattern = graph adjacency; \(J^\top J\) = information matrix</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">marginalization</td><td style="padding:8px">\((\Omega_{aa}-\Omega_{ab}\Omega_{bb}^{-1}\Omega_{ab}^\top)\tilde{\mathbf x}_a=\mathbf c_a-\Omega_{ab}\Omega_{bb}^{-1}\mathbf c_b\); fill-in = clique</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">spectrum</td><td style="padding:8px">smoothing (many vars, sparse) ↔ filtering (few vars, dense)</td></tr>
+    </table>
+  </div>
+</section>
+<!-- =================== 14 PRACTICE =================== -->
+<section id="practice">
+  <div class="kicker"><span class="num">14</span></div>
+  <h2>Practice problems &amp; full solutions</h2>
+  <p>Try each one with pen and paper first, then expand the solution. They march through the lecture, and several chain together the way a real solver pipeline would.</p>
+
+  <!-- P1 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 1</span><span class="tag">linear least squares</span>
+      <p>A scalar robot has \(F=G=H=1\), \(x_0=0\), inputs \(u_0=u_1=1\), and measurements \(z_1=1.2\), \(z_2=1.9\). (a) Write the localization cost \(c(x_1,x_2)\) and the stacked form \(\lVert A\mathbf x+\mathbf b\rVert_2^2\). (b) Solve exactly via the normal equations.</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>(a)</strong> Two measurement residuals and two motion residuals:</p>
+      $$c=(1.2-x_1)^2+(1.9-x_2)^2+(x_1-0-1)^2+(x_2-x_1-1)^2$$
+      <p>Stacking (measurement rows first, then sign-flipped motion rows):</p>
+      $$A=\begin{bmatrix}1&0\\0&1\\-1&0\\1&-1\end{bmatrix}\qquad \mathbf b=\begin{bmatrix}-1.2\\-1.9\\1\\1\end{bmatrix}$$
+      <p>(Check row 3: \(-x_1+1=-(x_1-1)\) ✓ same square; row 4: \(x_1-x_2+1=-(x_2-x_1-1)\) ✓.)</p>
+      <p><strong>(b)</strong> Normal equations \(A^\top A\,\mathbf x=-A^\top\mathbf b\):</p>
+      $$A^\top A=\begin{bmatrix}3&-1\\-1&2\end{bmatrix}\qquad -A^\top\mathbf b=\begin{bmatrix}1.2\\2.9\end{bmatrix}$$
+      <p>With \(\det=5\): \(x_1=\tfrac{2(1.2)+1(2.9)}{5}=\tfrac{5.3}{5}=1.06\), \(x_2=\tfrac{3(2.9)+1(1.2)}{5}=\tfrac{9.9}{5}=1.98\).</p>
+      <p><strong>Interpret.</strong> Dead reckoning says \((1,2)\); the measurements say \((1.2,1.9)\); the optimum \((1.06,\,1.98)\) is the weighted compromise. No single factor is satisfied exactly — least squares spreads the disagreement.</p>
+    </div></details>
+  </div>
+
+  <!-- P2 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 2</span><span class="tag">gradient descent</span>
+      <p>For Problem 1, start at the dead-reckoning guess \(\mathbf x^{(0)}=(1,2)\) and take one gradient-descent step with \(\alpha=0.1\), using \(\nabla c=2A^\top(A\mathbf x+\mathbf b)\).</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Residual.</strong> \(A\mathbf x^{(0)}+\mathbf b=(1-1.2,\ 2-1.9,\ -1+1,\ 1-2+1)=(-0.2,\ 0.1,\ 0,\ 0)\). The motion residuals are zero — dead reckoning satisfies the motion model perfectly; only the sensors object.</p>
+      <p><strong>Step 2 — Gradient.</strong></p>
+      $$\nabla c=2A^\top\begin{bmatrix}-0.2\\0.1\\0\\0\end{bmatrix}=2\begin{bmatrix}-0.2\\0.1\end{bmatrix}=\begin{bmatrix}-0.4\\0.2\end{bmatrix}$$
+      <p><strong>Step 3 — Step.</strong> \(\mathbf x^{(1)}=(1,2)-0.1\,(-0.4,\ 0.2)=(1.04,\ 1.98)\).</p>
+      <p>One step already lands next to the exact optimum \((1.06, 1.98)\) — on a well-conditioned quadratic, descent moves fast at first and crawls at the end. The widget in section 02 is this exact computation with \(T=8\).</p>
+    </div></details>
+  </div>
+
+  <!-- P3 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 3</span><span class="tag">orientation model</span>
+      <p>A body is rolled \(90^\circ\) about its x-axis: \(q=\big[\tfrac{\sqrt2}{2},\tfrac{\sqrt2}{2},0,0\big]\). Compute the predicted accelerometer reading \(h(q)=q^{-1}\circ[0,-g\mathbf e_3]\circ q\) (take \(g=9.81\)).</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Recognize the sandwich.</strong> \(q^{-1}\circ[0,\mathbf v]\circ q\) applies \(R(q)^\top\) — it expresses the world vector \(\mathbf v=-g\mathbf e_3=(0,0,-9.81)\) in the body frame.</p>
+      <p><strong>Step 2 — Rotation matrix route.</strong> \(R(q)=R_x(90^\circ)\), so \(R^\top=R_x(-90^\circ)=\begin{bmatrix}1&0&0\\0&0&1\\0&-1&0\end{bmatrix}\), and</p>
+      $$h(q)=R_x(-90^\circ)\begin{bmatrix}0\\0\\-9.81\end{bmatrix}=\begin{bmatrix}0\\-9.81\\0\end{bmatrix}$$
+      <p><strong>Step 3 — Quaternion route (verify).</strong> \(q^{-1}=[\tfrac{\sqrt2}{2},-\tfrac{\sqrt2}{2},0,0]\). Multiply out \(q^{-1}\circ[0,(0,0,-g)]\circ q\) with the product rule \([a_s,\mathbf a][b_s,\mathbf b]=[a_sb_s-\mathbf a^\top\mathbf b,\ a_s\mathbf b+b_s\mathbf a+\mathbf a\times\mathbf b]\); the result is \([0,(0,-9.81,0)]\). ✓</p>
+      <p><strong>Interpret.</strong> After rolling \(90^\circ\), the body's y-axis points down, so gravity shows up along \(-y\). This is how the accelerometer reveals roll and pitch — and why it says <em>nothing</em> about yaw (rotations about the gravity axis leave \(h(q)\) unchanged, which is why Project 1 needs the gyro for heading).</p>
+    </div></details>
+  </div>
+
+  <!-- P4 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 4</span><span class="tag">quaternion distance</span>
+      <p>The gyro predicts \(f(q_t,\tau\mathbf u_t)=\big[\tfrac{\sqrt2}{2},0,0,\tfrac{\sqrt2}{2}\big]\) (a \(90^\circ\) yaw), but the current estimate is \(q_{t+1}=\big[\tfrac{\sqrt3}{2},0,0,\tfrac12\big]\) (a \(60^\circ\) yaw). Compute the motion-factor error \(\mathbf e=2\log\!\big(q_{t+1}^{-1}\circ f\big)\) and its norm.</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Relative rotation.</strong> \(q_{t+1}^{-1}=[\tfrac{\sqrt3}{2},0,0,-\tfrac12]\) (a \(-60^\circ\) yaw). Both quaternions rotate about z, so the product just adds half-angles: \(-30^\circ+45^\circ=15^\circ\):</p>
+      $$q_{t+1}^{-1}\circ f=[\cos15^\circ,\ 0,\ 0,\ \sin15^\circ]$$
+      <p><strong>Step 2 — Log and double.</strong> \(\log\) of a unit quaternion returns the half-angle axis vector, so \(\mathbf e=2\log(\cdot)=\big(0,0,\tfrac{\pi}{6}\big)\).</p>
+      <p><strong>Step 3 — Norm.</strong> \(\lVert\mathbf e\rVert=\tfrac{\pi}{6}\approx0.524\) rad \(=30^\circ\) — exactly the yaw discrepancy between estimate and prediction. The factor is the geometric difference, as promised: \(d(q_{t+1},f)=90^\circ-60^\circ\).</p>
+    </div></details>
+  </div>
+
+  <!-- P5 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 5</span><span class="tag">panorama</span>
+      <p>A camera with the panorama pipeline of section 04 has orientation \(R=R_z(40^\circ)\) (pure yaw). Where do (a) the image-center pixel \((\lambda,\phi)=(0^\circ,0^\circ)\) and (b) the top-center pixel \((0^\circ,22.5^\circ)\) land on the panorama?</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>(a)</strong> Spherical→Cartesian: \((0,0)\mapsto(1,0,0)\). Rotate: \(R_z(40^\circ)(1,0,0)=(\cos40^\circ,\sin40^\circ,0)\). Cartesian→spherical: \(\lambda'=\operatorname{atan2}(\sin40^\circ,\cos40^\circ)=40^\circ\), \(\phi'=\arcsin0=0^\circ\). Lands at \((40^\circ,0^\circ)\).</p>
+      <p><strong>(b)</strong> \((0,22.5^\circ)\mapsto(\cos22.5^\circ,0,\sin22.5^\circ)\). Yaw only mixes x and y, leaving z alone: \(R_z(40^\circ)\) gives \((\cos22.5^\circ\cos40^\circ,\ \cos22.5^\circ\sin40^\circ,\ \sin22.5^\circ)\) — so \(\phi'=22.5^\circ\) unchanged, and \(\lambda'=40^\circ\). Lands at \((40^\circ,\,22.5^\circ)\).</p>
+      <p><strong>Conclusion.</strong> Pure yaw shifts the whole image horizontally on the panorama by exactly the yaw angle and preserves every latitude — the proof behind what the panorama-painter widget shows when you sweep ψ.</p>
+    </div></details>
+  </div>
+
+  <!-- P6 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 6</span><span class="tag">pose-graph factor</span>
+      <p>In \(SE(2)\), the odometry between two poses was measured as \(\bar T_{12}=(2,0,90^\circ)\) (forward 2 m, turn left \(90^\circ\)). The current estimates are \(T_1=(0,0,0^\circ)\) and \(T_2=(1.9,\,0.2,\,90^\circ)\). Compute the factor error \(\mathbf e=\log(\bar T_{12}^{-1}T_1^{-1}T_2)^\vee\).</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Predicted relative pose.</strong> \(T_1\) is the identity, so \(T_1^{-1}T_2=(1.9,\,0.2,\,90^\circ)\).</p>
+      <p><strong>Step 2 — Invert the measurement.</strong> For a 2D pose \((R,\mathbf p)\), the inverse is \((R^\top,-R^\top\mathbf p)\): rotation \(-90^\circ\), translation \(-R(-90^\circ)(2,0)=-(0,-2)=(0,2)\). So \(\bar T_{12}^{-1}=(0,\,2,\,-90^\circ)\).</p>
+      <p><strong>Step 3 — Compose.</strong> Rotation: \(-90^\circ+90^\circ=0^\circ\). Translation: \((0,2)+R(-90^\circ)(1.9,0.2)=(0,2)+(0.2,-1.9)=(0.2,\,0.1)\).</p>
+      <p><strong>Step 4 — Log.</strong> The discrepancy pose is \((0.2,\,0.1,\,0^\circ)\) — a pure translation, whose \(SE(2)\) log is exactly the translation:</p>
+      $$\mathbf e=(0.2,\ 0.1,\ 0)$$
+      <p>Zero rotation error, 20 cm and 10 cm of position disagreement — that is what the optimizer will try to squeeze out, weighted by \(W_{12}\).</p>
+    </div></details>
+  </div>
+
+  <!-- P7 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 7</span><span class="tag">loop closure</span>
+      <p>A 1D pose graph: \(p_0=0\) fixed, odometry factors \(p_1-p_0\approx1.1\) and \(p_2-p_1\approx1.05\), and a loop-closure factor \(p_2-p_0\approx2.0\), all with weight 1. (a) Find the optimal \((p_1,p_2)\). (b) What happens as the closure weight \(w\to\infty\)?</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>(a)</strong> Minimize \(c=(p_1-1.1)^2+(p_2-p_1-1.05)^2+(p_2-2)^2\). Setting both partials to zero:</p>
+      $$\tfrac{\partial c}{\partial p_1}=0:\ 2p_1-p_2=0.05\qquad \tfrac{\partial c}{\partial p_2}=0:\ 2p_2-p_1=3.05$$
+      <p>Substituting \(p_2=2p_1-0.05\) into the second: \(3p_1=3.15\Rightarrow p_1=1.05,\ p_2=2.05\).</p>
+      <p><strong>Interpret.</strong> Dead reckoning says \((1.1,\,2.15)\); the closure says \(p_2=2.0\). The optimum lands at \((1.05,\,2.05)\): the 0.15 m of contradiction got <em>spread across all three factors</em> (each residual ends up at exactly \(\pm0.05\)). Loop closure does not just fix the last pose — it redistributes drift along the whole chain, which is what you see in the pose-graph widget.</p>
+      <p><strong>(b)</strong> With weight \(w\) on the closure, the second equation becomes \((1+w)p_2-p_1=1.05+2w\). As \(w\to\infty\): \(p_2\to2.0\) exactly, and the first equation gives \(p_1\to(0.05+2)/2=1.025\). An infinitely trusted closure becomes a hard constraint; the odometry factors split the remaining disagreement between themselves.</p>
+    </div></details>
+  </div>
+
+  <!-- P8 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 8</span><span class="tag">Gauss–Newton</span>
+      <p>For Problem 7 (weight 1), start at dead reckoning \(\mathbf p^{(0)}=(1.1,\,2.15)\) and take one Gauss–Newton step: build \(J\) and \(\mathbf e\), solve \(J^\top J\,\delta=-J^\top\mathbf e\). Where do you land? What would the LM damping \(\lambda D\) change?</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Residuals at \(\mathbf p^{(0)}\).</strong> \(e_1=p_1-1.1=0\), \(e_2=p_2-p_1-1.05=0\), \(e_3=p_2-2=0.15\). Only the closure complains.</p>
+      <p><strong>Step 2 — Jacobian.</strong> Rows are \(\partial e_i/\partial(p_1,p_2)\): \(J=\begin{bmatrix}1&0\\-1&1\\0&1\end{bmatrix}\).</p>
+      <p><strong>Step 3 — Normal equations.</strong></p>
+      $$J^\top J=\begin{bmatrix}2&-1\\-1&2\end{bmatrix}\qquad -J^\top\mathbf e=\begin{bmatrix}0\\-0.15\end{bmatrix}$$
+      <p>With \(\det=3\): \(\delta=\big(\tfrac{2\cdot0+1\cdot(-0.15)}{3},\ \tfrac{1\cdot0+2\cdot(-0.15)}{3}\big)=(-0.05,\,-0.1)\).</p>
+      <p><strong>Step 4 — Land.</strong> \(\mathbf p^{(1)}=(1.1-0.05,\ 2.15-0.1)=(1.05,\,2.05)\) — the exact optimum of Problem 7, in <em>one step</em>. The factors are linear, so the linearization is exact and Gauss–Newton finishes immediately.</p>
+      <p><strong>LM.</strong> Adding \(\lambda D\) inflates the diagonal, shrinking and rotating the step toward gradient descent: safer when the linearization is untrustworthy (real pose graphs, where \(\mathbf e\) involves \(\log\) and rotations), at the cost of more iterations. \(\lambda\) adapts: success → shrink it toward Gauss–Newton; failure → grow it.</p>
+    </div></details>
+  </div>
+
+  <!-- P9 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 9</span><span class="tag">Schur complement</span>
+      <p>Two poses both observe one landmark (no direct pose–pose factor). The normal equations are</p>
+      $$\begin{bmatrix}2&0&-1\\0&2&-1\\-1&-1&3\end{bmatrix}\begin{bmatrix}\tilde x_1\\\tilde x_2\\\tilde x_b\end{bmatrix}=\begin{bmatrix}1\\1\\1\end{bmatrix}$$
+      <p>with \(b\) the landmark. (a) Marginalize the landmark via the Schur complement and solve for \((\tilde x_1,\tilde x_2)\). (b) Verify against the full solve. (c) Where is the fill-in?</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>(a)</strong> Blocks: \(\Omega_{aa}=\begin{bmatrix}2&0\\0&2\end{bmatrix}\), \(\Omega_{ab}=\begin{bmatrix}-1\\-1\end{bmatrix}\), \(\Omega_{bb}=3\), \(\mathbf c_a=(1,1)\), \(c_b=1\). Schur complement:</p>
+      $$\Omega_{aa}-\Omega_{ab}\Omega_{bb}^{-1}\Omega_{ab}^\top=\begin{bmatrix}2&0\\0&2\end{bmatrix}-\frac13\begin{bmatrix}1&1\\1&1\end{bmatrix}=\begin{bmatrix}\tfrac53&-\tfrac13\\-\tfrac13&\tfrac53\end{bmatrix}$$
+      $$\mathbf c_a-\Omega_{ab}\Omega_{bb}^{-1}c_b=\begin{bmatrix}1\\1\end{bmatrix}+\frac13\begin{bmatrix}1\\1\end{bmatrix}=\begin{bmatrix}\tfrac43\\\tfrac43\end{bmatrix}$$
+      <p>By symmetry \(\tilde x_1=\tilde x_2=s\): \(\big(\tfrac53-\tfrac13\big)s=\tfrac43\Rightarrow s=1\). So \((\tilde x_1,\tilde x_2)=(1,1)\).</p>
+      <p><strong>(b)</strong> Full system: try \((1,1,1)\): row 1: \(2-1=1\) ✓, row 3: \(-1-1+3=1\) ✓. Same answer — marginalization is exact.</p>
+      <p><strong>(c)</strong> \(\Omega_{aa}\) was diagonal — the poses were <em>not directly connected</em>. The Schur correction \(\tfrac13\begin{bmatrix}1&1\\1&1\end{bmatrix}\) put \(-\tfrac13\) in the off-diagonal: eliminating the landmark <strong>created an edge</strong> between the two poses that saw it. That \(-\tfrac13\) is fill-in — the algebraic shadow of the clique.</p>
+    </div></details>
+  </div>
+
+  <!-- P10 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 10</span><span class="tag">fill-in / cliques</span>
+      <p>In a landmark SLAM graph, pose \(\mathbf x_t\) is connected to landmarks \(L_1,L_2,L_3\) and to pose \(\mathbf x_{t+1}\); independently, \(\mathbf x_{t+1}\) is connected to \(L_3\). If \(\mathbf x_t\) is marginalized, how many edges does the resulting clique have, and how many are <em>new</em>?</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Neighbors.</strong> \(\mathbf x_t\) touches four variables: \(\{L_1,L_2,L_3,\mathbf x_{t+1}\}\).</p>
+      <p><strong>Step 2 — Clique size.</strong> Elimination connects every pair of neighbors: \(\binom42=6\) edges total — \(L_1L_2,\ L_1L_3,\ L_2L_3,\ \mathbf x_{t+1}L_1,\ \mathbf x_{t+1}L_2,\ \mathbf x_{t+1}L_3\).</p>
+      <p><strong>Step 3 — New ones.</strong> Only \(\mathbf x_{t+1}\)–\(L_3\) existed before, so <strong>5 of the 6 are new fill-in</strong> — including landmark–landmark edges, which a fresh SLAM graph never has. Each marginalized pose densifies the map block a little more; do it every step (filtering) and the landmark block becomes fully dense. That is the sparsity cost quantified.</p>
+    </div></details>
+  </div>
+
+  <!-- P11 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 11</span><span class="tag">smoothing vs filtering</span>
+      <p>A SLAM session has poses \(\mathbf x_0,\dots,\mathbf x_{1000}\) (3 DoF each) and 500 landmarks (2 DoF each). Count the variables kept by (a) full smoothing and (b) filtering (current pose + landmarks). (c) Which has the sparser information matrix, and why?</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>(a)</strong> Smoothing keeps everything: \(1001\times3+500\times2=3003+1000=4003\) scalar variables.</p>
+      <p><strong>(b)</strong> Filtering keeps one pose and the map: \(3+1000=1003\) variables — four times fewer.</p>
+      <p><strong>(c)</strong> Smoothing, by far. Its information matrix has nonzeros only where factors exist — the tridiagonal-plus-fringe arrow shape of section 10, with a <em>diagonal</em> landmark block. Filtering reached its small size by Schur-marginalizing 1000 old poses, and each marginalization spread fill-in among the variables those poses touched; after all of them, the landmark–landmark block is essentially <strong>dense</strong> (\(\sim1000\times1000\) nonzeros). Fewer variables, denser couplings — the trade-off has no free lunch, which is exactly why modern SLAM defaults to smoothing and sparse solvers.</p>
+    </div></details>
+  </div>
+</section>
+
+<footer>
+  <p>Built from ECE276A Lecture 5 (N. Atanasov, UCSD) — third lesson in the series after <em>Rotations</em> (L3) and <em>Motion &amp; Observation Models</em> (L4); the \(\exp\)/\(\log\), \(\ominus\), and model machinery used here is developed there. Math renders with KaTeX and the live panels draw on canvas — internet connection needed on first load. For a static copy use <strong>Print → Save as PDF</strong> (the panels appear as snapshots).</p>
+</footer>
+
+</div><!-- /wrap -->
+<script>
+/* ============ shared helpers ============ */
+const COL={x:'#FF5D5D',y:'#46D17C',z:'#5398FF',amber:'#FFB454',ink:'#E4E9F1',
+           muted:'#909CB2',faint:'#5d6a80',line:'#222B3A',line2:'#2c374a',panel:'#10151F'};
+function $(id){return document.getElementById(id)}
+const REDRAWS=[];
+function fit(cv){
+  const host=cv.parentElement, dpr=window.devicePixelRatio||1;
+  const w=host.clientWidth, h=host.clientHeight;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+    cv.style.width=w+'px'; cv.style.height=h+'px';
+  }
+  const g=cv.getContext('2d'); g.setTransform(dpr,0,0,dpr,0,0);
+  return {g,w,h};
+}
+function wrapPi(a){while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a}
+function fmt(v,n){const d=n===undefined?2:n; return (v<0?'\u2212':'')+Math.abs(v).toFixed(d)}
+const DEG=Math.PI/180;
+function grid(g,w,h,step){
+  g.strokeStyle='rgba(255,255,255,.035)';g.lineWidth=1;g.beginPath();
+  for(let x=0;x<w;x+=step){g.moveTo(x,0);g.lineTo(x,h)}
+  for(let y=0;y<h;y+=step){g.moveTo(0,y);g.lineTo(w,y)}
+  g.stroke();
+}
+/* gaussian elimination with partial pivoting */
+function solveLin(A,b){
+  const n=b.length, M=A.map((row,i)=>[...row,b[i]]);
+  for(let c=0;c<n;c++){
+    let p=c; for(let r=c+1;r<n;r++) if(Math.abs(M[r][c])>Math.abs(M[p][c])) p=r;
+    const tmp=M[c]; M[c]=M[p]; M[p]=tmp;
+    if(Math.abs(M[c][c])<1e-12) return null;
+    for(let r=c+1;r<n;r++){
+      const f=M[r][c]/M[c][c];
+      for(let k=c;k<=n;k++) M[r][k]-=f*M[c][k];
+    }
+  }
+  const x=new Array(n);
+  for(let r=n-1;r>=0;r--){
+    let s=M[r][n]; for(let k=r+1;k<n;k++) s-=M[r][k]*x[k];
+    x[r]=s/M[r][r];
+  }
+  return x;
+}
+
+/* ============ W1: descent lab (1D linear localization) ============ */
+function bootDescent(){
+  const cv=$('cvG'); if(!cv) return;
+  const T=8;
+  let seed=11;
+  function rnd(){seed=(seed*1103515245+12345)%2147483648; return seed/2147483648-0.5}
+  let z=[], x=[], k=0, costHist=[], diverged=false;
+  function params(){
+    return {sig:+$('sGsig').value/100, w:+$('sGw').value/10, al:+$('sGal').value/200};
+  }
+  function makeNoise(){
+    const {sig}=params();
+    z=[]; for(let t=1;t<=T;t++) z.push(t+sig*2*rnd());
+  }
+  function reset(){ x=[]; for(let t=1;t<=T;t++) x.push(t); k=0; costHist=[]; diverged=false; }
+  function cost(xx){
+    const {w}=params(); let c=0;
+    for(let t=0;t<T;t++) c+=(xx[t]-z[t])*(xx[t]-z[t]);
+    let prev=0;
+    for(let t=0;t<T;t++){ const r=xx[t]-prev-1; c+=w*r*r; prev=xx[t]; }
+    return c;
+  }
+  function gradient(xx){
+    const {w}=params(); const g=new Array(T).fill(0);
+    for(let t=0;t<T;t++) g[t]+=2*(xx[t]-z[t]);
+    let prev=0;
+    for(let t=0;t<T;t++){
+      const r=xx[t]-prev-1;           /* motion residual t-1 -> t */
+      g[t]+=2*w*r;
+      if(t>0) g[t-1]-=2*w*r;
+      prev=xx[t];
+    }
+    return g;
+  }
+  /* exact optimum via Thomas algorithm on the tridiagonal normal equations */
+  function optimum(){
+    const {w}=params();
+    const a=new Array(T).fill(-w), b=new Array(T), c=new Array(T).fill(-w), d=new Array(T);
+    for(let t=0;t<T;t++){ b[t]=(t<T-1)?1+2*w:1+w; d[t]=z[t]; }
+    d[T-1]=z[T-1]+w;            /* last motion factor contributes +w */
+    /* forward sweep */
+    for(let t=1;t<T;t++){ const m=a[t]/b[t-1]; b[t]-=m*c[t-1]; d[t]-=m*d[t-1]; }
+    const xs=new Array(T); xs[T-1]=d[T-1]/b[T-1];
+    for(let t=T-2;t>=0;t--) xs[t]=(d[t]-c[t]*xs[t+1])/b[t];
+    return xs;
+  }
+  function step(n){
+    const {al}=params();
+    for(let i=0;i<n;i++){
+      const g=gradient(x);
+      for(let t=0;t<T;t++) x[t]-=al*g[t];
+      k++;
+      const c=cost(x);
+      if(!isFinite(c)||c>1e6){diverged=true; break}
+      costHist.push(c);
+    }
+    draw();
+  }
+  function draw(){
+    const {g,w:W,h:H}=fit(cv);
+    g.clearRect(0,0,W,H); grid(g,W,H,32);
+    const {sig,w,al}=params();
+    $('vGsig').textContent=fmt(sig,2)+' m'; $('vGw').textContent=fmt(w,1); $('vGal').textContent=fmt(al,3);
+    /* plot region: t in [0,8], pos in [-0.5, 9.5] */
+    const px=t=>30+(W-50)*t/T, py=v=>H-28-(H-58)*(v+0.5)/10;
+    /* axes */
+    g.strokeStyle=COL.line2; g.lineWidth=1; g.beginPath();
+    g.moveTo(px(0),py(-0.5)); g.lineTo(px(T),py(-0.5)); g.moveTo(px(0),py(-0.5)); g.lineTo(px(0),py(9.5)); g.stroke();
+    g.fillStyle=COL.faint; g.font='10px "IBM Plex Mono"';
+    g.fillText('t',px(T)-8,py(-0.5)+16); g.fillText('position',px(0)+4,py(9.5)+10);
+    /* truth */
+    g.strokeStyle='rgba(70,209,124,.5)'; g.lineWidth=1.5; g.beginPath();
+    g.moveTo(px(0),py(0)); g.lineTo(px(T),py(T)); g.stroke();
+    /* exact optimum dashed blue */
+    const xs=optimum();
+    g.strokeStyle=COL.z; g.setLineDash([5,4]); g.lineWidth=1.6; g.beginPath();
+    g.moveTo(px(0),py(0));
+    for(let t=0;t<T;t++) g.lineTo(px(t+1),py(xs[t]));
+    g.stroke(); g.setLineDash([]);
+    /* measurements */
+    g.fillStyle=COL.x;
+    for(let t=0;t<T;t++){ g.beginPath(); g.arc(px(t+1),py(z[t]),4,0,7); g.fill(); }
+    /* estimate */
+    g.strokeStyle=COL.amber; g.lineWidth=2.2; g.beginPath();
+    g.moveTo(px(0),py(0));
+    for(let t=0;t<T;t++) g.lineTo(px(t+1),py(Math.max(-0.5,Math.min(9.5,x[t]))));
+    g.stroke();
+    g.fillStyle=COL.amber;
+    for(let t=0;t<T;t++){ g.beginPath(); g.arc(px(t+1),py(Math.max(-0.5,Math.min(9.5,x[t]))),3.4,0,7); g.fill(); }
+    /* readout */
+    const c=cost(x), gn=Math.sqrt(gradient(x).reduce((a,b)=>a+b*b,0)), co=cost(xs);
+    $('rG').innerHTML=
+      'iteration k = <b>'+k+'</b><br>'+
+      'cost c(x⁽ᵏ⁾) = <b class="hi">'+(isFinite(c)?fmt(c,4):'∞')+'</b><br>'+
+      '‖∇c‖ = <b>'+(isFinite(gn)?fmt(gn,4):'∞')+'</b><br>'+
+      'optimum c(x*) = <b>'+fmt(co,4)+'</b>'+
+      (diverged?'<br><span class="statusbad">diverged — α too large, reset &amp; lower it</span>':
+       (gn<1e-3&&k>0?'<br><span class="statusgood">converged to x*</span>':''));
+  }
+  $('bG1').addEventListener('click',()=>step(1));
+  $('bG50').addEventListener('click',()=>step(50));
+  $('bGreset').addEventListener('click',()=>{reset(); draw()});
+  $('bGnoise').addEventListener('click',()=>{makeNoise(); reset(); draw()});
+  $('sGsig').addEventListener('input',()=>{makeNoise(); reset(); draw()});
+  $('sGw').addEventListener('input',()=>{reset(); draw()});
+  $('sGal').addEventListener('input',draw);
+  makeNoise(); reset();
+  REDRAWS.push(draw); draw();
+}
+
+/* ============ W2: panorama painter ============ */
+function bootPano(){
+  const cv=$('cvP'); if(!cv) return;
+  function R(yaw,pit,rol){
+    /* Rz(yaw)*Ry(-pitch)*Rx(roll) — x forward, y left, z up; positive pitch looks up */
+    const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(-pit),sp=Math.sin(-pit),cr=Math.cos(rol),sr=Math.sin(rol);
+    /* Ry(-p)*Rx(r) then Rz(y)* */
+    const m=[
+      [cy*cp, cy*sp*sr-sy*cr, cy*sp*cr+sy*sr],
+      [sy*cp, sy*sp*sr+cy*cr, sy*sp*cr-cy*sr],
+      [-sp,   cp*sr,          cp*cr]
+    ];
+    return v=>[m[0][0]*v[0]+m[0][1]*v[1]+m[0][2]*v[2],
+               m[1][0]*v[0]+m[1][1]*v[1]+m[1][2]*v[2],
+               m[2][0]*v[0]+m[2][1]*v[1]+m[2][2]*v[2]];
+  }
+  function dir(lam,phi){const c=Math.cos(phi);return [c*Math.cos(lam),c*Math.sin(lam),Math.sin(phi)]}
+  function sph(v){return [Math.atan2(v[1],v[0]), Math.asin(Math.max(-1,Math.min(1,v[2])))]}
+  function draw(){
+    const {g,w:W,h:H}=fit(cv);
+    g.clearRect(0,0,W,H);
+    const yaw=+$('sPyaw').value*DEG, pit=+$('sPpit').value*DEG, rol=+$('sPro').value*DEG;
+    $('vPyaw').textContent=$('sPyaw').value+'°'; $('vPpit').textContent=$('sPpit').value+'°'; $('vPro').textContent=$('sPro').value+'°';
+    /* panorama frame */
+    const M={l:26,r:14,t:16,b:26};
+    const PW=W-M.l-M.r, PH=H-M.t-M.b;
+    const px=lam=>M.l+PW*(lam/Math.PI+1)/2;          /* λ in [-π,π] */
+    const py=phi=>M.t+PH*(1-(phi/(Math.PI/2)+1)/2);  /* φ in [-π/2,π/2] */
+    g.fillStyle='rgba(13,18,27,.6)'; g.fillRect(M.l,M.t,PW,PH);
+    /* meridians & parallels every 30° */
+    g.strokeStyle='rgba(255,255,255,.06)'; g.lineWidth=1; g.beginPath();
+    for(let d=-180;d<=180;d+=30){g.moveTo(px(d*DEG),M.t);g.lineTo(px(d*DEG),M.t+PH)}
+    for(let d=-90;d<=90;d+=30){g.moveTo(M.l,py(d*DEG));g.lineTo(M.l+PW,py(d*DEG))}
+    g.stroke();
+    g.strokeStyle='rgba(255,255,255,.14)'; g.beginPath();
+    g.moveTo(M.l,py(0)); g.lineTo(M.l+PW,py(0)); g.stroke();
+    g.fillStyle=COL.faint; g.font='9.5px "IBM Plex Mono"';
+    g.fillText('-180°',px(-Math.PI)+2,M.t+PH+13); g.fillText('0°',px(0)-5,M.t+PH+13); g.fillText('+180°',px(Math.PI)-32,M.t+PH+13);
+    g.fillText('+90°',2,py(Math.PI/2)+9); g.fillText('0°',8,py(0)+3); g.fillText('-90°',2,py(-Math.PI/2)-2);
+    /* image: 16x12 grid over 60°x45° FOV */
+    const rot=R(yaw,pit,rol), NX=16, NY=12, FH=60*DEG, FV=45*DEG;
+    function corner(i,j){
+      const lam=(i/NX-0.5)*FH, phi=(0.5-j/NY)*FV;
+      return sph(rot(dir(lam,phi)));
+    }
+    for(let j=0;j<NY;j++)for(let i=0;i<NX;i++){
+      const c=[corner(i,j),corner(i+1,j),corner(i+1,j+1),corner(i,j+1)];
+      const lams=c.map(p=>p[0]);
+      const straddle=Math.max(...lams)-Math.min(...lams)>Math.PI;
+      const hue=200+120*i/NX, lig=30+38*(1-j/NY);
+      g.fillStyle='hsla('+hue+',72%,'+lig+'%,.92)';
+      const shifts=straddle?[0,2*Math.PI,-2*Math.PI]:[0];
+      for(const s of shifts){
+        g.beginPath();
+        let ok=true;
+        c.forEach((p,n)=>{
+          let L=p[0]; if(straddle&&L<0)L+=2*Math.PI; L+=s-(straddle?0:0);
+          const X=px(L), Y=py(p[1]);
+          if(X<M.l-PW||X>M.l+2*PW)ok=false;
+          n===0?g.moveTo(X,Y):g.lineTo(X,Y);
+        });
+        g.closePath();
+        if(ok){g.save();g.beginPath();g.rect(M.l,M.t,PW,PH);g.clip();
+          g.fillStyle='hsla('+hue+',72%,'+lig+'%,.92)';
+          g.beginPath();
+          c.forEach((p,n)=>{
+            let L=p[0]; if(straddle&&L<0)L+=2*Math.PI; L+=s;
+            n===0?g.moveTo(px(L),py(p[1])):g.lineTo(px(L),py(p[1]));
+          });
+          g.closePath();g.fill();g.restore();}
+      }
+    }
+    /* center crosshair */
+    const ctr=sph(rot([1,0,0]));
+    g.strokeStyle=COL.amber; g.lineWidth=1.4; g.beginPath();
+    g.arc(px(ctr[0]),py(ctr[1]),5,0,7); g.stroke();
+    $('rP').innerHTML=
+      'image center → λ = <b class="hi">'+fmt(ctr[0]/DEG,1)+'°</b>, φ = <b class="hi">'+fmt(ctr[1]/DEG,1)+'°</b><br>'+
+      'FOV 60°×45° · sphere → cylinder<br>(equidistant: height = φ)';
+  }
+  ['sPyaw','sPpit','sPro'].forEach(id=>$(id).addEventListener('input',draw));
+  document.querySelectorAll('[data-pan]').forEach(b=>b.addEventListener('click',()=>{
+    const m=b.getAttribute('data-pan');
+    if(m==='level'){$('sPyaw').value=0;$('sPpit').value=0;$('sPro').value=0}
+    if(m==='up'){$('sPpit').value=50}
+    if(m==='rolled'){$('sPro').value=30}
+    draw();
+  }));
+  REDRAWS.push(draw); draw();
+}
+
+/* ============ W3: pose-graph LM optimizer ============ */
+function bootPose(){
+  const cv=$('cvO'); if(!cv) return;
+  const WTH=2;
+  let seed=7;
+  function rnd(){seed=(seed*1103515245+12345)%2147483648; return seed/2147483648-0.5}
+  function buildTruth(){
+    const rels=[];
+    for(let t=0;t<11;t++) rels.push([1,0,(t===2||t===5||t===8)?90*DEG:0]);
+    const poses=[[0,0,0]];
+    for(let t=0;t<11;t++){
+      const p=poses[t], r=rels[t];
+      poses.push([p[0]+Math.cos(p[2])*r[0]-Math.sin(p[2])*r[1],
+                  p[1]+Math.sin(p[2])*r[0]+Math.cos(p[2])*r[1], wrapPi(p[2]+r[2])]);
+    }
+    return {rels, closure:[1,0,90*DEG], poses};
+  }
+  const TRUTH=buildTruth();
+  let meas=[], dr=[], v=[], useClosure=true, lam=1e-3, it=0, running=false, lastCost=0;
+  function relPose(Ti,Tj){
+    const dx=Tj[0]-Ti[0], dy=Tj[1]-Ti[1], c=Math.cos(-Ti[2]), s=Math.sin(-Ti[2]);
+    return [c*dx-s*dy, s*dx+c*dy, wrapPi(Tj[2]-Ti[2])];
+  }
+  function makeProblem(){
+    const bias=+$('sObias').value/10*DEG, noise=+$('sOnoise').value/100;
+    seed=7;
+    meas=TRUTH.rels.map(r=>[r[0]+noise*2*rnd(), r[1]+noise*2*rnd(), r[2]+bias+noise*rnd()]);
+    dr=[[0,0,0]];
+    for(let t=0;t<11;t++){
+      const p=dr[t], m=meas[t];
+      dr.push([p[0]+Math.cos(p[2])*m[0]-Math.sin(p[2])*m[1],
+               p[1]+Math.sin(p[2])*m[0]+Math.cos(p[2])*m[1], wrapPi(p[2]+m[2])]);
+    }
+    v=[]; for(let i=1;i<12;i++) v.push(dr[i][0],dr[i][1],dr[i][2]);
+    lam=1e-3; it=0; running=false; $('bOopt').textContent='optimize';
+    lastCost=cost(v);
+  }
+  function unpack(vv){const P=[[0,0,0]];for(let i=0;i<11;i++)P.push([vv[3*i],vv[3*i+1],wrapPi(vv[3*i+2])]);return P}
+  function residuals(vv){
+    const P=unpack(vv), r=[];
+    for(let t=0;t<11;t++){
+      const p=relPose(P[t],P[t+1]), m=meas[t];
+      r.push(p[0]-m[0], p[1]-m[1], WTH*wrapPi(p[2]-m[2]));
+    }
+    if(useClosure){
+      const p=relPose(P[11],P[0]), m=TRUTH.closure;
+      r.push(p[0]-m[0], p[1]-m[1], WTH*wrapPi(p[2]-m[2]));
+    }
+    return r;
+  }
+  function cost(vv){return residuals(vv).reduce((a,b)=>a+b*b,0)}
+  function lmStep(){
+    const r0=residuals(v), c0=r0.reduce((a,b)=>a+b*b,0);
+    const n=v.length, m=r0.length, eps=1e-6;
+    const J=[]; for(let i=0;i<m;i++) J.push(new Array(n).fill(0));
+    for(let k2=0;k2<n;k2++){
+      const v2=[...v]; v2[k2]+=eps;
+      const r2=residuals(v2);
+      for(let i=0;i<m;i++) J[i][k2]=(r2[i]-r0[i])/eps;
+    }
+    const A=[]; for(let a=0;a<n;a++) A.push(new Array(n).fill(0));
+    const gv=new Array(n).fill(0);
+    for(let i=0;i<m;i++) for(let a=0;a<n;a++){
+      if(J[i][a]===0) continue;
+      gv[a]+=J[i][a]*r0[i];
+      for(let b=a;b<n;b++) A[a][b]+=J[i][a]*J[i][b];
+    }
+    for(let a=0;a<n;a++) for(let b=0;b<a;b++) A[a][b]=A[b][a];
+    for(let a=0;a<n;a++) A[a][a]+=lam*(A[a][a]||1)+1e-9;
+    const d=solveLin(A,gv.map(x=>-x));
+    if(d){
+      const v2=v.map((x,i)=>x+d[i]);
+      const c2=cost(v2);
+      if(c2<c0){ v=v2; lam=Math.max(1e-7,lam/3); it++; lastCost=c2; return true }
+    }
+    lam*=5; lastCost=c0; return false;
+  }
+  function draw(){
+    const {g,w:W,h:H}=fit(cv);
+    g.clearRect(0,0,W,H); grid(g,W,H,32);
+    /* world: x in [-1.2, 4.6], y in [-1.2, 4.4] mapped preserving aspect */
+    const sc=Math.min(W/6.2,H/5.8), ox=W/2-1.7*sc, oy=H/2+1.6*sc;
+    const px=x=>ox+x*sc, py=y=>oy-y*sc;
+    function path(P,colr,wd,dash){
+      g.strokeStyle=colr; g.lineWidth=wd; if(dash)g.setLineDash(dash);
+      g.beginPath(); P.forEach((p,i)=>i===0?g.moveTo(px(p[0]),py(p[1])):g.lineTo(px(p[0]),py(p[1])));
+      g.stroke(); g.setLineDash([]);
+    }
+    function tris(P,colr){
+      g.fillStyle=colr;
+      P.forEach(p=>{
+        g.save(); g.translate(px(p[0]),py(p[1])); g.rotate(-p[2]);
+        g.beginPath(); g.moveTo(7,0); g.lineTo(-4,4); g.lineTo(-4,-4); g.closePath(); g.fill(); g.restore();
+      });
+    }
+    const E=unpack(v);
+    path(TRUTH.poses,'rgba(70,209,124,.4)',1.5);
+    path(dr,'rgba(144,156,178,.55)',1.4,[4,4]);
+    if(useClosure){
+      g.strokeStyle=COL.z; g.setLineDash([3,4]); g.lineWidth=1.6; g.beginPath();
+      g.moveTo(px(E[11][0]),py(E[11][1])); g.lineTo(px(E[0][0]),py(E[0][1])); g.stroke(); g.setLineDash([]);
+    }
+    path(E,COL.amber,2.2);
+    tris(E,COL.amber);
+    g.fillStyle=COL.ink; g.font='10px "IBM Plex Mono"';
+    g.fillText('start',px(0)-34,py(0)+4);
+    const gap=Math.hypot(E[11][0]-TRUTH.poses[11][0],E[11][1]-TRUTH.poses[11][1]);
+    $('rO').innerHTML=
+      'LM iterations = <b>'+it+'</b> · λ = <b>'+lam.toExponential(0)+'</b><br>'+
+      'cost = <b class="hi">'+fmt(lastCost,4)+'</b><br>'+
+      'final-pose error vs truth = <b>'+fmt(gap,3)+' m</b><br>'+
+      (useClosure?'<span style="color:var(--z)">closure factor active (11 → 0)</span>'
+                 :'<span class="statusbad">no closure — drift is invisible</span>');
+  }
+  function loop(){
+    if(running){
+      const ok=lmStep();
+      if(it>40||(ok&&lastCost<1e-9)){running=false; $('bOopt').textContent='optimize'}
+      draw();
+    }
+    requestAnimationFrame(loop);
+  }
+  $('bOclose').addEventListener('click',()=>{
+    useClosure=!useClosure;
+    $('bOclose').textContent='closure: '+(useClosure?'ON':'OFF');
+    lastCost=cost(v); draw();
+  });
+  $('bOopt').addEventListener('click',()=>{
+    running=!running; $('bOopt').textContent=running?'pause':'optimize';
+  });
+  $('bOstep').addEventListener('click',()=>{running=false;$('bOopt').textContent='optimize';lmStep();draw()});
+  $('bOreset').addEventListener('click',()=>{makeProblem(); draw()});
+  $('sObias').addEventListener('input',()=>{$('vObias').textContent=fmt(+$('sObias').value/10,1)+'°'; makeProblem(); draw()});
+  $('sOnoise').addEventListener('input',()=>{$('vOnoise').textContent=fmt(+$('sOnoise').value/100,2); makeProblem(); draw()});
+  makeProblem();
+  $('vObias').textContent=fmt(+$('sObias').value/10,1)+'°';
+  $('vOnoise').textContent=fmt(+$('sOnoise').value/100,2);
+  REDRAWS.push(draw); draw();
+  requestAnimationFrame(loop);
+}
+
+/* ============ W4: marginalization lab ============ */
+function bootMarg(){
+  const cv=$('cvM'); if(!cv) return;
+  const NAMES=['x1','x2','x3','L1','L2'];
+  const POS={x1:[0.13,0.72],x2:[0.5,0.72],x3:[0.87,0.72],L1:[0.31,0.26],L2:[0.69,0.26]};
+  const FACTORS=[['x1','x2'],['x2','x3'],['x1','L1'],['x2','L1'],['x2','L2'],['x3','L2']];
+  let names=[], M=[], fillEdges=[], lastMsg='';
+  function reset(){
+    names=[...NAMES];
+    const n=names.length;
+    M=[]; for(let i=0;i<n;i++) M.push(new Array(n).fill(0));
+    M[0][0]+=1; /* prior on x1 */
+    for(const [a,b] of FACTORS){
+      const i=names.indexOf(a), j=names.indexOf(b);
+      M[i][i]+=1; M[j][j]+=1; M[i][j]-=1; M[j][i]-=1;
+    }
+    fillEdges=[]; lastMsg='full graph · 5 variables · prior on x1';
+  }
+  function marg(name){
+    const k=names.indexOf(name); if(k<0||names.length<=1) return;
+    const n=names.length, keep=[];
+    for(let i=0;i<n;i++) if(i!==k) keep.push(i);
+    const oldZero={};
+    keep.forEach((i,a)=>keep.forEach((j,b)=>{ if(a<b) oldZero[a+'_'+b]=Math.abs(M[i][j])<1e-9 }));
+    const Mkk=M[k][k];
+    const M2=keep.map(i=>keep.map(j=>M[i][j]-M[i][k]*M[k][j]/Mkk));
+    const newNames=keep.map(i=>names[i]);
+    fillEdges=[]; let newCount=0;
+    keep.forEach((i,a)=>keep.forEach((j,b)=>{
+      if(a<b && oldZero[a+'_'+b] && Math.abs(M2[a][b])>1e-9){ fillEdges.push([newNames[a],newNames[b]]); newCount++; }
+    }));
+    names=newNames; M=M2;
+    lastMsg='eliminated <b>'+name+'</b> → '+(newCount?'<span class="hi">'+newCount+' fill-in edge'+(newCount>1?'s':'')+'</span>':'no new edges (neighbors already connected)');
+  }
+  function draw(){
+    const {g,w:W,h:H}=fit(cv);
+    g.clearRect(0,0,W,H);
+    /* left half: graph; right half: matrix */
+    const GW=W*0.52, MX=W*0.56;
+    /* edges from off-diagonals */
+    const n=names.length;
+    function xy(name){const p=POS[name];return [18+p[0]*(GW-36), 24+p[1]*(H-58)]}
+    g.lineWidth=1.6;
+    for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+      if(Math.abs(M[i][j])>1e-9){
+        const isFill=fillEdges.some(e=>(e[0]===names[i]&&e[1]===names[j])||(e[0]===names[j]&&e[1]===names[i]));
+        g.strokeStyle=isFill?COL.amber:COL.line2;
+        g.lineWidth=isFill?2.2:1.6;
+        const A=xy(names[i]), B=xy(names[j]);
+        g.beginPath(); g.moveTo(A[0],A[1]); g.lineTo(B[0],B[1]); g.stroke();
+      }
+    }
+    /* removed nodes ghosted */
+    NAMES.forEach(nm=>{
+      const p=xy(nm), active=names.includes(nm), isL=nm[0]==='L';
+      g.beginPath(); g.arc(p[0],p[1],15,0,7);
+      g.fillStyle=active?COL.panel:'rgba(16,21,31,.4)'; g.fill();
+      g.strokeStyle=active?(isL?COL.z:COL.amber):'rgba(93,106,128,.35)';
+      g.lineWidth=2; g.stroke();
+      g.fillStyle=active?COL.ink:'rgba(93,106,128,.5)';
+      g.font='11px "IBM Plex Mono"'; g.textAlign='center';
+      g.fillText(nm,p[0],p[1]+4); g.textAlign='left';
+    });
+    /* matrix grid */
+    const cell=Math.min((W-MX-16)/Math.max(n,1),(H-70)/Math.max(n,1));
+    const mx=MX, my=34;
+    g.fillStyle=COL.faint; g.font='10px "IBM Plex Mono"';
+    g.fillText('Ω ('+n+'×'+n+')',mx,my-12);
+    let maxv=0; for(let i=0;i<n;i++)for(let j=0;j<n;j++) maxv=Math.max(maxv,Math.abs(M[i][j]));
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++){
+      const v2=M[i][j], a=Math.abs(v2)/(maxv||1);
+      const isFill=i!==j&&fillEdges.some(e=>(e[0]===names[i]&&e[1]===names[j])||(e[0]===names[j]&&e[1]===names[i]));
+      g.fillStyle=Math.abs(v2)<1e-9?'rgba(255,255,255,.03)':
+        (isFill?'rgba(255,180,84,'+(0.25+0.6*a)+')':'rgba(83,152,255,'+(0.15+0.7*a)+')');
+      g.fillRect(mx+j*cell,my+i*cell,cell-2,cell-2);
+      if(Math.abs(v2)>1e-9&&cell>30){
+        g.fillStyle=COL.ink; g.font='9.5px "IBM Plex Mono"'; g.textAlign='center';
+        g.fillText(fmt(v2,2),mx+j*cell+cell/2-1,my+i*cell+cell/2+3); g.textAlign='left';
+      }
+    }
+    g.fillStyle=COL.faint; g.font='9.5px "IBM Plex Mono"'; g.textAlign='center';
+    for(let j=0;j<n;j++) g.fillText(names[j],mx+j*cell+cell/2-1,my+n*cell+12);
+    g.textAlign='right';
+    for(let i=0;i<n;i++) g.fillText(names[i],mx-5,my+i*cell+cell/2+3);
+    g.textAlign='left';
+    $('rM').innerHTML=lastMsg+'<br>variables left: <b>'+names.join(', ')+'</b><br>'+
+      'nonzero off-diag pairs: <b>'+(function(){let c=0;for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(Math.abs(M[i][j])>1e-9)c++;return c})()+'</b>';
+  }
+  document.querySelectorAll('[data-marg]').forEach(b=>b.addEventListener('click',()=>{marg(b.getAttribute('data-marg')); draw()}));
+  $('bMreset').addEventListener('click',()=>{reset(); draw()});
+  reset();
+  REDRAWS.push(draw); draw();
+}
+
+/* ============ scroll-spy nav ============ */
+function setupNav(){
+  const links=[...document.querySelectorAll('#navlinks a')];
+  const map={}; links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{
+    es.forEach(e=>{
+      if(e.isIntersecting){
+        links.forEach(a=>a.classList.remove('on'));
+        const a=map[e.target.id]; if(a)a.classList.add('on');
+      }
+    });
+  },{rootMargin:'-45% 0px -50% 0px'});
+  document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));
+}
+
+function bootWidgets(){
+  try{bootDescent()}catch(e){}
+  try{bootPano()}catch(e){}
+  try{bootPose()}catch(e){}
+  try{bootMarg()}catch(e){}
+  window.addEventListener('resize',()=>REDRAWS.forEach(f=>{try{f()}catch(e){}}));
+}
+
+/* ============ robust KaTeX loader ============ */
+(function(){
+  var mathDone=false, otherDone=false;
+  function renderMath(){
+    if(mathDone) return;
+    if(window.renderMathInElement){
+      try{renderMathInElement(document.body,{delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'\\[',right:'\\]',display:true},
+        {left:'\\(',right:'\\)',display:false}
+      ],throwOnError:false});}catch(e){}
+      mathDone=true;
+    }
+  }
+  function bootRest(){
+    if(otherDone) return; otherDone=true;
+    try{bootWidgets()}catch(e){}
+    try{setupNav()}catch(e){}
+  }
+  var tries=0;
+  (function poll(){
+    renderMath();
+    if(!mathDone && tries++ < 160){ setTimeout(poll,50); }
+  })();
+  window.addEventListener('load',renderMath);
+  if(document.readyState!=='loading') bootRest();
+  else document.addEventListener('DOMContentLoaded',bootRest);
+})();
+</script>
+</body>
+</html>

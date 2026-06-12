@@ -1,0 +1,1239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Motion &amp; Observation Models — Interactive Lesson (ECE276A · L4)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+:root{
+  --bg:#0A0D13; --panel:#10151F; --panel2:#0D121B; --raise:#161D2A;
+  --line:#222B3A; --line2:#2c374a;
+  --ink:#E4E9F1; --muted:#909CB2; --faint:#5d6a80;
+  --x:#FF5D5D; --y:#46D17C; --z:#5398FF;
+  --amber:#FFB454; --amber-dim:rgba(255,180,84,.10);
+  --maxw:920px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:17px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+/* subtle engineering grid + scanline atmosphere */
+body::before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(transparent 0 31px, rgba(255,255,255,.014) 32px),
+    linear-gradient(90deg, transparent 0 31px, rgba(255,255,255,.014) 32px);
+  background-size:32px 32px;
+  mask-image:radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 90%);
+}
+.wrap{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding:0 22px}
+
+/* ---------- nav ---------- */
+nav{
+  position:sticky; top:0; z-index:50; backdrop-filter:blur(9px);
+  background:linear-gradient(180deg, rgba(10,13,19,.94), rgba(10,13,19,.78));
+  border-bottom:1px solid var(--line);
+}
+.navrow{max-width:var(--maxw); margin:0 auto; padding:10px 22px; display:flex; align-items:center; gap:16px}
+.brand{font-family:"Space Grotesk"; font-weight:700; letter-spacing:.02em; font-size:15px; white-space:nowrap}
+.brand b{color:var(--amber)}
+.navlinks{display:flex; gap:2px; overflow-x:auto; scrollbar-width:none; margin-left:auto}
+.navlinks::-webkit-scrollbar{display:none}
+.navlinks a{
+  color:var(--muted); text-decoration:none; font-size:12.5px; font-family:"IBM Plex Mono";
+  padding:5px 9px; border-radius:6px; white-space:nowrap; letter-spacing:.02em;
+}
+.navlinks a:hover{color:var(--ink); background:var(--raise)}
+.navlinks a.on{color:var(--amber); background:var(--amber-dim)}
+
+/* ---------- hero ---------- */
+header.hero{padding:62px 0 30px; border-bottom:1px solid var(--line)}
+.eyebrow{font-family:"IBM Plex Mono"; font-size:13px; letter-spacing:.22em; text-transform:uppercase; color:var(--amber); margin:0 0 14px}
+h1.title{
+  font-family:"Space Grotesk"; font-weight:700; font-size:clamp(46px,11vw,104px);
+  line-height:.92; letter-spacing:-.02em; margin:0;
+}
+h1.title .so{display:block; font-size:clamp(15px,3.4vw,22px); font-family:"IBM Plex Mono"; color:var(--faint); letter-spacing:.04em; margin-top:18px; font-weight:400}
+.lede{max-width:62ch; color:var(--muted); margin:22px 0 0; font-size:18px}
+.herogrid{display:grid; grid-template-columns:1.3fr .9fr; gap:30px; align-items:center}
+@media(max-width:720px){.herogrid{grid-template-columns:1fr}}
+.triad-card{
+  border:1px solid var(--line); border-radius:16px; background:
+   radial-gradient(120% 120% at 70% 10%, rgba(83,152,255,.10), transparent 60%),
+   var(--panel2);
+  padding:18px; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+}
+.triad-card .cap{position:absolute; bottom:12px; left:14px; font-family:"IBM Plex Mono"; font-size:11px; color:var(--faint); letter-spacing:.08em}
+.spin{transform-origin:center; animation:spin 26s linear infinite}
+@media(prefers-reduced-motion:reduce){.spin{animation:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- sections ---------- */
+section{padding:46px 0; border-bottom:1px solid var(--line)}
+.kicker{display:flex; align-items:baseline; gap:12px; margin:0 0 6px}
+.kicker .num{font-family:"IBM Plex Mono"; color:var(--amber); font-size:13px; letter-spacing:.12em}
+h2{font-family:"Space Grotesk"; font-weight:700; font-size:clamp(26px,5vw,38px); letter-spacing:-.01em; margin:0 0 18px; line-height:1.08}
+h3{font-family:"Space Grotesk"; font-weight:600; font-size:21px; margin:34px 0 10px; color:var(--ink)}
+h4{font-family:"IBM Plex Sans"; font-weight:600; font-size:15px; letter-spacing:.02em; margin:22px 0 6px; color:var(--amber)}
+p{margin:12px 0}
+ul{margin:12px 0; padding-left:22px} li{margin:7px 0}
+a.link{color:var(--z); text-decoration:none; border-bottom:1px dotted var(--z)}
+strong{color:#fff; font-weight:600}
+.axx{color:var(--x); font-weight:600} .ayy{color:var(--y); font-weight:600} .azz{color:var(--z); font-weight:600}
+code{font-family:"IBM Plex Mono"; font-size:.9em; background:var(--raise); padding:1px 6px; border-radius:5px; color:#cfe0ff}
+
+/* katex base color */
+.katex{color:var(--ink); font-size:1.04em}
+.katex-display{margin:18px 0; overflow-x:auto; overflow-y:hidden; padding:4px 0}
+
+/* callouts */
+.card{border:1px solid var(--line); background:var(--panel); border-radius:12px; padding:16px 18px; margin:18px 0}
+.key{border-left:3px solid var(--amber); background:linear-gradient(90deg,var(--amber-dim),transparent 60%)}
+.key .lab{font-family:"IBM Plex Mono"; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--amber); margin-bottom:6px}
+.note{border-left:3px solid var(--z)}
+.warn{border-left:3px solid var(--x)}
+
+/* ---------- explorer widgets ---------- */
+.lab{border:1px solid var(--line); border-radius:16px; background:var(--panel2); overflow:hidden; margin:22px 0}
+.lab-head{display:flex; align-items:center; gap:10px; padding:11px 16px; border-bottom:1px solid var(--line); background:var(--panel)}
+.lab-head .dot{width:9px; height:9px; border-radius:50%; background:var(--amber); box-shadow:0 0 10px var(--amber)}
+.lab-head .t{font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.08em; color:var(--muted)}
+.lab-head .t b{color:var(--ink)}
+.lab-body{display:grid; grid-template-columns:1fr 320px; gap:0}
+@media(max-width:760px){.lab-body{grid-template-columns:1fr}}
+.canvas-host{position:relative; min-height:320px; background:
+  radial-gradient(120% 120% at 60% 0%, rgba(83,152,255,.06), transparent 55%);}
+.canvas-host canvas{display:block; width:100%; height:100%}
+.canvas-host .hint{position:absolute; left:12px; bottom:10px; font-family:"IBM Plex Mono"; font-size:10.5px; color:var(--faint); letter-spacing:.06em}
+.fallback{padding:30px; color:var(--muted); font-size:14px; text-align:center}
+.panelside{border-left:1px solid var(--line); padding:16px; background:var(--panel)}
+@media(max-width:760px){.panelside{border-left:none; border-top:1px solid var(--line)}}
+
+.ctrl{margin:0 0 13px}
+.ctrl .row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:5px}
+.ctrl label{font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:.04em}
+.ctrl .val{font-family:"IBM Plex Mono"; font-size:12px; color:var(--amber)}
+input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:4px; background:var(--line2); outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:15px; height:15px; border-radius:50%; background:var(--ink); border:2px solid var(--bg); cursor:pointer}
+input[type=range]::-moz-range-thumb{width:15px; height:15px; border-radius:50%; background:var(--ink); border:2px solid var(--bg); cursor:pointer}
+input.sx::-webkit-slider-thumb{background:var(--x)} input.sx::-moz-range-thumb{background:var(--x)}
+input.sy::-webkit-slider-thumb{background:var(--y)} input.sy::-moz-range-thumb{background:var(--y)}
+input.sz::-webkit-slider-thumb{background:var(--z)} input.sz::-moz-range-thumb{background:var(--z)}
+input.sa::-webkit-slider-thumb{background:var(--amber)} input.sa::-moz-range-thumb{background:var(--amber)}
+
+.btnrow{display:flex; flex-wrap:wrap; gap:7px; margin:10px 0 4px}
+button.btn{font-family:"IBM Plex Mono"; font-size:11.5px; letter-spacing:.04em; color:var(--muted); background:var(--raise); border:1px solid var(--line2); padding:6px 10px; border-radius:7px; cursor:pointer}
+button.btn:hover{color:var(--ink); border-color:var(--amber)}
+button.btn:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visible{outline:2px solid var(--amber); outline-offset:2px}
+
+/* numeric matrix */
+.matwrap{margin-top:14px}
+.matwrap .cap{font-family:"IBM Plex Mono"; font-size:11px; color:var(--faint); letter-spacing:.06em; margin-bottom:6px}
+.mat{display:inline-grid; grid-template-columns:repeat(3,1fr); gap:3px 8px; font-family:"IBM Plex Mono"; font-size:13px; padding:8px 12px; border:1px solid var(--line2); border-radius:8px; background:var(--panel2)}
+.mat span{text-align:right; min-width:52px; font-variant-numeric:tabular-nums}
+.mat .cx{color:var(--x)} .mat .cy{color:var(--y)} .mat .cz{color:var(--z)}
+.readout{font-family:"IBM Plex Mono"; font-size:12.5px; color:var(--muted); margin-top:12px; line-height:1.9}
+.readout b{color:var(--ink)} .readout .hi{color:var(--amber)}
+.statusbad{color:var(--x)} .statusgood{color:var(--y)}
+
+/* ---------- practice ---------- */
+.prob{border:1px solid var(--line); border-radius:12px; margin:16px 0; background:var(--panel); overflow:hidden}
+.prob>.q{padding:16px 18px}
+.prob .pno{font-family:"IBM Plex Mono"; font-size:12px; letter-spacing:.1em; color:var(--amber); text-transform:uppercase}
+details.sol{border-top:1px solid var(--line)}
+details.sol>summary{cursor:pointer; list-style:none; padding:11px 18px; font-family:"IBM Plex Mono"; font-size:12.5px; letter-spacing:.06em; color:var(--z); background:var(--panel2)}
+details.sol>summary::-webkit-details-marker{display:none}
+details.sol>summary::before{content:"▸ "; color:var(--amber)}
+details.sol[open]>summary::before{content:"▾ "}
+details.sol .body{padding:6px 18px 18px}
+.tag{display:inline-block; font-family:"IBM Plex Mono"; font-size:10.5px; letter-spacing:.06em; color:var(--faint); border:1px solid var(--line2); padding:2px 7px; border-radius:20px; margin-left:8px}
+
+footer{padding:40px 0 70px; color:var(--faint); font-size:13px; font-family:"IBM Plex Mono"}
+.legend{display:flex; gap:18px; flex-wrap:wrap; font-family:"IBM Plex Mono"; font-size:12px; color:var(--muted); margin:6px 0 0}
+.legend .li{display:flex; align-items:center; gap:7px}
+.legend .sw{width:13px; height:13px; border-radius:3px}
+hr.soft{border:none; border-top:1px solid var(--line); margin:26px 0}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="navrow">
+    <span class="brand">ECE276A · <b>Motion &amp; Observation</b></span>
+    <div class="navlinks" id="navlinks">
+      <a href="#big">overview</a>
+      <a href="#rotkin">Ṙ = Rω̂</a>
+      <a href="#quatkin">q̇</a>
+      <a href="#twist">twists</a>
+      <a href="#dyn">dynamics</a>
+      <a href="#motion">motion models</a>
+      <a href="#odom">odometry</a>
+      <a href="#ddrive">diff drive</a>
+      <a href="#ackermann">Ackermann</a>
+      <a href="#quad">quadrotor</a>
+      <a href="#obs">sensors</a>
+      <a href="#encoder">encoder</a>
+      <a href="#imu">IMU</a>
+      <a href="#lidar">lidar</a>
+      <a href="#camera">camera</a>
+      <a href="#stereo">stereo</a>
+      <a href="#summary">summary</a>
+      <a href="#practice">practice</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="herogrid">
+    <div>
+      <p class="eyebrow">Lecture 4 · Sensing &amp; Estimation in Robotics</p>
+      <h1 class="title">Motion &amp; Observation Models<span class="so">how robots move · how robots see</span></h1>
+      <p class="lede">Lecture 3 built the language of orientation. This lesson puts it in motion: how poses evolve under velocity (kinematics) and force (dynamics), how to model real drive trains from wheeled robots to quadrotors, and how to model the sensors — encoders, IMUs, lidars, cameras — that let a robot estimate where it is. Every model is a small equation you can drive with a slider below.</p>
+      <div class="legend">
+        <span class="li"><span class="sw" style="background:var(--x)"></span> X axis</span>
+        <span class="li"><span class="sw" style="background:var(--y)"></span> Y axis</span>
+        <span class="li"><span class="sw" style="background:var(--z)"></span> Z axis</span>
+        <span class="li"><span class="sw" style="background:var(--amber)"></span> measurement / result</span>
+      </div>
+    </div>
+    <div class="triad-card">
+      <svg viewBox="-110 -110 220 220" width="100%" height="100%" aria-label="robot with sensor beams">
+        <g>
+          <!-- lidar beams -->
+          <g stroke="var(--z)" stroke-width="1" opacity=".5">
+            <line x1="0" y1="-6" x2="-86" y2="-66"/>
+            <line x1="0" y1="-6" x2="-40" y2="-92"/>
+            <line x1="0" y1="-6" x2="14" y2="-98"/>
+            <line x1="0" y1="-6" x2="66" y2="-78"/>
+            <line x1="0" y1="-6" x2="94" y2="-30"/>
+          </g>
+          <g fill="var(--amber)">
+            <circle cx="-86" cy="-66" r="3.4"/><circle cx="-40" cy="-92" r="3.4"/>
+            <circle cx="14" cy="-98" r="3.4"/><circle cx="66" cy="-78" r="3.4"/>
+            <circle cx="94" cy="-30" r="3.4"/>
+          </g>
+          <!-- trajectory arc -->
+          <path d="M -88 84 Q -10 96 38 58 T 86 -8" fill="none" stroke="var(--y)" stroke-width="2" stroke-dasharray="5 6" opacity=".8"/>
+          <!-- robot body -->
+          <g>
+            <rect x="-26" y="-20" width="52" height="40" rx="9" fill="none" stroke="var(--line2)" stroke-width="1.6" style="stroke:var(--ink)" opacity=".85"/>
+            <rect x="-30" y="-24" width="10" height="14" rx="3" fill="var(--x)" opacity=".9"/>
+            <rect x="-30" y="10" width="10" height="14" rx="3" fill="var(--x)" opacity=".9"/>
+            <rect x="20" y="-24" width="10" height="14" rx="3" fill="var(--x)" opacity=".9"/>
+            <rect x="20" y="10" width="10" height="14" rx="3" fill="var(--x)" opacity=".9"/>
+            <circle cx="0" cy="-6" r="5" fill="var(--z)"/>
+            <line x1="0" y1="0" x2="0" y2="-40" stroke="var(--amber)" stroke-width="2.4"/>
+            <polygon points="0,-40 -5,-31 5,-31" fill="var(--amber)"/>
+          </g>
+        </g>
+      </svg>
+      <span class="cap">pose in · ranges out</span>
+    </div>
+  </div>
+</header>
+
+<!-- =================== 01 BIG PICTURE =================== -->
+<section id="big">
+  <div class="kicker"><span class="num">01</span></div>
+  <h2>The big picture: two models run a robot</h2>
+  <p>Everything in estimation rests on two functions. A <strong>motion model</strong> \(f\) predicts how the robot's state changes when it acts. An <strong>observation model</strong> \(h\) predicts what its sensors should read given where it is. Estimation is the art of playing these two against each other: predict with \(f\), correct with \(h\).</p>
+  <div class="card key">
+    <div class="lab">The cast of variables</div>
+    <strong>Motion side:</strong> time \(t\) (continuous or discrete), state \(\mathbf x\) (e.g. position, orientation), control input \(\mathbf u\) (e.g. velocity, force), disturbance \(\mathbf w\) (e.g. tire slip, wind).<br>
+    <strong>Observation side:</strong> sensor state \(\mathbf x\) (its position and orientation), environment state \(\mathbf m\) (e.g. an object's position or shape), measurement \(\mathbf z\) (e.g. an image), noise \(\mathbf v\) (e.g. blur).
+  </div>
+  <p>Before we can write \(f\) for any real robot, we need to answer a more basic question: <em>how does a pose \(T\in SE(3)\) change in time at all?</em> That is rigid-body kinematics, and it is where the \(\exp\) map from Lecture 3 earns its keep.</p>
+</section>
+
+<!-- =================== 02 ROTATION KINEMATICS =================== -->
+<section id="rotkin">
+  <div class="kicker"><span class="num">02</span></div>
+  <h2>Rotation kinematics: \(\dot R=R\hat{\boldsymbol\omega}\)</h2>
+  <p>Let \(R(t)\in SO(3)\) be a continuously rotating orientation. We know one thing for certain at every instant: \(R^\top(t)R(t)=I\). Differentiate that constraint with the product rule:</p>
+  $$R^\top(t)R(t)=I\ \Longrightarrow\ \dot R^\top(t)R(t)+R^\top(t)\dot R(t)=0$$
+  <p>The second term is the transpose of the first, so \(R^\top\dot R\) equals minus its own transpose — it is <strong>skew-symmetric</strong>. By the hat-map lemma of Lecture 3, every skew-symmetric matrix is \(\hat{\boldsymbol\omega}\) for some vector \(\boldsymbol\omega(t)\in\mathbb R^3\):</p>
+  $$R^\top(t)\,\dot R(t)=\hat{\boldsymbol\omega}(t)\qquad\Longrightarrow\qquad \boxed{\,\dot R(t)=R(t)\,\hat{\boldsymbol\omega}(t)\,}$$
+  <p>That vector \(\boldsymbol\omega\) is the <strong>angular velocity in body-frame coordinates</strong>. The Lie-group picture from Lecture 3 makes this inevitable: velocities live in the tangent space, the tangent space at the identity is \(so(3)\) (skew matrices), and \(R\hat{\boldsymbol\omega}\) is just that tangent direction carried out to the point \(R\).</p>
+  <div class="card note">Order matters. \(\dot R=R\hat{\boldsymbol\omega}\) uses body-frame \(\boldsymbol\omega\) (what a gyroscope strapped to the body reads). The same motion written with world-frame angular velocity \(\boldsymbol\omega_W=R\boldsymbol\omega\) is \(\dot R=\hat{\boldsymbol\omega}_W R\). Robotics overwhelmingly uses the body-frame form because that is where the sensors are.</div>
+  <h3>Discrete time: integrate with exp, not with addition</h3>
+  <p>Estimators run on a clock. Suppose the angular velocity is (approximately) constant, \(\boldsymbol\omega(t)\equiv\boldsymbol\omega_k\), over the interval \(t\in[t_k,t_{k+1})\), and write \(R_k:=R(t_k)\), \(\tau_k:=t_{k+1}-t_k\). Then \(\dot R=R\hat{\boldsymbol\omega}_k\) is a linear matrix ODE, and its solution is the matrix exponential — the same \(\exp:so(3)\to SO(3)\) from Lecture 3, computable in closed form with Rodrigues:</p>
+  $$\boxed{\,R_{k+1}=R_k\,\exp(\tau_k\,\hat{\boldsymbol\omega}_k)\,}\qquad \exp(X)=\sum_{n=0}^\infty \tfrac{1}{n!}X^n$$
+  <div class="card warn">Why not the naive update \(R_{k+1}=R_k+\tau_k R_k\hat{\boldsymbol\omega}_k\)? Because addition leaves the manifold: the result is no longer orthogonal, and after a few thousand IMU steps your "rotation" has determinant 0.97 and shears geometry. \(\exp\) moves along the curved surface of \(SO(3)\) and lands exactly on it, every step. This is the flat-algebra → curved-group bridge in action.</div>
+</section>
+
+<!-- =================== 03 QUATERNION KINEMATICS =================== -->
+<section id="quatkin">
+  <div class="kicker"><span class="num">03</span></div>
+  <h2>Quaternion kinematics</h2>
+  <p>The same physics, written on the 4D unit sphere. A body with orientation \(q(t)\in\mathbb H_*\) and body-frame angular velocity \(\boldsymbol\omega(t)\) satisfies:</p>
+  $$\boxed{\,\dot q(t)=q(t)\circ\big[0,\ \boldsymbol\omega(t)/2\,\big]\,}$$
+  <p>The half is the familiar half-angle of Lecture 3 surfacing as a rate. (Equivalently \(\dot q=\tfrac12\,q\circ[0,\boldsymbol\omega]=\tfrac12 G(q)^\top\boldsymbol\omega\) using the \(G\) matrix from the quaternion lesson.)</p>
+  <h3>Discrete time</h3>
+  <p>With \(\boldsymbol\omega(t)\equiv\boldsymbol\omega_k\) constant over \([t_k,t_{k+1})\) and \(q_k:=q(t_k)\):</p>
+  $$\boxed{\,q_{k+1}=q_k\circ\exp\big(\big[0,\ \tau_k\boldsymbol\omega_k/2\,\big]\big)\,}\qquad
+  \exp(q)=e^{q_s}\Big[\cos\lVert\mathbf q_v\rVert,\ \tfrac{\mathbf q_v}{\lVert\mathbf q_v\rVert}\sin\lVert\mathbf q_v\rVert\Big]$$
+  <p>For the pure quaternion \([0,\mathbf w]\) this gives \(\exp([0,\mathbf w])=[\cos\lVert\mathbf w\rVert,\ \tfrac{\mathbf w}{\lVert\mathbf w\rVert}\sin\lVert\mathbf w\rVert]\) — exactly the axis–angle quaternion \(q=[\cos\tfrac\theta2,\sin\tfrac\theta2\,\boldsymbol\eta]\) with \(\boldsymbol\theta=\tau_k\boldsymbol\omega_k\). The matrix and quaternion updates describe the <em>same</em> step; the quaternion version is what flight controllers actually run because it is 4 numbers, cheap to compose, and trivially renormalized.</p>
+</section>
+
+<!-- =================== 04 POSE KINEMATICS / TWISTS =================== -->
+<section id="twist">
+  <div class="kicker"><span class="num">04</span></div>
+  <h2>Pose kinematics: twists and \(\dot T=T\hat{\boldsymbol\zeta}\)</h2>
+  <p>Now move the whole pose. Stack the body-frame <strong>linear</strong> velocity \(\mathbf v\in\mathbb R^3\) and <strong>angular</strong> velocity \(\boldsymbol\omega\in\mathbb R^3\) into one 6-vector called the <strong>generalized velocity</strong> or <strong>twist</strong>:</p>
+  $$\boldsymbol\zeta(t)=\begin{bmatrix}\mathbf v(t)\\\boldsymbol\omega(t)\end{bmatrix}\in\mathbb R^6$$
+  <p>Just as \(\mathbb R^3\) had its hat map into \(so(3)\), twists have a hat map into \(se(3)\) — the Lie algebra of \(SE(3)\):</p>
+  $$\hat{\boldsymbol\zeta}=\widehat{\begin{bmatrix}\mathbf v\\\boldsymbol\omega\end{bmatrix}}:=\begin{bmatrix}\hat{\boldsymbol\omega}&\mathbf v\\\mathbf 0^\top&0\end{bmatrix}\in\mathbb R^{4\times4}$$
+  <p>The pose of a rigid body \(T(t)\in SE(3)\) moving with body-frame twist \(\boldsymbol\zeta(t)\) then satisfies the perfect analogue of rotation kinematics:</p>
+  $$\boxed{\,\dot T(t)=T(t)\,\hat{\boldsymbol\zeta}(t)\,}$$
+  <h3>Discrete time</h3>
+  <p>Constant twist \(\boldsymbol\zeta_k\) over \([t_k,t_{k+1})\), \(T_k:=T(t_k)\), \(\tau_k:=t_{k+1}-t_k\):</p>
+  $$\boxed{\,T_{k+1}=T_k\,\exp(\tau_k\,\hat{\boldsymbol\zeta}_k)\,}$$
+  <p>Same matrix exponential series, now on \(4\times4\) matrices. Geometrically, a constant twist drives the body along a <strong>screw motion</strong> — a helix of simultaneous rotation and translation — and \(\exp\) traces that arc exactly. You will see this concretely in the differential-drive model, where the exact integration formula is nothing but this \(\exp\) written out in 2D.</p>
+</section>
+
+<!-- =================== 05 POSE DYNAMICS =================== -->
+<section id="dyn">
+  <div class="kicker"><span class="num">05</span></div>
+  <h2>Pose dynamics: forces enter the story</h2>
+  <p>Kinematics answers "where do I go with this velocity"; <strong>dynamics</strong> answers "how does my velocity change under force." For a rigid body with mass \(m\in\mathbb R_{\gt0}\) and moment of inertia \(J\in\mathbb R^{3\times3}\), collect the body-frame force \(\mathbf f\) and torque \(\boldsymbol\tau\) into a <strong>wrench</strong> \(\mathbf w=\begin{bmatrix}\mathbf f\\\boldsymbol\tau\end{bmatrix}\in\mathbb R^6\), and define the <strong>generalized mass matrix</strong> \(M\):</p>
+  $$M:=\begin{bmatrix}mI&0\\0&J\end{bmatrix}\qquad
+  \boldsymbol\zeta^{\curlywedge}:=\begin{bmatrix}\mathbf v\\\boldsymbol\omega\end{bmatrix}^{\curlywedge}=\begin{bmatrix}\hat{\boldsymbol\omega}&\hat{\mathbf v}\\0&\hat{\boldsymbol\omega}\end{bmatrix}$$
+  <p>Then the pose \(T(t)\in SE(3)\) and twist \(\boldsymbol\zeta(t)\in\mathbb R^6\) of the body evolve as:</p>
+  $$\boxed{\;\dot T(t)=T(t)\hat{\boldsymbol\zeta}(t),\qquad M\dot{\boldsymbol\zeta}(t)=\big(\boldsymbol\zeta(t)^{\curlywedge}\big)^\top M\,\boldsymbol\zeta(t)+\mathbf w(t)\;}$$
+  <p>The curly-hat operator \(^{\curlywedge}\) packages the gyroscopic coupling. Multiply the blocks out and the compact 6D equation splits into two famous 3D ones:</p>
+  $$m\dot{\mathbf v}=-\boldsymbol\omega\times m\mathbf v+\mathbf f\qquad\qquad J\dot{\boldsymbol\omega}=-\boldsymbol\omega\times J\boldsymbol\omega+\boldsymbol\tau$$
+  <div class="card key">
+    <div class="lab">Read the terms</div>
+    These are <strong>Newton's and Euler's equations in the body frame</strong>. The cross-product terms exist only because we insist on body coordinates: the frame itself is spinning, so even a constant world-frame momentum appears to swing around (\(-\boldsymbol\omega\times m\mathbf v\)), and a spinning body resists having its spin axis moved (\(-\boldsymbol\omega\times J\boldsymbol\omega\) — the gyroscopic torque that keeps a bicycle upright). The control inputs \(\mathbf f,\boldsymbol\tau\) fight against this geometry. The quadrotor model in section 10 is exactly these equations with a specific wrench plugged in.
+  </div>
+</section>
+<!-- =================== 06 MOTION MODELS =================== -->
+<section id="motion">
+  <div class="kicker"><span class="num">06</span></div>
+  <h2>Motion models, formally</h2>
+  <p>A <strong>motion model</strong> is a function \(f\) relating the current state \(\mathbf x\) and control input \(\mathbf u\) of a robot to its state change:</p>
+  $$\text{continuous time: }\ \dot{\mathbf x}(t)=f(\mathbf x(t),\mathbf u(t))\qquad\qquad \text{discrete time: }\ \mathbf x_{t+1}=f(\mathbf x_t,\mathbf u_t)$$
+  <p>Real motion is never that clean — tires slip, wind gusts. If the disturbance \(\mathbf w\) is modeled as a random variable, the next state becomes a random variable too, described in either of two interchangeable ways:</p>
+  <ul>
+    <li><strong>Function form</strong>: \(\mathbf x_{t+1}=f(\mathbf x_t,\mathbf u_t,\mathbf w_t)\) — the noise enters as an extra argument.</li>
+    <li><strong>Probability form</strong>: a density \(p_f(\cdot\mid \mathbf x_t,\mathbf u_t)\) over the next state — "given where I am and what I did, here is the distribution of where I end up."</li>
+  </ul>
+  <p>The probability form is the one filters (Bayes, Kalman, particle) consume directly. The rest of this half of the lecture is a tour of concrete \(f\)'s: odometry, differential drive, Ackermann steering, and the quadrotor.</p>
+</section>
+
+<!-- =================== 07 ODOMETRY =================== -->
+<section id="odom">
+  <div class="kicker"><span class="num">07</span></div>
+  <h2>The odometry-based motion model</h2>
+  <p>The simplest useful motion model treats the robot's own ego-motion estimate as the control input. Let the state be the full pose \(\mathbf x_t=T_t\in SE(3)\) in the world frame. Onboard sensors — wheel encoders, camera, lidar, IMU — can estimate the <strong>relative pose</strong> of the body frame at time \(t{+}1\) with respect to the body frame at time \(t\). That relative pose is called <strong>odometry</strong>:</p>
+  $$\mathbf u_t={}_tT_{t+1}=\begin{bmatrix}{}_tR_{t+1}&{}_t\mathbf p_{t+1}\\\mathbf 0^\top&1\end{bmatrix}\in SE(3)$$
+  <p>The motion model is then a single pose composition — exactly the chaining rule from Lecture 3:</p>
+  $$\boxed{\,\mathbf x_{t+1}=f(\mathbf x_t,\mathbf u_t):=\mathbf x_t\,\mathbf u_t=T_t\,{}_tT_{t+1}\,}$$
+  <p>Unrolling from an initial pose \(\mathbf x_0\) with odometry measurements \(\mathbf u_0,\dots,\mathbf u_t\):</p>
+  $$\mathbf x_{t+1}=f(\mathbf x_t,\mathbf u_t)=f(\mathbf x_{t-1},\mathbf u_{t-1})\,\mathbf u_t=\cdots=\mathbf x_0\,\mathbf u_0\,\mathbf u_1\cdots\mathbf u_t$$
+  <div class="card warn">
+    <strong>Drift.</strong> Every \(\mathbf u_t\) carries a small error, and composition <em>never forgets</em>: each new pose multiplies all previous mistakes forward, so the estimate degrades steadily over time. A 0.1° heading error early on becomes meters of position error after a long corridor. This is why odometry alone cannot localize a robot for long — it must be corrected by the observation models in the second half of this lesson.
+  </div>
+</section>
+
+<!-- =================== 08 DIFFERENTIAL DRIVE =================== -->
+<section id="ddrive">
+  <div class="kicker"><span class="num">08</span></div>
+  <h2>The differential-drive kinematic model</h2>
+  <p>The workhorse of mobile robotics: two independently driven wheels on one axle (think Roomba). The robot lives in the plane, so the state and control are:</p>
+  <ul>
+    <li><strong>State</strong> \(\mathbf x=(\mathbf p,\theta)\): position \(\mathbf p=(x,y)\in\mathbb R^2\) and orientation (yaw) \(\theta\in(-\pi,\pi]\) in the world frame.</li>
+    <li><strong>Control</strong> \(\mathbf u=(v,\omega)\): linear velocity \(v\in\mathbb R\) and angular velocity (yaw rate) \(\omega\in\mathbb R\), both in the body frame.</li>
+  </ul>
+  <p>The <strong>continuous-time model</strong>:</p>
+  $$\dot{\mathbf x}=\begin{bmatrix}\dot x\\\dot y\\\dot\theta\end{bmatrix}=f(\mathbf x,\mathbf u):=\begin{bmatrix}v\cos\theta\\v\sin\theta\\\omega\end{bmatrix}$$
+  <p>This is not an ad-hoc guess — it is 2D pose kinematics \(\dot T=T\hat{\boldsymbol\zeta}\) with the body-frame twist \(\boldsymbol\zeta=(v,0,\omega)^\top\) (the robot can only drive along its own nose, never sideways):</p>
+  $$\begin{bmatrix}\dot R(\theta)&\dot{\mathbf p}\\\mathbf 0^\top&0\end{bmatrix}=\begin{bmatrix}R(\theta)&\mathbf p\\\mathbf 0^\top&1\end{bmatrix}\begin{bmatrix}0&-\omega&v\\\omega&0&0\\0&0&0\end{bmatrix}$$
+  <p>Multiply out: \(\dot{\mathbf p}=R(\theta)\begin{bmatrix}v\\0\end{bmatrix}=(v\cos\theta,\ v\sin\theta)\) and \(\dot R=R\hat\omega\Rightarrow\dot\theta=\omega\). The general machinery of section 04, specialized to the plane.</p>
+
+  <h3>From wheel speeds to \((v,\omega)\): the ICC</h3>
+  <p>What the motors actually set are the <strong>wheel rim speeds</strong> \(v_L,v_R\). With both wheels rolling without slipping, the robot pivots about a point on the axle line called the <strong>Instantaneous Center of Curvature (ICC)</strong>. Let \(\ell\) be the axle length and \(r\) the distance from the ICC to the axle midpoint. Arc length equals angle times radius, \(vt=r\theta\Rightarrow v=r\omega\), and each wheel traces its own circle:</p>
+  $$v_L=\omega\big(r-\tfrac{\ell}{2}\big)\qquad v_R=\omega\big(r+\tfrac{\ell}{2}\big)$$
+  <p>Subtract and add the two equations to invert them:</p>
+  $$\boxed{\ \omega=\frac{v_R-v_L}{\ell}\qquad v=\frac{v_R+v_L}{2}\ }\qquad r=\frac{\ell}{2}\left(\frac{v_L+v_R}{v_R-v_L}\right)=\frac{v}{\omega}$$
+  <p>Three sanity checks: equal speeds \(v_R=v_L\) give \(\omega=0\) (straight line, ICC at infinity); opposite speeds \(v_R=-v_L\) give \(v=0\) (pivot in place, ICC between the wheels); and the faster the difference, the tighter the turn.</p>
+
+  <h3>Discretizing: Euler vs exact</h3>
+  <p>To run this on a computer we need \(\mathbf x_{t+1}=f_d(\mathbf x_t,\mathbf u_t)\) over a step of length \(\tau_t\). The crude option is <strong>Euler discretization</strong> — freeze the heading for the whole step:</p>
+  $$\mathbf x_{t+1}=f_d(\mathbf x_t,\mathbf u_t):=\mathbf x_t+\tau_t\begin{bmatrix}v_t\cos\theta_t\\v_t\sin\theta_t\\\omega_t\end{bmatrix}$$
+  <p>The honest option is <strong>exact integration</strong>: with constant \((v_t,\omega_t)\), the robot truly travels a circular arc, and the ODEs integrate in closed form. Solve \(\dot\theta=\omega\) first, then substitute into the position equations:</p>
+  $$\theta(t_0+\tau)=\theta(t_0)+\int_{t_0}^{t_0+\tau}\!\omega\,ds=\theta(t_0)+\omega\tau$$
+  $$x(t_0+\tau)=x(t_0)+v\!\int_{t_0}^{t_0+\tau}\!\!\cos\theta(s)\,ds
+   =x(t_0)+\frac{v}{\omega}\big(\sin(\omega\tau+\theta(t_0))-\sin\theta(t_0)\big)$$
+  $$y(t_0+\tau)=y(t_0)+v\!\int_{t_0}^{t_0+\tau}\!\!\sin\theta(s)\,ds
+   =y(t_0)+\frac{v}{\omega}\big(\cos\theta(t_0)-\cos(\omega\tau+\theta(t_0))\big)$$
+  <p>Rewriting with the \(\operatorname{sinc}\) function (\(\operatorname{sinc}(x)=\sin(x)/x\), with \(\operatorname{sinc}(0)=1\)) packages both cases — turning and straight — into one singularity-free formula:</p>
+  $$\boxed{\ \mathbf x_{t+1}=\mathbf x_t+\tau_t\begin{bmatrix}v_t\,\operatorname{sinc}\!\big(\tfrac{\omega_t\tau_t}{2}\big)\cos\!\big(\theta_t+\tfrac{\omega_t\tau_t}{2}\big)\\[2pt] v_t\,\operatorname{sinc}\!\big(\tfrac{\omega_t\tau_t}{2}\big)\sin\!\big(\theta_t+\tfrac{\omega_t\tau_t}{2}\big)\\[2pt] \omega_t\end{bmatrix}\ }$$
+  <p>Read it as: move at the <em>average</em> heading \(\theta_t+\tfrac{\omega\tau}{2}\) of the step, with the chord length \(v\tau\operatorname{sinc}(\tfrac{\omega\tau}{2})\) slightly shorter than the arc. And it is no coincidence this looks like an exponential map — the exact step <em>is</em> the discrete-time pose kinematics of section 04:</p>
+  $$\begin{bmatrix}R(\theta_{t+1})&\mathbf p_{t+1}\\\mathbf 0^\top&1\end{bmatrix}=\begin{bmatrix}R(\theta_t)&\mathbf p_t\\\mathbf 0^\top&1\end{bmatrix}\exp\!\left(\tau_t\begin{bmatrix}0&-\omega_t&v_t\\\omega_t&0&0\\0&0&0\end{bmatrix}\right)$$
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>Drive simulator</b> · wheel speeds → arc · solid = exact exp step · ghost = Euler steps</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="hostD" style="min-height:340px"><canvas id="cvD"></canvas><span class="hint">amber robot integrates exactly · gray ghost uses Euler at step τ</span></div>
+      <div class="panelside">
+        <div class="ctrl"><div class="row"><label>left wheel v<sub>L</sub></label><span class="val" id="vVL">0.60 m/s</span></div><input type="range" class="sx" id="sVL" min="-100" max="150" value="60" step="1"></div>
+        <div class="ctrl"><div class="row"><label>right wheel v<sub>R</sub></label><span class="val" id="vVR">1.00 m/s</span></div><input type="range" class="sy" id="sVR" min="-100" max="150" value="100" step="1"></div>
+        <div class="ctrl"><div class="row"><label>Euler step τ</label><span class="val" id="vTau">0.50 s</span></div><input type="range" class="sa" id="sTau" min="5" max="100" value="50" step="1"></div>
+        <div class="btnrow">
+          <button class="btn" id="bRun">pause</button>
+          <button class="btn" id="bReset">reset</button>
+          <button class="btn" data-dd="straight">straight</button>
+          <button class="btn" data-dd="arc">arc</button>
+          <button class="btn" data-dd="pivot">pivot</button>
+        </div>
+        <div class="readout" id="rD"></div>
+      </div>
+    </div>
+  </div>
+  <p>Watch the gray Euler ghost cut the corners of every arc — it always moves along the <em>old</em> heading for a full step, so it drifts outward, and the gap grows with \(\tau\). Shrink \(\tau\) and the ghost converges to the truth; that is the entire trade of explicit integration schemes.</p>
+</section>
+
+<!-- =================== 09 ACKERMANN =================== -->
+<section id="ackermann">
+  <div class="kicker"><span class="num">09</span></div>
+  <h2>The Ackermann-drive kinematic model</h2>
+  <p>A car steers differently: the rear axle drives, the front wheels pivot by a <strong>steering angle</strong>. Same state as the differential drive, new control:</p>
+  <ul>
+    <li><strong>State</strong> \(\mathbf x=(\mathbf p,\theta)\): position \(\mathbf p=(x,y)\in\mathbb R^2\), yaw \(\theta\in(-\pi,\pi]\), in the world frame.</li>
+    <li><strong>Control</strong> \(\mathbf u=(v,\phi)\): linear velocity \(v\in\mathbb R\) and steering angle \(\phi\in(-\pi,\pi]\), in the body frame.</li>
+  </ul>
+  $$\dot{\mathbf x}=\begin{bmatrix}\dot x\\\dot y\\\dot\theta\end{bmatrix}=f(\mathbf x,\mathbf u):=\begin{bmatrix}v\cos\theta\\v\sin\theta\\\tfrac{v}{L}\tan\phi\end{bmatrix}$$
+  <p>where \(L\) is the distance between the two wheel axles (the wheelbase). The geometry behind the third row: the front and rear wheels share an ICC, and similar triangles give the turning radius \(r=L/\tan\phi\), hence yaw rate \(\dot\theta=v/r=\tfrac{v}{L}\tan\phi\).</p>
+  <div class="card key">
+    <div class="lab">One model to rule both</div>
+    Define \(\omega:=\tfrac{v}{L}\tan\phi\) and the Ackermann model becomes <em>identical</em> to the differential-drive model — same continuous equations, so the same Euler and exact \(\operatorname{sinc}\) discretizations apply verbatim. The only practical difference is the control parametrization (and that a car cannot pivot in place: \(\phi=\pm90^\circ\) is mechanically impossible, so \(\omega\) is bounded by \(v\)).
+  </div>
+</section>
+
+<!-- =================== 10 QUADROTOR =================== -->
+<section id="quad">
+  <div class="kicker"><span class="num">10</span></div>
+  <h2>The quadrotor dynamics model</h2>
+  <p>The first fully 3D — and fully <em>dynamic</em> — model of the lecture. A quadrotor cannot command velocity directly; its four propellers produce a thrust and torques, and the velocity follows from Newton–Euler. So the state must carry velocities, and the control is a wrench:</p>
+  <ul>
+    <li><strong>State</strong> \(\mathbf x=(\mathbf p,R,\mathbf v,\boldsymbol\omega)\): position \(\mathbf p\in\mathbb R^3\), orientation \(R\in SO(3)\), body-frame linear velocity \(\mathbf v\in\mathbb R^3\), body-frame angular velocity \(\boldsymbol\omega\in\mathbb R^3\).</li>
+    <li><strong>Control</strong> \(\mathbf u=(\rho,\boldsymbol\tau)\): scalar body-frame thrust \(\rho\in\mathbb R\) along the body z-axis, and torque \(\boldsymbol\tau\in\mathbb R^3\).</li>
+  </ul>
+  <p>With mass \(m\), gravity \(g\), inertia \(J\in\mathbb R^{3\times3}\), and \(\mathbf e_3=(0,0,1)^\top\), the continuous-time model is rigid-body pose dynamics (section 05) with the quadrotor's specific wrench plugged in:</p>
+  $$\dot{\mathbf x}=f(\mathbf x,\mathbf u)=\begin{cases}\dot{\mathbf p}=R\,\mathbf v\\[2pt] \dot R=R\,\hat{\boldsymbol\omega}\\[2pt] m\dot{\mathbf v}=-\boldsymbol\omega\times m\mathbf v+\big(\rho\,\mathbf e_3-mg\,R^\top\mathbf e_3\big)\\[2pt] J\dot{\boldsymbol\omega}=-\boldsymbol\omega\times J\boldsymbol\omega+\boldsymbol\tau\end{cases}$$
+  <p>Reading the four lines: the first two are pose kinematics (body velocities pushed through the orientation); the last two are the Newton–Euler equations with force \(\mathbf f=\rho\mathbf e_3-mgR^\top\mathbf e_3\) — thrust along the body z-axis, minus gravity <em>rotated into the body frame</em> by \(R^\top\). At a level hover (\(R=I\), \(\mathbf v=\boldsymbol\omega=0\)) the force balance collapses to \(\rho=mg\): the propellers must exactly carry the weight. Tilt the body and \(R^\top\mathbf e_3\) tilts too — part of the thrust now accelerates the robot sideways, which is precisely how quadrotors translate.</p>
+</section>
+<!-- =================== 11 OBSERVATION MODELS =================== -->
+<section id="obs">
+  <div class="kicker"><span class="num">11</span></div>
+  <h2>Observation models &amp; the sensor zoo</h2>
+  <p>Now the other half of estimation. An <strong>observation model</strong> is a function \(h\) relating the sensor state \(\mathbf x\) and the environment state \(\mathbf m\) to the measurement \(\mathbf z\):</p>
+  $$\mathbf z=h(\mathbf x,\mathbf m)$$
+  <p>If the sensor is affected by noise \(\mathbf v\) modeled as a random variable, the measurement is random too, described either in <strong>function form</strong> \(\mathbf z=h(\mathbf x,\mathbf m,\mathbf v)\) or with the <strong>probability density</strong> \(p_h(\cdot\mid\mathbf x,\mathbf m)\) of \(\mathbf z\) — the mirror image of the two motion-model forms.</p>
+  <div class="card">
+    <p style="margin-top:0"><strong>Four families of sensors</strong>, by what they fundamentally measure:</p>
+    <ul style="margin-bottom:0">
+      <li><strong>Inertial / force sensors</strong> — velocity, acceleration, or force: encoder, magnetometer, gyroscope, accelerometer.</li>
+      <li><strong>Position sensors</strong> — a point's location: GPS, RGBD camera, laser scanner.</li>
+      <li><strong>Bearing sensors</strong> — angles to things: compass, RGB camera.</li>
+      <li><strong>Range sensors</strong> — distances to things: radio received-signal-strength, time-of-flight.</li>
+    </ul>
+  </div>
+  <p>The rest of the lesson walks the zoo: encoder → IMU → lidar → camera → stereo, each time writing the explicit \(h\).</p>
+</section>
+
+<!-- =================== 12 ENCODER =================== -->
+<section id="encoder">
+  <div class="kicker"><span class="num">12</span></div>
+  <h2>Wheel encoders</h2>
+  <p>A <strong>magnetic encoder</strong> is the humblest sensor on the robot: a rotating gear, a permanent magnet, and a sensing element. As the gear teeth pass, the sensor emits pulses on <strong>two output channels with offset phase</strong> — the phase order reveals the direction of rotation. A microcontroller counts the transitions, adding or subtracting 1 per tick depending on direction.</p>
+  <p>Geometry converts ticks to distance. One wheel revolution covers the circumference \(\pi\times\)(wheel diameter) and produces \(n\) ticks, so:</p>
+  $$\text{meters per tick}=\frac{\pi\times(\text{wheel diameter})}{\text{ticks per revolution}}$$
+  <p>Over an interval \(\tau\) with encoder count \(z\), wheel diameter \(d\), and \(n\) ticks per revolution, the distance traveled is:</p>
+  $$\boxed{\ \tau v\approx\frac{\pi d z}{n}\ }$$
+  <p>Divide by \(\tau\) and you have a measurement of the <strong>linear velocity \(v\)</strong> — exactly the input the differential-drive model wants. One encoder per wheel gives \(v_L\) and \(v_R\), hence \(v\) and \(\omega\) via the ICC formulas of section 08. The \(\approx\) matters: ticks are quantized, wheels slip, diameters wear — all of it ends up as the disturbance \(\mathbf w\) in the motion model.</p>
+</section>
+
+<!-- =================== 13 IMU =================== -->
+<section id="imu">
+  <div class="kicker"><span class="num">13</span></div>
+  <h2>The inertial measurement unit</h2>
+  <p>An <strong>IMU</strong> packages two triaxial sensors: an <strong>accelerometer</strong> (linear acceleration) and a <strong>gyroscope</strong> (angular velocity).</p>
+  <ul>
+    <li><strong>Accelerometer physics.</strong> A proof mass \(m\) on a spring of constant \(k\): the spring displacement is proportional to acceleration, \(F=ma=kd\Rightarrow a=\tfrac{kd}{m}\). In VLSI fabrication the "spring" is a suspended polysilicon structure and the displacement of a metal plate is read <em>capacitively</em> against a fixed plate. The same chip fires your car's airbags — if deceleration exceeds about \(2g\), the car is hitting something.</li>
+    <li><strong>Gyroscope physics.</strong> A micro tuning fork is driven into resonance; when the package rotates, the <strong>Coriolis force</strong> deflects the vibrating tines sideways, and the change in mechanical resonance reveals the rotation rate.</li>
+  </ul>
+
+  <h3>The IMU observation model</h3>
+  <p>The full model is the most intricate \(h\) in this lecture, because an IMU mounted away from the body origin feels extra accelerations from the body's rotation. The ingredients:</p>
+  <ul>
+    <li><strong>State</strong> \((\mathbf p,R,\mathbf v,\boldsymbol\omega,\mathbf a,\boldsymbol\alpha,\mathbf b_g,\mathbf b_a)\): pose, body-frame linear/angular velocity, body-frame linear acceleration \(\mathbf a\), angular acceleration \(\boldsymbol\alpha\), gyroscope bias \(\mathbf b_g\in\mathbb R^3\), accelerometer bias \(\mathbf b_a\in\mathbb R^3\).</li>
+    <li><strong>Extrinsic parameters</strong>: the IMU's mounting position \({}^B\mathbf p_I\in\mathbb R^3\) and orientation \({}^B R_I\in SO(3)\) in the body frame, assumed known from calibration.</li>
+  </ul>
+  <p>The measurement \(\mathbf z=(\mathbf z_\omega,\mathbf z_a)\) — angular velocity and linear acceleration — is:</p>
+  $$\mathbf z_\omega={}^B R_I^\top\,\boldsymbol\omega+\mathbf b_g+\mathbf n_g$$
+  $$\mathbf z_a={}^B R_I^\top\Big(\mathbf a-gR^\top\mathbf e_3+\hat{\boldsymbol\alpha}\,{}^B\mathbf p_I+\hat{\boldsymbol\omega}^2\,{}^B\mathbf p_I\Big)+\mathbf b_a+\mathbf n_a$$
+  <p>Term by term, the accelerometer line says: take the true body acceleration \(\mathbf a\); subtract the gravity component \(gR^\top\mathbf e_3\) expressed in the body frame (an accelerometer measures <em>specific force</em>, not coordinate acceleration — it cannot tell gravity from acceleration); add the <strong>lever-arm effects</strong> of being mounted at \({}^B\mathbf p_I\) — the tangential acceleration \(\hat{\boldsymbol\alpha}\,{}^B\mathbf p_I=\boldsymbol\alpha\times{}^B\mathbf p_I\) from angular acceleration and the centripetal acceleration \(\hat{\boldsymbol\omega}^2\,{}^B\mathbf p_I=\boldsymbol\omega\times(\boldsymbol\omega\times{}^B\mathbf p_I)\) from spinning; rotate everything into the IMU's own axes with \({}^B R_I^\top\); then corrupt with a slowly-wandering bias \(\mathbf b_a\) and white noise \(\mathbf n_a\). The gyroscope line is the same story without lever arms — angular velocity is the same everywhere on a rigid body.</p>
+  <div class="card key">
+    <div class="lab">Strapdown IMU — the common special case</div>
+    If the IMU frame coincides with the body frame, \({}^B\mathbf p_I=\mathbf 0\) and \({}^B R_I=I\), the lever-arm terms vanish and the model collapses to
+    $$\mathbf z_\omega=\boldsymbol\omega+\mathbf b_g+\mathbf n_g\qquad\quad \mathbf z_a=\mathbf a-gR^\top\mathbf e_3+\mathbf b_a+\mathbf n_a$$
+    A strapdown IMU sitting perfectly still (\(\mathbf a=0\), \(R=I\)) therefore reads \(\mathbf z_a\approx-g\mathbf e_3+\mathbf b_a\): the constant gravity signature is how estimators infer roll and pitch — and how accelerometer bias gets confused with tilt.
+  </div>
+</section>
+
+<!-- =================== 14 LIDAR =================== -->
+<section id="lidar">
+  <div class="kicker"><span class="num">14</span></div>
+  <h2>Lidar: range by light</h2>
+  <p><strong>LIDAR</strong> — LIght Detection And Ranging — illuminates the scene with pulsed laser light and measures the <strong>return times</strong> (and wavelengths) of the reflected pulses; time-of-flight gives distance. Mirrors steer the beam across the \(xy\) plane (and the \(zy\) plane for 3D lidars). The device emits rays over a set of known horizontal <strong>azimuth</strong> and vertical <strong>elevation</strong> angles \(\{\alpha_k,\epsilon_k\}\) and returns range estimates \(\{r_k\}\) to obstacles in the environment \(\mathbf m\).</p>
+  <p>A concrete unit: the Hokuyo URG-04LX scans a detectable range of 0.02–4 m over a 240° field of view at 0.36° angular resolution — 666 beams per scan, one scan every 100 ms.</p>
+
+  <h3>The range–azimuth–elevation model</h3>
+  <p>Consider a lidar at position \(\mathbf p\in\mathbb R^3\), orientation \(R\in SO(3)\), observing a world-frame point \(\mathbf m\in\mathbb R^3\). The point's coordinates in the lidar frame are \(\bar{\mathbf m}:=R^\top(\mathbf m-\mathbf p)\), and the lidar reports them in <strong>spherical coordinates</strong>:</p>
+  $$\bar{\mathbf m}=R^\top(\mathbf m-\mathbf p)=\begin{bmatrix}r\cos\alpha\cos\epsilon\\ r\sin\alpha\cos\epsilon\\ r\sin\epsilon\end{bmatrix}$$
+  <p>where \(r\) is range, \(\alpha\) azimuth, \(\epsilon\) elevation. Inverting (the <strong>inverse observation model</strong> expresses the measurement in terms of the states) gives the <strong>laser range–azimuth–elevation model</strong>:</p>
+  $$\boxed{\ \mathbf z=\begin{bmatrix}r\\\alpha\\\epsilon\end{bmatrix}=\begin{bmatrix}\lVert\bar{\mathbf m}\rVert_2\\[2pt] \arctan(\bar m_y/\bar m_x)\\[2pt] \arcsin(\bar m_z/\lVert\bar{\mathbf m}\rVert_2)\end{bmatrix}\ }\qquad \bar{\mathbf m}=R^\top(\mathbf m-\mathbf p)$$
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>2D lidar scan</b> · drive the pose, watch every beam compute r at its azimuth α</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="hostL" style="min-height:340px"><canvas id="cvL"></canvas><span class="hint">blue rays = beams · amber = selected beam</span></div>
+      <div class="panelside">
+        <div class="ctrl"><div class="row"><label>pose x</label><span class="val" id="vLx">−1.20 m</span></div><input type="range" class="sx" id="sLx" min="-250" max="250" value="-120" step="1"></div>
+        <div class="ctrl"><div class="row"><label>pose y</label><span class="val" id="vLy">−0.60 m</span></div><input type="range" class="sy" id="sLy" min="-150" max="150" value="-60" step="1"></div>
+        <div class="ctrl"><div class="row"><label>yaw θ</label><span class="val" id="vLth">30°</span></div><input type="range" class="sz" id="sLth" min="-180" max="180" value="30" step="1"></div>
+        <div class="ctrl"><div class="row"><label>selected beam α</label><span class="val" id="vLb">0°</span></div><input type="range" class="sa" id="sLb" min="-120" max="120" value="0" step="3"></div>
+        <div class="readout" id="rL"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="lab">The four canonical observation models</div>
+    <p style="margin-top:8px">Most sensors in this course reduce to one of four idealized \(h\)'s. With sensor pose \((\mathbf p,R)\) and observed point \(\mathbf m\):</p>
+    <ul style="margin-bottom:0">
+      <li><strong>Position sensor</strong> (GPS, RGBD, laser scanner) — reports the point in the sensor frame: \(\ \mathbf z=h(\mathbf x,\mathbf m)=R^\top(\mathbf m-\mathbf p)\in\mathbb R^3\).</li>
+      <li><strong>Range sensor</strong> (RSS, time-of-flight) — reports only distance: \(\ z=\lVert R^\top(\mathbf m-\mathbf p)\rVert_2=\lVert\mathbf m-\mathbf p\rVert_2\in\mathbb R\). The rotation drops out — rotations preserve norms (Lecture 3, law one).</li>
+      <li><strong>Bearing sensor</strong> (compass, RGB camera), planar with state \((\mathbf p,\theta)\), \(\mathbf p\in\mathbb R^2\) — reports only direction: \(\ z=\arctan\!\big(\tfrac{m_2-p_2}{m_1-p_1}\big)-\theta\in\mathbb R\).</li>
+      <li><strong>Camera sensor</strong> — reports a pixel: \(\ \mathbf z=PK\,\pi\big(R^\top(\mathbf m-\mathbf p)\big)\in\mathbb R^2\), with projection \(\pi(\mathbf m):=\tfrac{1}{\mathbf e_3^\top\mathbf m}\mathbf m\), intrinsic matrix \(K\in\mathbb R^{3\times3}\), and \(P:=[I\ \ \mathbf 0]\in\mathbb R^{2\times3}\). The next two sections unpack every symbol.</li>
+    </ul>
+  </div>
+</section>
+<!-- =================== 15 CAMERA =================== -->
+<section id="camera">
+  <div class="kicker"><span class="num">15</span></div>
+  <h2>The camera: from world point to pixel</h2>
+  <p>Cameras come in many flavors — global shutter, RGBD, stereo pairs (often with an IMU), event-based — but the geometry underneath is shared. <strong>Image formation</strong> models trade physical accuracy for mathematical simplicity. An image's values depend on the shape and reflectance of the scene and the distribution of light; the <strong>image intensity</strong> \(I(u,v)\) is the energy falling onto a small sensor patch — integrated over the shutter interval and over a region of space — measured in power per unit area (\(W/m^2\)). A lens stack controls light by diffraction, refraction, and reflection. Two simplifications get us to geometry:</p>
+  <ul>
+    <li><strong>Thin lens model</strong>: keep only refraction.</li>
+    <li><strong>Pinhole model</strong>: shrink the lens aperture to zero — every ray passes undeflected through a single <strong>optical center</strong> (diffraction becomes dominant, but the geometry becomes exact).</li>
+  </ul>
+
+  <h3>Planes, frames, and the flip</h3>
+  <p>The <strong>focal plane</strong> is perpendicular to the <strong>optical axis</strong> with a circular aperture at the optical center; the <strong>image plane</strong> sits parallel to it, a distance \(f\) — the <strong>focal length</strong>, in meters — behind the center. The model lives in an <strong>optical frame</strong> at the optical center with the optical axis as z:</p>
+  <div class="card">
+    <strong>optical frame:</strong> x = right, y = down, z = forward &nbsp;·&nbsp; <strong>regular frame:</strong> x = forward, y = left, z = up
+  </div>
+  <p><strong>Image flip:</strong> on the physical image plane \(\{z=f\}\) behind the center, the object lands upside down. Flipping the image \((x,y)\to(-x,-y)\) cancels this — equivalent to pretending the image plane sits <em>in front</em> of the center at \(\{z=-f\}\). All formulas below use that front-plane convention.</p>
+  <p><strong>Field of view:</strong> the angle subtended by the image plane from the optical center. With sensor side \(s\) (meters): \(\ \theta=2\arctan\!\big(\tfrac{s}{2f}\big)\). A flat image plane always has \(\theta\lt180^\circ\); spherical or ellipsoidal imaging surfaces (omnidirectional cameras) can exceed it.</p>
+  <p><strong>Ray tracing:</strong> with a pinhole and Lambertian surfaces, forming an image reduces to tracing rays from object points to pixels, in three stages:</p>
+  <ol>
+    <li><strong>Extrinsics</strong> — world-to-camera frame transformation;</li>
+    <li><strong>Projection</strong> — 3D-to-2D coordinate projection;</li>
+    <li><strong>Intrinsics</strong> — scaling and translation into the pixel array.</li>
+  </ol>
+
+  <h3>Stage 1 — Extrinsics</h3>
+  <p>Let \({}_w\mathbf p_r\in\mathbb R^3,\ {}_wR_r\in SO(3)\) be the position and orientation of the (regular) camera frame in the world. One fixed rotation re-labels regular axes as optical axes:</p>
+  $${}_oR_r:=\begin{bmatrix}0&-1&0\\0&0&-1\\1&0&0\end{bmatrix}$$
+  <p>(check: regular-forward \(\mathbf e_1\) → optical-z; regular-left \(\mathbf e_2\) → optical \(-x\); regular-up \(\mathbf e_3\) → optical \(-y\)). Then a world point \((X_w,Y_w,Z_w)\) has optical-frame coordinates:</p>
+  $$\begin{bmatrix}X_o\\Y_o\\Z_o\\1\end{bmatrix}=\begin{bmatrix}{}_oR_r&0\\\mathbf 0^\top&1\end{bmatrix}\begin{bmatrix}{}_wR_r&{}_w\mathbf p_r\\\mathbf 0^\top&1\end{bmatrix}^{-1}\begin{bmatrix}X_w\\Y_w\\Z_w\\1\end{bmatrix}=\begin{bmatrix}{}_oR_r\,{}_wR_r^\top&-{}_oR_r\,{}_wR_r^\top\,{}_w\mathbf p_r\\\mathbf 0^\top&1\end{bmatrix}\begin{bmatrix}X_w\\Y_w\\Z_w\\1\end{bmatrix}$$
+  <p>— the \(SE(3)\) inverse formula from Lecture 3 doing the heavy lifting.</p>
+
+  <h3>Stage 2 — Projection</h3>
+  <p>Similar triangles relate optical coordinates \((X_o,Y_o,Z_o)\) to image-plane coordinates \((x,y)\): the ray hits the plane at depth-normalized, focal-scaled position</p>
+  $$x=f\frac{X_o}{Z_o}\qquad y=f\frac{Y_o}{Z_o}\qquad\Longleftrightarrow\qquad \begin{pmatrix}x\\y\\1\end{pmatrix}=\frac{1}{Z_o}\begin{bmatrix}f&0&0&0\\0&f&0&0\\0&0&1&0\end{bmatrix}\begin{pmatrix}X_o\\Y_o\\Z_o\\1\end{pmatrix}$$
+  <p>The lecture decomposes this into three named factors — the bookkeeping pays off in the next stage:</p>
+  $$\begin{pmatrix}x\\y\\1\end{pmatrix}=\underbrace{\begin{bmatrix}-1&0&0\\0&-1&0\\0&0&1\end{bmatrix}}_{\text{image flip: }F_f}\underbrace{\begin{bmatrix}-f&0&0\\0&-f&0\\0&0&1\end{bmatrix}}_{\text{focal scaling: }K_f}\underbrace{\frac{1}{Z_o}\begin{bmatrix}1&0&0&0\\0&1&0&0\\0&0&1&0\end{bmatrix}}_{\text{canonical projection: }\pi}\begin{pmatrix}X_o\\Y_o\\Z_o\\1\end{pmatrix}$$
+  <p>Division by depth \(Z_o\) is the one genuinely nonlinear step — the reason far things look small and the reason camera estimation is harder than lidar estimation.</p>
+
+  <h3>Stage 3 — Intrinsics</h3>
+  <p>Images are delivered as <strong>pixels</strong> \((u,v)\) with the origin at the upper-left of the array. Converting image-frame meters to pixels takes a handful of <strong>intrinsic parameters</strong>:</p>
+  <ul>
+    <li>\((s_u,s_v)\) [pixels/meter] — scaling from meters to pixels; aspect ratio \(\sigma=s_u/s_v\);</li>
+    <li>\((c_u,c_v)\) [pixels] — the <strong>principal point</strong> translating the origin, e.g. \((320.5,\ 240.5)\) for a \(640\times480\) image;</li>
+    <li>\(s_\theta\) [pixels/meter] — a <strong>skew factor</strong> for non-rectangular pixels, proportional to \(\cot\alpha\) where \(\alpha\) is the angle between the pixel-array axes (nearly always \(\approx0\)).</li>
+  </ul>
+  <p>Stack pixel scaling onto the projection factors and the three \(3\times3\)'s fuse into the <strong>calibration matrix</strong> \(K\):</p>
+  $$\underbrace{\begin{bmatrix}s_u&s_\theta&c_u\\0&s_v&c_v\\0&0&1\end{bmatrix}}_{\text{pixel scaling: }K_s}\underbrace{\begin{bmatrix}-1&0&0\\0&-1&0\\0&0&1\end{bmatrix}}_{\text{image flip: }F_f}\underbrace{\begin{bmatrix}-f&0&0\\0&-f&0\\0&0&1\end{bmatrix}}_{\text{focal scaling: }K_f}=\underbrace{\begin{bmatrix}fs_u&fs_\theta&c_u\\0&fs_v&c_v\\0&0&1\end{bmatrix}}_{\text{calibration matrix: }K}\in\mathbb R^{3\times3}$$
+
+  <div class="card key">
+    <div class="lab">The whole pipeline on one line</div>
+    $$\underbrace{\begin{pmatrix}u\\v\\1\end{pmatrix}}_{\text{pixels}}=\underbrace{\begin{bmatrix}fs_u&fs_\theta&c_u\\0&fs_v&c_v\\0&0&1\end{bmatrix}}_{\text{calibration: }K}\ \underbrace{\frac{1}{Z_o}\begin{bmatrix}1&0&0&0\\0&1&0&0\\0&0&1&0\end{bmatrix}}_{\text{canonical projection: }\pi}\begin{pmatrix}X_o\\Y_o\\Z_o\\1\end{pmatrix}$$
+    with the optical coordinates supplied by the extrinsics of Stage 1. As a compact observation model with optical-frame pose \((\mathbf p,R)\), point \(\mathbf m\), canonical projection \(\pi(\mathbf x):=\tfrac{1}{\mathbf e_3^\top\mathbf x}\mathbf x\), and \(P:=[I\ \ \mathbf 0]\in\mathbb R^{2\times3}\):
+    $$\mathbf z=h(\mathbf x,\mathbf m)=PK\,\pi\big(R^\top(\mathbf m-\mathbf p)\big)$$
+    or directly in terms of the optical-frame pose \(T\in SE(3)\) with homogeneous coordinates and \(P:=[I\ \ \mathbf 0]\in\mathbb R^{3\times4}\): \(\ \mathbf z=K\pi(P\,T^{-1}\bar{\mathbf m})\).
+  </div>
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>Pinhole bench</b> · side view · move the point, change f, watch x = f·X/Z and the pixel u</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="hostC" style="min-height:320px"><canvas id="cvC"></canvas><span class="hint">amber = image point on the (front) image plane · shaded wedge = field of view</span></div>
+      <div class="panelside">
+        <div class="ctrl"><div class="row"><label>focal length f</label><span class="val" id="vCf">0.50 m</span></div><input type="range" class="sa" id="sCf" min="20" max="120" value="50" step="1"></div>
+        <div class="ctrl"><div class="row"><label>point height X</label><span class="val" id="vCx">0.80 m</span></div><input type="range" class="sx" id="sCx" min="-150" max="150" value="80" step="1"></div>
+        <div class="ctrl"><div class="row"><label>point depth Z</label><span class="val" id="vCz">3.00 m</span></div><input type="range" class="sz" id="sCz" min="80" max="600" value="300" step="1"></div>
+        <div class="ctrl"><div class="row"><label>pixel scale s<sub>u</sub></label><span class="val" id="vCsu">400 px/m</span></div><input type="range" class="sy" id="sCsu" min="100" max="1000" value="400" step="10"></div>
+        <div class="readout" id="rC"></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Beyond the ideal pinhole</h3>
+  <ul>
+    <li><strong>Radial distortion</strong> (wide-FOV lenses): on top of the linear intrinsics \(K\), points shift along radial directions. The simplest effective model, with \((x_d,y_d)\) the distorted pixel coordinates and \(r^2=x_d^2+y_d^2\): \(\ x=x_d(1+a_1r^2+a_2r^4),\ \ y=y_d(1+a_1r^2+a_2r^4)\), where \(a_1,a_2\) set the amount of distortion.</li>
+    <li><strong>Spherical perspective projection</strong>: if the imaging surface is the sphere \(S^2=\{\mathbf x\in\mathbb R^3:\lVert\mathbf x\rVert=1\}\) (motivated by biological retinas), replace \(\pi\) by \(\pi_s(\mathbf x)=\tfrac{\mathbf x}{\lVert\mathbf x\rVert_2}\) in the same model.</li>
+    <li><strong>Catadioptric model</strong>: an ellipsoidal imaging surface (mirror+lens systems).</li>
+  </ul>
+</section>
+
+<!-- =================== 16 STEREO =================== -->
+<section id="stereo">
+  <div class="kicker"><span class="num">16</span></div>
+  <h2>The stereo camera: depth from two eyes</h2>
+  <p>A single camera destroys depth — every point on a ray maps to the same pixel. A <strong>stereo camera</strong> is two perspective cameras rigidly connected with a known transformation, and that one extra view restores depth from a single observation. In the standard configuration the transformation is purely a displacement of size \(b\) — the <strong>stereo baseline</strong> — along the x-axis of the optical frame.</p>
+  <p>For a world point \(\mathbf m\) seen by a stereo pair at position \(\mathbf p\), orientation \(R\), intrinsics \(K\):</p>
+  $$\mathbf z_L=K\pi\big(R^\top(\mathbf m-\mathbf p)\big)\qquad\quad \mathbf z_R=K\pi\big(R^\top(\mathbf m-\mathbf p)-b\,\mathbf e_1\big)$$
+  <p>— the right camera sees the same lidar-frame point shifted by \(-b\) along x. Stacking both pixel pairs, with \((x,y,z)=R^\top(\mathbf m-\mathbf p)\):</p>
+  $$\begin{pmatrix}u_L\\v_L\\u_R\\v_R\end{pmatrix}=\underbrace{\begin{bmatrix}fs_u&0&c_u&0\\0&fs_v&c_v&0\\fs_u&0&c_u&-fs_ub\\0&fs_v&c_v&0\end{bmatrix}}_{M}\ \frac1z\begin{pmatrix}x\\y\\z\\1\end{pmatrix}$$
+  <p>Rows 2 and 4 of \(M\) are identical: <strong>\(v_L=v_R\) always</strong>. In this configuration the epipolar lines are horizontal — a point's two images sit on the same image row, which is what makes stereo matching a 1D search. Since \(v_R\) is redundant, drop it and replace \(u_R\) by the <strong>disparity</strong>:</p>
+  $$d=u_L-u_R=\frac{1}{z}\,fs_ub\qquad\Longrightarrow\qquad \begin{pmatrix}u_L\\v_L\\d\end{pmatrix}=\begin{bmatrix}fs_u&0&c_u&0\\0&fs_v&c_v&0\\0&0&0&fs_ub\end{bmatrix}\frac1z\begin{pmatrix}x\\y\\z\\1\end{pmatrix}$$
+  <div class="card key">
+    <div class="lab">Depth from disparity</div>
+    Invert the disparity row: \(\ z=\dfrac{fs_u\,b}{d}\). Depth is <em>inversely</em> proportional to disparity — nearby points shift a lot between the eyes, distant points barely move. Resolution therefore degrades quadratically with distance, and a longer baseline \(b\) buys you range at the cost of a larger blind zone up close.
+  </div>
+
+  <div class="lab">
+    <div class="lab-head"><span class="dot"></span><span class="t"><b>Stereo rig</b> · top view · move the point, stretch the baseline, read the disparity</span></div>
+    <div class="lab-body">
+      <div class="canvas-host" id="hostS" style="min-height:320px"><canvas id="cvS"></canvas><span class="hint">two image strips below show u_L and u_R · bracket = disparity d</span></div>
+      <div class="panelside">
+        <div class="ctrl"><div class="row"><label>baseline b</label><span class="val" id="vSb">0.20 m</span></div><input type="range" class="sa" id="sSb" min="5" max="60" value="20" step="1"></div>
+        <div class="ctrl"><div class="row"><label>point lateral x</label><span class="val" id="vSx">0.40 m</span></div><input type="range" class="sx" id="sSx" min="-60" max="120" value="40" step="1"></div>
+        <div class="ctrl"><div class="row"><label>point depth z</label><span class="val" id="vSz">2.00 m</span></div><input type="range" class="sz" id="sSz" min="60" max="500" value="200" step="1"></div>
+        <div class="readout" id="rS"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================== 17 SUMMARY =================== -->
+<section id="summary">
+  <div class="kicker"><span class="num">17</span></div>
+  <h2>Everything on one card</h2>
+  <div class="card">
+    <h4 style="margin-top:0">Kinematics &amp; dynamics — one pattern, three sizes</h4>
+    <table style="width:100%; border-collapse:collapse; font-size:14.5px; margin-top:6px">
+      <tr style="color:var(--amber); font-family:'IBM Plex Mono'; font-size:12px; text-align:left">
+        <th style="padding:6px 8px"></th><th style="padding:6px 8px">continuous</th><th style="padding:6px 8px">discrete (constant input over τ)</th></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">rotation</td><td style="padding:8px">\(\dot R=R\hat{\boldsymbol\omega}\)</td><td style="padding:8px">\(R_{k+1}=R_k\exp(\tau_k\hat{\boldsymbol\omega}_k)\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">quaternion</td><td style="padding:8px">\(\dot q=q\circ[0,\boldsymbol\omega/2]\)</td><td style="padding:8px">\(q_{k+1}=q_k\circ\exp([0,\tau_k\boldsymbol\omega_k/2])\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">pose</td><td style="padding:8px">\(\dot T=T\hat{\boldsymbol\zeta}\)</td><td style="padding:8px">\(T_{k+1}=T_k\exp(\tau_k\hat{\boldsymbol\zeta}_k)\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">dynamics</td><td style="padding:8px" colspan="2">\(M\dot{\boldsymbol\zeta}=(\boldsymbol\zeta^{\curlywedge})^\top M\boldsymbol\zeta+\mathbf w\ \Leftrightarrow\ m\dot{\mathbf v}=-\boldsymbol\omega\times m\mathbf v+\mathbf f,\ \ J\dot{\boldsymbol\omega}=-\boldsymbol\omega\times J\boldsymbol\omega+\boldsymbol\tau\)</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4 style="margin-top:0">Motion models</h4>
+    <table style="width:100%; border-collapse:collapse; font-size:14.5px; margin-top:6px">
+      <tr style="color:var(--amber); font-family:'IBM Plex Mono'; font-size:12px; text-align:left">
+        <th style="padding:6px 8px">model</th><th style="padding:6px 8px">state · control</th><th style="padding:6px 8px">law</th></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">odometry</td><td style="padding:8px">\(T_t\in SE(3)\) · \(\mathbf u_t={}_tT_{t+1}\)</td><td style="padding:8px">\(\mathbf x_{t+1}=\mathbf x_t\mathbf u_t\) (drifts)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">diff drive</td><td style="padding:8px">\((x,y,\theta)\) · \((v,\omega)\)</td><td style="padding:8px">\(\dot{\mathbf x}=(v\cos\theta,v\sin\theta,\omega)\); exact step via sinc</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">Ackermann</td><td style="padding:8px">\((x,y,\theta)\) · \((v,\phi)\)</td><td style="padding:8px">same with \(\omega=\tfrac{v}{L}\tan\phi\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">quadrotor</td><td style="padding:8px">\((\mathbf p,R,\mathbf v,\boldsymbol\omega)\) · \((\rho,\boldsymbol\tau)\)</td><td style="padding:8px">pose dynamics, wrench \((\rho\mathbf e_3-mgR^\top\mathbf e_3,\ \boldsymbol\tau)\)</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4 style="margin-top:0">Observation models</h4>
+    <table style="width:100%; border-collapse:collapse; font-size:14.5px; margin-top:6px">
+      <tr style="color:var(--amber); font-family:'IBM Plex Mono'; font-size:12px; text-align:left">
+        <th style="padding:6px 8px">sensor</th><th style="padding:6px 8px">measurement \(\mathbf z=h(\mathbf x,\mathbf m)\)</th></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">encoder</td><td style="padding:8px">\(\tau v\approx \pi d z/n\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">IMU (strapdown)</td><td style="padding:8px">\(\mathbf z_\omega=\boldsymbol\omega+\mathbf b_g+\mathbf n_g\), \(\ \mathbf z_a=\mathbf a-gR^\top\mathbf e_3+\mathbf b_a+\mathbf n_a\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">lidar</td><td style="padding:8px">\((r,\alpha,\epsilon)\) spherical coords of \(R^\top(\mathbf m-\mathbf p)\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">position / range / bearing</td><td style="padding:8px">\(R^\top(\mathbf m-\mathbf p)\) / \(\lVert\mathbf m-\mathbf p\rVert\) / \(\arctan\tfrac{m_2-p_2}{m_1-p_1}-\theta\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">camera</td><td style="padding:8px">\(PK\pi(R^\top(\mathbf m-\mathbf p))\)</td></tr>
+      <tr style="border-top:1px solid var(--line)"><td style="padding:8px; color:var(--muted)">stereo</td><td style="padding:8px">\((u_L,v_L,d)\) with \(d=fs_ub/z\)</td></tr>
+    </table>
+  </div>
+</section>
+<!-- =================== 18 PRACTICE =================== -->
+<section id="practice">
+  <div class="kicker"><span class="num">18</span></div>
+  <h2>Practice problems &amp; full solutions</h2>
+  <p>Try each one with pen and paper first, then expand the solution. They march through the whole lecture; several chain together the way a real estimation pipeline would.</p>
+
+  <!-- P1 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 1</span><span class="tag">rotation kinematics</span>
+      <p>(a) Starting from \(R^\top R=I\), show that \(R^\top\dot R\) is always skew-symmetric. (b) A body starts at \(R_0=I\) and spins with constant body-frame angular velocity \(\boldsymbol\omega=(0,0,\tfrac{\pi}{2})\) rad/s. Compute \(R_1\) after \(\tau=1\) s exactly.</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>(a)</strong> Differentiate the constraint with the product rule: \(\dot R^\top R+R^\top\dot R=0\). The first term is \((R^\top\dot R)^\top\), so \((R^\top\dot R)^\top=-R^\top\dot R\) — the definition of skew-symmetric. By the hat-map lemma it equals \(\hat{\boldsymbol\omega}\) for some \(\boldsymbol\omega\in\mathbb R^3\), giving \(\dot R=R\hat{\boldsymbol\omega}\).</p>
+      <p><strong>(b)</strong> Constant \(\boldsymbol\omega\) means \(R_1=R_0\exp(\tau\hat{\boldsymbol\omega})=\exp(\hat{\boldsymbol\theta})\) with rotation vector \(\boldsymbol\theta=\tau\boldsymbol\omega=(0,0,\tfrac{\pi}{2})\): angle \(\theta=\tfrac{\pi}{2}\), axis \(\boldsymbol\eta=(0,0,1)\). Rodrigues with \(\sin\theta=1\), \(1-\cos\theta=1\):</p>
+      $$R_1=I+\hat{\boldsymbol\eta}+\hat{\boldsymbol\eta}^2=\begin{bmatrix}0&-1&0\\1&0&0\\0&0&1\end{bmatrix}=R_z(90^\circ)$$
+      <p>A quarter turn about z, exactly — no discretization error, because \(\exp\) integrates the constant-rate spin in closed form.</p>
+    </div></details>
+  </div>
+
+  <!-- P2 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 2</span><span class="tag">quaternion kinematics</span>
+      <p>Repeat Problem 1(b) on the quaternion side: starting at the identity quaternion \(q_0=[1,\mathbf 0]\) with the same \(\boldsymbol\omega=(0,0,\tfrac{\pi}{2})\), \(\tau=1\), compute \(q_1\) and verify it represents the same rotation.</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Discrete update.</strong> \(q_1=q_0\circ\exp([0,\tau\boldsymbol\omega/2])=\exp([0,\mathbf w])\) with \(\mathbf w=(0,0,\tfrac{\pi}{4})\), \(\lVert\mathbf w\rVert=\tfrac{\pi}{4}\).</p>
+      <p><strong>Step 2 — Quaternion exponential.</strong> \(\exp([0,\mathbf w])=[\cos\tfrac{\pi}{4},\ \tfrac{\mathbf w}{\lVert\mathbf w\rVert}\sin\tfrac{\pi}{4}]=\big[\tfrac{\sqrt2}{2},\,0,\,0,\,\tfrac{\sqrt2}{2}\big]\).</p>
+      <p><strong>Step 3 — Verify.</strong> Unit norm: \(\tfrac12+\tfrac12=1\) ✓. Axis–angle reading: \(q=[\cos\tfrac\theta2,\sin\tfrac\theta2\boldsymbol\eta]\) with \(\tfrac\theta2=45^\circ\Rightarrow\theta=90^\circ\) about \(\boldsymbol\eta=(0,0,1)\) — the same \(R_z(90^\circ)\) as Problem 1. The matrix and quaternion clocks tick identically.</p>
+    </div></details>
+  </div>
+
+  <!-- P3 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 3</span><span class="tag">diff drive · exact</span>
+      <p>A differential-drive robot has axle length \(\ell=0.4\) m and wheel speeds \(v_L=0.8\), \(v_R=1.2\) m/s. (a) Find \(v\), \(\omega\), and the turning radius \(r\). (b) Starting at \(\mathbf x_0=(0,0,0)\), apply these controls for \(\tau=\tfrac{\pi}{2}\) s and compute the exact final state.</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>(a)</strong> \(v=\tfrac{v_R+v_L}{2}=\tfrac{2.0}{2}=1\) m/s; \(\ \omega=\tfrac{v_R-v_L}{\ell}=\tfrac{0.4}{0.4}=1\) rad/s; \(\ r=\tfrac{v}{\omega}=1\) m. The ICC sits 1 m to the robot's left.</p>
+      <p><strong>(b)</strong> Heading first: \(\theta_1=\theta_0+\omega\tau=\tfrac{\pi}{2}\). Position via the exact integrals with \(\theta_0=0\):</p>
+      $$x_1=\frac{v}{\omega}\big(\sin(\omega\tau)-\sin 0\big)=1\cdot(1-0)=1\qquad y_1=\frac{v}{\omega}\big(\cos 0-\cos(\omega\tau)\big)=1\cdot(1-0)=1$$
+      <p>So \(\mathbf x_1=(1,\,1,\,90^\circ)\) — a quarter of the radius-1 circle centered at the ICC \((0,1)\), exactly as geometry demands. (Sinc check: \(v\tau\operatorname{sinc}(\tfrac{\pi}{4})\cos(\tfrac{\pi}{4})=\tfrac{\pi}{2}\cdot\tfrac{\sin(\pi/4)}{\pi/4}\cdot\cos(\tfrac{\pi}{4})=2\sin(\tfrac{\pi}{4})\cos(\tfrac{\pi}{4})=\sin(\tfrac{\pi}{2})=1\) ✓.)</p>
+    </div></details>
+  </div>
+
+  <!-- P4 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 4</span><span class="tag">Euler vs exact</span>
+      <p>Repeat Problem 3(b) with a single Euler step of the same length \(\tau=\tfrac{\pi}{2}\). Compare with the exact answer and explain the direction of the error. What happens as the step is split into more, smaller Euler steps?</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Euler step.</strong> Euler freezes \(\theta=0\) for the whole step:</p>
+      $$x_1=0+\tau v\cos 0=\tfrac{\pi}{2}\approx1.571,\qquad y_1=0+\tau v\sin 0=0,\qquad \theta_1=\omega\tau=\tfrac{\pi}{2}$$
+      <p><strong>Step 2 — Compare.</strong> Exact: \((1,1)\). Euler: \((1.571,0)\) — an error of about \(1.16\) m on a \(1.57\) m arc! The heading is right (it integrates trivially), but the position shot straight along the <em>initial</em> heading instead of curving: Euler always exits along the tangent, overshooting the chord and ignoring the lateral motion entirely.</p>
+      <p><strong>Step 3 — Refinement.</strong> Split \(\tau\) into \(N\) substeps and the Euler polyline becomes an inscribed polygon of the true arc; the error shrinks like \(O(\tau/N)\) (first-order method). The exact \(\operatorname{sinc}\) step gets it right for <em>any</em> \(\tau\) because it is the matrix exponential in disguise — this is precisely what the drive simulator shows live.</p>
+    </div></details>
+  </div>
+
+  <!-- P5 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 5</span><span class="tag">Ackermann</span>
+      <p>A car with wheelbase \(L=2.5\) m drives at \(v=10\) m/s with steering angle \(\phi=10^\circ\). Find the equivalent yaw rate \(\omega\) and the turning radius. Why can this car never pivot in place like a differential drive?</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Yaw rate.</strong> \(\omega=\tfrac{v}{L}\tan\phi=\tfrac{10}{2.5}\tan10^\circ=4\times0.1763=0.705\) rad/s.</p>
+      <p><strong>Step 2 — Radius.</strong> \(r=\tfrac{v}{\omega}=\tfrac{10}{0.705}\approx14.18\) m. Equivalently \(r=\tfrac{L}{\tan\phi}=\tfrac{2.5}{0.1763}\approx14.18\) m — note the radius is independent of speed; steering geometry alone fixes the circle, speed only sets how fast you trace it.</p>
+      <p><strong>Step 3 — No pivot.</strong> A pivot needs \(v=0\) with \(\omega\ne0\), but here \(\omega=\tfrac{v}{L}\tan\phi\) vanishes whenever \(v\) does: yaw is generated <em>by rolling</em>. Only \(\phi\to\pm90^\circ\) could fake it, which the steering linkage cannot reach. This is a <em>nonholonomic</em> constraint stronger than the diff drive's.</p>
+    </div></details>
+  </div>
+
+  <!-- P6 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 6</span><span class="tag">encoder</span>
+      <p>A wheel of diameter \(d=0.25\) m carries an encoder with \(n=360\) ticks per revolution. Over \(\tau=0.5\) s the counter reports \(z=90\) ticks. How far did the wheel travel, and what linear velocity does the encoder measure?</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Meters per tick.</strong> \(\tfrac{\pi d}{n}=\tfrac{\pi\cdot0.25}{360}\approx2.18\times10^{-3}\) m/tick.</p>
+      <p><strong>Step 2 — Distance.</strong> \(\tau v\approx\tfrac{\pi dz}{n}=\tfrac{\pi\cdot0.25\cdot90}{360}=\tfrac{\pi}{16}\approx0.196\) m — exactly a quarter revolution (\(90/360\)) of the circumference \(\pi d\approx0.785\) m. ✓</p>
+      <p><strong>Step 3 — Velocity.</strong> \(v\approx\tfrac{0.196}{0.5}=0.393\) m/s. Feed one of these per wheel into \(v=\tfrac{v_R+v_L}{2}\), \(\omega=\tfrac{v_R-v_L}{\ell}\) and the differential-drive model is fully driven by encoders.</p>
+    </div></details>
+  </div>
+
+  <!-- P7 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 7</span><span class="tag">lidar</span>
+      <p>A lidar sits at \(\mathbf p=(1,1,0.5)\) with orientation \(R=R_z(90^\circ)\) and observes the world point \(\mathbf m=(0,\ 1+\sqrt3,\ 2.5)\). Compute its measurement \(\mathbf z=(r,\alpha,\epsilon)\).</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Into the lidar frame.</strong> \(\mathbf m-\mathbf p=(-1,\ \sqrt3,\ 2)\). With \(R^\top=R_z(-90^\circ)\), which maps \((a,b,c)\mapsto(b,-a,c)\):</p>
+      $$\bar{\mathbf m}=R^\top(\mathbf m-\mathbf p)=(\sqrt3,\ 1,\ 2)$$
+      <p><strong>Step 2 — Range.</strong> \(r=\lVert\bar{\mathbf m}\rVert=\sqrt{3+1+4}=\sqrt8=2\sqrt2\approx2.83\) m.</p>
+      <p><strong>Step 3 — Azimuth.</strong> \(\alpha=\arctan(\bar m_y/\bar m_x)=\arctan(1/\sqrt3)=30^\circ\).</p>
+      <p><strong>Step 4 — Elevation.</strong> \(\epsilon=\arcsin(\bar m_z/r)=\arcsin\!\big(\tfrac{2}{2\sqrt2}\big)=\arcsin\!\big(\tfrac{\sqrt2}{2}\big)=45^\circ\).</p>
+      <p>Sanity check the forward model: \(r\cos\alpha\cos\epsilon=2\sqrt2\cdot\tfrac{\sqrt3}{2}\cdot\tfrac{\sqrt2}{2}=\sqrt3\) ✓, \(r\sin\alpha\cos\epsilon=2\sqrt2\cdot\tfrac12\cdot\tfrac{\sqrt2}{2}=1\) ✓, \(r\sin\epsilon=2\sqrt2\cdot\tfrac{\sqrt2}{2}=2\) ✓.</p>
+    </div></details>
+  </div>
+
+  <!-- P8 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 8</span><span class="tag">camera pipeline</span>
+      <p>A camera's <em>regular</em> frame coincides with the world frame (\({}_wR_r=I\), \({}_w\mathbf p_r=\mathbf 0\)). Its intrinsics are \(fs_u=fs_v=500\), \(s_\theta=0\), \((c_u,c_v)=(320,240)\). A point sits at world coordinates \((2,\ -0.4,\ 0.2)\) (x forward, y left, z up). Run the full pipeline: optical coordinates, then the pixel \((u,v)\).</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Extrinsics.</strong> World = regular here, so only the axis relabeling \({}_oR_r\) acts. Optical axes from regular: \(x_o=-y_r\), \(y_o=-z_r\), \(z_o=x_r\). Therefore</p>
+      $$(X_o,Y_o,Z_o)=(-(-0.4),\ -(0.2),\ 2)=(0.4,\ -0.2,\ 2)$$
+      <p>The point is 2 m ahead along the optical axis, 0.4 m to the right, 0.2 m above center (negative \(y_o\) is up because optical-y points down).</p>
+      <p><strong>Step 2 — Projection.</strong> Normalized image coordinates: \(\tfrac{X_o}{Z_o}=0.2\), \(\tfrac{Y_o}{Z_o}=-0.1\).</p>
+      <p><strong>Step 3 — Intrinsics.</strong></p>
+      $$u=fs_u\tfrac{X_o}{Z_o}+c_u=500\cdot0.2+320=420\qquad v=fs_v\tfrac{Y_o}{Z_o}+c_v=500\cdot(-0.1)+240=190$$
+      <p>Pixel \((420,\ 190)\): right of center (point is to the right) and above center (point is up; smaller \(v\) = up in pixel coordinates). Both directions check out.</p>
+    </div></details>
+  </div>
+
+  <!-- P9 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 9</span><span class="tag">stereo</span>
+      <p>The same point and intrinsics as Problem 8, now seen by a stereo pair with baseline \(b=0.1\) m. (a) Predict \(u_R\) and the disparity \(d\). (b) An estimator measures \(u_L=420\), \(v_L=190\), \(d=25\) px. Recover the full optical-frame 3D point.</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>(a)</strong> The right camera sees the point at \(x-b=0.3\): \(u_R=500\cdot\tfrac{0.3}{2}+320=395\). Disparity \(d=u_L-u_R=420-395=25\) px — equal to \(\tfrac{fs_ub}{z}=\tfrac{500\cdot0.1}{2}=25\) ✓. And \(v_R=v_L=190\): same image row, horizontal epipolar lines.</p>
+      <p><strong>(b)</strong> Invert the three-row model:</p>
+      $$z=\frac{fs_ub}{d}=\frac{500\cdot0.1}{25}=2\text{ m}\qquad x=\frac{(u_L-c_u)\,z}{fs_u}=\frac{100\cdot2}{500}=0.4\qquad y=\frac{(v_L-c_v)\,z}{fs_v}=\frac{-50\cdot2}{500}=-0.2$$
+      <p>Recovered point \((0.4,\ -0.2,\ 2)\) — exactly the point of Problem 8. One stereo observation pinned down all three coordinates; a single camera could only have given the ray.</p>
+    </div></details>
+  </div>
+
+  <!-- P10 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 10</span><span class="tag">quadrotor</span>
+      <p>A quadrotor of mass \(m=1.2\) kg (take \(g=9.81\) m/s²) holds a perfect level hover: \(R=I\), \(\mathbf v=\boldsymbol\omega=\mathbf 0\), all derivatives zero. What thrust \(\rho\) and torque \(\boldsymbol\tau\) must the controller command? What changes the instant the body tilts?</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>Step 1 — Force balance.</strong> With \(\dot{\mathbf v}=\mathbf 0\), \(\boldsymbol\omega=\mathbf 0\), the translational equation \(m\dot{\mathbf v}=-\boldsymbol\omega\times m\mathbf v+\rho\mathbf e_3-mgR^\top\mathbf e_3\) reduces to \(\mathbf 0=\rho\mathbf e_3-mg\mathbf e_3\), so</p>
+      $$\rho=mg=1.2\times9.81\approx11.8\text{ N}$$
+      <p><strong>Step 2 — Torque balance.</strong> \(J\dot{\boldsymbol\omega}=-\boldsymbol\omega\times J\boldsymbol\omega+\boldsymbol\tau\) with everything zero gives \(\boldsymbol\tau=\mathbf 0\).</p>
+      <p><strong>Step 3 — Tilt.</strong> Once \(R\ne I\), gravity in the body frame \(mgR^\top\mathbf e_3\) is no longer along the body z-axis, but the thrust \(\rho\mathbf e_3\) still is — the two can no longer cancel. The vertical components balance only if \(\rho\) grows (\(\rho=mg/\cos(\text{tilt})\)), and the leftover horizontal component accelerates the vehicle sideways. That residual <em>is</em> the steering mechanism: quadrotors translate by leaning.</p>
+    </div></details>
+  </div>
+
+  <!-- P11 -->
+  <div class="prob">
+    <div class="q"><span class="pno">Problem 11</span><span class="tag">IMU · concept</span>
+      <p>(a) A strapdown IMU sits motionless on a level table (\(\mathbf a=\mathbf 0\), \(\boldsymbol\omega=\mathbf 0\), \(R=I\)). What do \(\mathbf z_\omega\) and \(\mathbf z_a\) read (ignore white noise)? (b) Why must the discrete gyro integration use \(R_{k+1}=R_k\exp(\tau\hat{\mathbf z}_\omega)\) rather than \(R_{k+1}=R_k+\tau R_k\hat{\mathbf z}_\omega\)?</p></div>
+    <details class="sol"><summary>Show solution</summary><div class="body">
+      <p><strong>(a)</strong> Gyro: \(\mathbf z_\omega=\boldsymbol\omega+\mathbf b_g=\mathbf b_g\) — a stationary gyro reads its own bias, which is exactly how bias is calibrated at startup. Accelerometer: \(\mathbf z_a=\mathbf a-gR^\top\mathbf e_3+\mathbf b_a=-g\mathbf e_3+\mathbf b_a\approx(0,0,-9.81)+\mathbf b_a\) — the constant gravity signature. Tilting the table tilts that vector in the body frame, which is how an IMU estimates roll and pitch (and why accelerometer bias masquerades as a small tilt).</p>
+      <p><strong>(b)</strong> The additive update is a step in the flat 9-dimensional matrix space: the result fails \(R^\top R=I\) by \(O(\tau^2)\) <em>every step</em>, and the violations compound — after thousands of IMU samples per second the "rotation" shears and scales geometry. \(\exp\) is the bridge from the Lie algebra to the group: it converts the tangent step \(\tau\hat{\mathbf z}_\omega\) into motion <em>along</em> the curved manifold \(SO(3)\), so \(R_{k+1}\) is orthogonal with determinant 1 to machine precision, forever. Same reason quaternion integration uses \(q_{k+1}=q_k\circ\exp([0,\tau\mathbf z_\omega/2])\) plus a renormalize.</p>
+    </div></details>
+  </div>
+</section>
+
+<footer>
+  <p>Built from ECE276A Lecture 4 (N. Atanasov, UCSD) — companion to the Lecture 3 <em>Rotations</em> lesson; the \(\exp\)/\(\log\), hat-map, and \(SE(3)\) machinery used here is developed there. Math renders with KaTeX and the live panels draw on canvas — both need an internet connection on first load. For a static copy, use your browser's <strong>Print → Save as PDF</strong> (the simulators will appear as snapshots).</p>
+</footer>
+
+</div><!-- /wrap -->
+<script>
+/* ============ shared helpers ============ */
+const COL={x:'#FF5D5D',y:'#46D17C',z:'#5398FF',amber:'#FFB454',ink:'#E4E9F1',muted:'#909CB2',faint:'#5d6a80',line:'#222B3A',line2:'#2c374a',panel:'#10151F'};
+function $(id){return document.getElementById(id)}
+const REDRAWS=[];
+function fit(cv){
+  const host=cv.parentElement, dpr=window.devicePixelRatio||1;
+  const w=host.clientWidth, h=host.clientHeight;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+    cv.style.width=w+'px'; cv.style.height=h+'px';
+  }
+  const g=cv.getContext('2d');
+  g.setTransform(dpr,0,0,dpr,0,0);
+  return {g,w,h};
+}
+function sinc(x){return Math.abs(x)<1e-9?1:Math.sin(x)/x}
+function wrapPi(a){while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a}
+function fmt(v,n){return (v<0?'−':'')+Math.abs(v).toFixed(n===undefined?2:n)}
+function deg(a){return a*180/Math.PI}
+function raySeg(ox,oy,dx,dy,x1,y1,x2,y2){
+  const ex=x2-x1,ey=y2-y1,den=dx*ey-dy*ex;
+  if(Math.abs(den)<1e-12)return Infinity;
+  const t=((x1-ox)*ey-(y1-oy)*ex)/den;
+  const s=((x1-ox)*dy-(y1-oy)*dx)/den;
+  return (t>1e-9&&s>=-1e-9&&s<=1+1e-9)?t:Infinity;
+}
+function rectEdges(x1,y1,x2,y2){return[[x1,y1,x2,y1],[x2,y1,x2,y2],[x2,y2,x1,y2],[x1,y2,x1,y1]]}
+function grid(g,w,h,step){
+  g.strokeStyle='rgba(255,255,255,.035)';g.lineWidth=1;g.beginPath();
+  for(let x=0;x<w;x+=step){g.moveTo(x,0);g.lineTo(x,h)}
+  for(let y=0;y<h;y+=step){g.moveTo(0,y);g.lineTo(w,y)}
+  g.stroke();
+}
+
+/* ============ W1 · differential-drive simulator ============ */
+function bootDrive(){
+  const cv=$('cvD'); if(!cv)return;
+  const L=0.4, BW=3.4, BH=2.1;           // axle length; world half-extents (m)
+  let exact={x:-1.6,y:-0.7,th:0}, ghost={x:-1.6,y:-0.7,th:0};
+  let trailE=[],trailG=[],running=true,eulerClock=0,simT=0;
+  const sVL=$('sVL'),sVR=$('sVR'),sTau=$('sTau');
+  function vals(){return{vL:+sVL.value/100,vR:+sVR.value/100,tau:+sTau.value/100}}
+  function labels(){
+    const{vL,vR,tau}=vals();
+    $('vVL').textContent=fmt(vL)+' m/s'; $('vVR').textContent=fmt(vR)+' m/s'; $('vTau').textContent=fmt(tau)+' s';
+  }
+  function reset(){
+    exact={x:-1.6,y:-0.7,th:0}; ghost={x:-1.6,y:-0.7,th:0};
+    trailE=[];trailG=[];eulerClock=0;simT=0;
+  }
+  function shiftAll(dx,dy){
+    exact.x+=dx;exact.y+=dy;ghost.x+=dx;ghost.y+=dy;
+    for(const p of trailE)if(p){p.x+=dx;p.y+=dy}
+    for(const p of trailG)if(p){p.x+=dx;p.y+=dy}
+  }
+  function step(dt){
+    const{vL,vR,tau}=vals();
+    const v=(vL+vR)/2, om=(vR-vL)/L;
+    // exact (closed-form / matrix-exponential) integration of the unicycle
+    const h=om*dt/2;
+    exact.x+=v*dt*sinc(h)*Math.cos(exact.th+h);
+    exact.y+=v*dt*sinc(h)*Math.sin(exact.th+h);
+    exact.th=wrapPi(exact.th+om*dt);
+    trailE.push({x:exact.x,y:exact.y}); if(trailE.length>900)trailE.shift();
+    // Euler ghost steps once per tau of sim time
+    eulerClock+=dt; simT+=dt;
+    while(eulerClock>=tau){
+      eulerClock-=tau;
+      ghost.x+=tau*v*Math.cos(ghost.th);
+      ghost.y+=tau*v*Math.sin(ghost.th);
+      ghost.th=wrapPi(ghost.th+tau*om);
+      trailG.push({x:ghost.x,y:ghost.y}); if(trailG.length>900)trailG.shift();
+    }
+    if(Math.abs(exact.x)>BW-0.5||Math.abs(exact.y)>BH-0.4){
+      shiftAll(-exact.x-1.2*Math.cos(exact.th), -exact.y-1.2*Math.sin(exact.th));
+    }
+  }
+  function draw(){
+    const{g,w,h}=fit(cv);
+    g.clearRect(0,0,w,h);
+    grid(g,w,h,32);
+    const sc=Math.min(w/(2*BW),h/(2*BH));
+    const X=p=>w/2+p.x*sc, Y=p=>h/2-p.y*sc;
+    const{vL,vR}=vals();
+    const v=(vL+vR)/2, om=(vR-vL)/L;
+    // ICC
+    if(Math.abs(om)>1e-3){
+      const r=v/om;
+      const ix=exact.x-r*Math.sin(exact.th), iy=exact.y+r*Math.cos(exact.th);
+      const sx=w/2+ix*sc, sy=h/2-iy*sc, rr=Math.abs(r)*sc;
+      g.strokeStyle='rgba(255,180,84,.35)';g.setLineDash([4,5]);g.lineWidth=1;
+      g.beginPath();g.arc(sx,sy,rr,0,2*Math.PI);g.stroke();g.setLineDash([]);
+      g.strokeStyle=COL.amber;g.beginPath();
+      g.moveTo(sx-6,sy);g.lineTo(sx+6,sy);g.moveTo(sx,sy-6);g.lineTo(sx,sy+6);g.stroke();
+      g.fillStyle=COL.amber;g.font='10px "IBM Plex Mono"';g.fillText('ICC',sx+8,sy-6);
+    }
+    // trails
+    function trail(t,col,dash){
+      g.strokeStyle=col;g.lineWidth=2;if(dash)g.setLineDash([3,4]);
+      g.beginPath();let pen=false;
+      for(const p of t){
+        if(!p){pen=false;continue}
+        const x=X(p),y=Y(p);
+        if(!pen){g.moveTo(x,y);pen=true}else g.lineTo(x,y);
+      }
+      g.stroke();g.setLineDash([]);
+    }
+    trail(trailG,'rgba(83,152,255,.55)',true);
+    trail(trailE,COL.amber,false);
+    // ghost robot
+    function bot(p,col,fill){
+      const x=X(p),y=Y(p);
+      g.save();g.translate(x,y);g.rotate(-p.th);
+      g.strokeStyle=col;g.fillStyle=fill;g.lineWidth=1.6;
+      const a=0.16*sc,b=0.22*sc;
+      g.beginPath();g.rect(-a,-b,2*a,2*b);g.fill();g.stroke();
+      g.fillStyle=col;
+      g.fillRect(-a-3,-b,3,0.32*sc);g.fillRect(-a-3,b-0.32*sc,3,0.32*sc);
+      g.fillRect(a,-b,3,0.32*sc);g.fillRect(a,b-0.32*sc,3,0.32*sc);
+      g.beginPath();g.moveTo(0,0);g.lineTo(0.34*sc,0);g.strokeStyle=col;g.lineWidth=2;
+      g.moveTo(0,0);g.lineTo(0.34*sc,0);g.stroke();
+      g.beginPath();g.arc(0,0,2.5,0,7);g.fill();
+      g.restore();
+    }
+    g.save();
+    // note: our bot() draws heading along +x of its local frame rotated by -th in screen space;
+    // screen y is flipped, so rotate(-th) gives correct CCW-positive heading.
+    bot(ghost,'rgba(83,152,255,.8)','rgba(83,152,255,.12)');
+    bot(exact,COL.amber,'rgba(255,180,84,.15)');
+    g.restore();
+    // legend
+    g.font='11px "IBM Plex Mono"';
+    g.fillStyle=COL.amber;g.fillText('exact (matrix exp)',12,18);
+    g.fillStyle='rgba(83,152,255,.9)';g.fillText('Euler ghost (step τ)',12,34);
+    const r=Math.abs(om)>1e-3?v/om:Infinity;
+    const drift=Math.hypot(exact.x-ghost.x,exact.y-ghost.y);
+    $('rD').innerHTML=
+      'v = (v<sub>R</sub>+v<sub>L</sub>)/2 = <b>'+fmt(v)+' m/s</b> &nbsp; ω = (v<sub>R</sub>−v<sub>L</sub>)/ℓ = <b>'+fmt(om)+' rad/s</b><br>'+
+      'turn radius r = v/ω = <b>'+(isFinite(r)?fmt(r)+' m':'∞ (straight)')+'</b> &nbsp; (ℓ = 0.40 m)<br>'+
+      'exact pose: ('+fmt(exact.x)+', '+fmt(exact.y)+', '+fmt(deg(exact.th),0)+'°)<br>'+
+      'Euler pose: ('+fmt(ghost.x)+', '+fmt(ghost.y)+', '+fmt(deg(ghost.th),0)+'°)<br>'+
+      'drift ‖exact − Euler‖ = <b style="color:'+(drift>0.15?'#FF5D5D':'#46D17C')+'">'+fmt(drift,3)+' m</b> after '+fmt(simT,1)+' s';
+  }
+  let last=performance.now();
+  function loop(now){
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(running)step(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+  [sVL,sVR,sTau].forEach(s=>s.addEventListener('input',labels));
+  $('bRun').addEventListener('click',()=>{running=!running;$('bRun').textContent=running?'pause':'run'});
+  $('bReset').addEventListener('click',reset);
+  document.querySelectorAll('[data-dd]').forEach(b=>b.addEventListener('click',()=>{
+    const m=b.getAttribute('data-dd');
+    if(m==='straight'){sVL.value=80;sVR.value=80}
+    if(m==='arc'){sVL.value=60;sVR.value=100}
+    if(m==='pivot'){sVL.value=-50;sVR.value=50}
+    labels();
+  }));
+  labels(); requestAnimationFrame(loop);
+}
+
+/* ============ W2 · lidar scan ============ */
+function bootLidar(){
+  const cv=$('cvL'); if(!cv)return;
+  const ROOM=[-3,-2,3,2];
+  const BOXES=[[-1.6,-1.2,-0.7,-0.3],[0.8,0.2,1.8,1.4]];
+  const segs=[...rectEdges(...ROOM),...BOXES.flatMap(b=>rectEdges(...b))];
+  const RMAX=4;
+  function cast(ox,oy,a){
+    const dx=Math.cos(a),dy=Math.sin(a);
+    let t=Infinity;
+    for(const s of segs)t=Math.min(t,raySeg(ox,oy,dx,dy,...s));
+    return Math.min(t,RMAX);
+  }
+  function draw(){
+    const{g,w,h}=fit(cv);
+    g.clearRect(0,0,w,h);
+    const sc=Math.min(w/6.8,h/4.6);
+    const X=x=>w/2+x*sc, Y=y=>h/2-y*sc;
+    grid(g,w,h,32);
+    const px=+$('sLx').value/100, py=+$('sLy').value/100;
+    const th=+$('sLth').value*Math.PI/180, ba=+$('sLb').value*Math.PI/180;
+    $('vLx').textContent=fmt(px)+' m';$('vLy').textContent=fmt(py)+' m';
+    $('vLth').textContent=$('sLth').value+'°';$('vLb').textContent=$('sLb').value+'°';
+    // beams
+    let selR=RMAX;
+    for(let k=-120;k<=120;k+=3){
+      const a=th+k*Math.PI/180;
+      const r=cast(px,py,a);
+      const hx=px+r*Math.cos(a), hy=py+r*Math.sin(a);
+      const sel=(k===+$('sLb').value);
+      if(sel)selR=r;
+      g.strokeStyle=sel?COL.amber:'rgba(255,93,93,.20)';
+      g.lineWidth=sel?2.2:1;
+      g.beginPath();g.moveTo(X(px),Y(py));g.lineTo(X(hx),Y(hy));g.stroke();
+      if(r<RMAX-1e-6){
+        g.fillStyle=sel?COL.amber:'rgba(255,93,93,.65)';
+        g.beginPath();g.arc(X(hx),Y(hy),sel?4:1.6,0,7);g.fill();
+      }
+    }
+    // walls + obstacles on top
+    g.strokeStyle=COL.z;g.lineWidth=2;
+    g.strokeRect(X(ROOM[0]),Y(ROOM[3]),(ROOM[2]-ROOM[0])*sc,(ROOM[3]-ROOM[1])*sc);
+    g.fillStyle='rgba(83,152,255,.14)';
+    for(const b of BOXES){
+      g.fillRect(X(b[0]),Y(b[3]),(b[2]-b[0])*sc,(b[3]-b[1])*sc);
+      g.strokeRect(X(b[0]),Y(b[3]),(b[2]-b[0])*sc,(b[3]-b[1])*sc);
+    }
+    // sensor
+    g.fillStyle=COL.amber;g.beginPath();g.arc(X(px),Y(py),5,0,7);g.fill();
+    g.strokeStyle=COL.amber;g.lineWidth=2;
+    g.beginPath();g.moveTo(X(px),Y(py));g.lineTo(X(px+0.45*Math.cos(th)),Y(py+0.45*Math.sin(th)));g.stroke();
+    const noHit=selR>=RMAX-1e-6;
+    const mx=px+selR*Math.cos(th+ba), my=py+selR*Math.sin(th+ba);
+    const lx=selR*Math.cos(ba), ly=selR*Math.sin(ba);
+    $('rL').innerHTML=
+      'selected beam: α = <b>'+$('sLb').value+'°</b> → range r = <b>'+(noHit?'no return (≥ 4 m)':fmt(selR,3)+' m')+'</b><br>'+
+      (noHit?'beam exits the 4 m detectable range':
+      'hit point m = ('+fmt(mx)+', '+fmt(my)+') world &nbsp;·&nbsp; m̄ = R<sup>⊤</sup>(m−p) = ('+fmt(lx)+', '+fmt(ly)+') lidar frame<br>'+
+      'check: m̄ = (r cos α, r sin α) = ('+fmt(selR*Math.cos(ba))+', '+fmt(selR*Math.sin(ba))+') ✓');
+  }
+  ['sLx','sLy','sLth','sLb'].forEach(id=>$(id).addEventListener('input',draw));
+  REDRAWS.push(draw); draw();
+}
+
+/* ============ W3 · pinhole bench ============ */
+function bootCam(){
+  const cv=$('cvC'); if(!cv)return;
+  const S=0.8; // sensor side (m), exaggerated bench
+  function draw(){
+    const{g,w,h}=fit(cv);
+    g.clearRect(0,0,w,h);
+    grid(g,w,h,32);
+    const f=+$('sCf').value/100, Xpt=+$('sCx').value/100, Z=+$('sCz').value/100, su=+$('sCsu').value;
+    $('vCf').textContent=fmt(f)+' m';$('vCx').textContent=fmt(Xpt)+' m';
+    $('vCz').textContent=fmt(Z)+' m';$('vCsu').textContent=su+' px/m';
+    const hsc=(w-100)/7.4, vsc=h/4.4;
+    const xO=70+1.3*hsc, yO=h/2;
+    const SX=z=>xO+z*hsc, SY=x=>yO-x*vsc;
+    // optical axis
+    g.strokeStyle=COL.line2;g.setLineDash([5,5]);g.beginPath();
+    g.moveTo(20,yO);g.lineTo(w-12,yO);g.stroke();g.setLineDash([]);
+    g.fillStyle=COL.muted;g.font='10px "IBM Plex Mono"';
+    g.fillText('optical axis (Z)',w-118,yO+14);
+    // FOV wedge through virtual plane edges
+    const half=Math.atan(S/(2*f));
+    g.fillStyle='rgba(255,180,84,.05)';
+    g.strokeStyle='rgba(255,180,84,.3)';g.lineWidth=1;
+    const far=6.9;
+    g.beginPath();g.moveTo(SX(0),yO);
+    g.lineTo(SX(far),yO-Math.tan(half)*far*hsc*(vsc/hsc));
+    g.lineTo(SX(far),yO+Math.tan(half)*far*hsc*(vsc/hsc));
+    g.closePath();g.fill();g.stroke();
+    // image plane (behind, real) and virtual plane (front)
+    const xb=SX(-f), xv=SX(f), hh=S/2*vsc;
+    g.strokeStyle=COL.z;g.lineWidth=3;
+    g.beginPath();g.moveTo(xb,yO-hh);g.lineTo(xb,yO+hh);g.stroke();
+    g.strokeStyle='rgba(83,152,255,.45)';g.setLineDash([4,4]);
+    g.beginPath();g.moveTo(xv,yO-hh);g.lineTo(xv,yO+hh);g.stroke();g.setLineDash([]);
+    g.fillStyle=COL.z;g.fillText('image plane',xb-34,yO-hh-8);
+    g.fillStyle='rgba(83,152,255,.7)';g.fillText('virtual plane (flipped)',xv-58,yO-hh-8);
+    // pinhole
+    g.fillStyle=COL.ink;g.beginPath();g.arc(xO,yO,4,0,7);g.fill();
+    g.fillText(' O',xO+4,yO-8);
+    // scene point + rays
+    const Px=SX(Z), Py=SY(Xpt);
+    const ximg=f*Xpt/Z;                  // metres on plane
+    const inside=Math.abs(ximg)<=S/2;
+    // ray scene → pinhole → behind plane
+    g.strokeStyle=inside?COL.x:'rgba(255,93,93,.45)';g.lineWidth=1.8;
+    g.beginPath();g.moveTo(Px,Py);g.lineTo(xO,yO);
+    g.lineTo(xb,yO+ximg*vsc);g.stroke();
+    // virtual intersection
+    g.fillStyle=inside?COL.amber:'#FF5D5D';
+    g.beginPath();g.arc(xv,yO-ximg*vsc,4,0,7);g.fill();
+    g.beginPath();g.arc(xb,yO+ximg*vsc,4,0,7);g.fill();
+    // the point
+    g.fillStyle=COL.y;g.beginPath();g.arc(Px,Py,5,0,7);g.fill();
+    g.fillStyle=COL.y;g.fillText('m = (X, Z)',Px-30,Py-10);
+    // height markers
+    g.strokeStyle='rgba(70,209,124,.4)';g.setLineDash([3,4]);
+    g.beginPath();g.moveTo(Px,Py);g.lineTo(Px,yO);g.stroke();g.setLineDash([]);
+    const Wpx=Math.round(su*S), cu=Wpx/2;
+    const u=su*ximg+cu;
+    const fov=2*Math.atan(S/(2*f))*180/Math.PI;
+    $('rC').innerHTML=
+      'image coordinate x = fX/Z = '+fmt(f)+'·'+fmt(Xpt)+'/'+fmt(Z)+' = <b>'+fmt(ximg,3)+' m</b>'+(inside?'':' — <b style="color:#FF5D5D">outside the sensor!</b>')+'<br>'+
+      'pixel u = s<sub>u</sub>·x + c<sub>u</sub> = '+su+'·'+fmt(ximg,3)+' + '+cu+' = <b>'+fmt(u,0)+' px</b> (sensor 0…'+Wpx+' px)<br>'+
+      'field of view θ = 2 arctan(s/2f) = <b>'+fmt(fov,1)+'°</b> &nbsp;(sensor side s = 0.80 m)';
+  }
+  ['sCf','sCx','sCz','sCsu'].forEach(id=>$(id).addEventListener('input',draw));
+  REDRAWS.push(draw); draw();
+}
+
+/* ============ W4 · stereo rig ============ */
+function bootStereo(){
+  const cv=$('cvS'); if(!cv)return;
+  const FSU=500, CU=320, WPX=640;
+  function draw(){
+    const{g,w,h}=fit(cv);
+    g.clearRect(0,0,w,h);
+    grid(g,w,h,32);
+    const b=+$('sSb').value/100, x=+$('sSx').value/100, z=+$('sSz').value/100;
+    $('vSb').textContent=fmt(b)+' m';$('vSx').textContent=fmt(x)+' m';$('vSz').textContent=fmt(z)+' m';
+    const sc=Math.min((w-60)/3.2,(h-92)/5.4);
+    const X0=w/2-(b/2)*sc, Y0=h-58;
+    const SX=v=>X0+v*sc, SY=zz=>Y0-zz*sc;
+    // cameras
+    function cam(cx,label,col){
+      g.fillStyle=col;g.strokeStyle=col;g.lineWidth=1.6;
+      g.beginPath();g.moveTo(SX(cx),Y0);
+      g.lineTo(SX(cx)-9,Y0+16);g.lineTo(SX(cx)+9,Y0+16);g.closePath();g.fill();
+      g.font='11px "IBM Plex Mono"';g.fillText(label,SX(cx)-10,Y0+30);
+    }
+    cam(0,'{L}',COL.z); cam(b,'{R}',COL.y);
+    // baseline
+    g.strokeStyle=COL.muted;g.lineWidth=1;g.setLineDash([3,4]);
+    g.beginPath();g.moveTo(SX(0),Y0+8);g.lineTo(SX(b),Y0+8);g.stroke();g.setLineDash([]);
+    g.fillStyle=COL.muted;g.fillText('b',SX(b/2)-3,Y0+22);
+    // point
+    const Pp={X:SX(x),Y:SY(z)};
+    g.fillStyle=COL.amber;g.beginPath();g.arc(Pp.X,Pp.Y,5,0,7);g.fill();
+    g.fillText('m',Pp.X+8,Pp.Y-4);
+    // rays
+    g.strokeStyle='rgba(83,152,255,.8)';g.lineWidth=1.8;
+    g.beginPath();g.moveTo(SX(0),Y0);g.lineTo(Pp.X,Pp.Y);g.stroke();
+    g.strokeStyle='rgba(70,209,124,.8)';
+    g.beginPath();g.moveTo(SX(b),Y0);g.lineTo(Pp.X,Pp.Y);g.stroke();
+    // pixel strips
+    const uL=FSU*x/z+CU, uR=FSU*(x-b)/z+CU, d=uL-uR;
+    const stw=Math.min(w-40,360), stx=(w-stw)/2;
+    function strip(y,u,col,name){
+      g.strokeStyle=COL.line2;g.lineWidth=1;g.strokeRect(stx,y,stw,10);
+      g.fillStyle=COL.faint;g.font='10px "IBM Plex Mono"';g.fillText(name,stx-26,y+9);
+      const px=stx+Math.max(0,Math.min(WPX,u))/WPX*stw;
+      g.fillStyle=col;g.fillRect(px-1.5,y-2,3,14);
+      g.fillText(fmt(u,0),px-9,y-5);
+    }
+    strip(16,uL,COL.z,'uL');
+    strip(44,uR,COL.y,'uR');
+    // disparity arrow
+    const pL=stx+Math.max(0,Math.min(WPX,uL))/WPX*stw, pR=stx+Math.max(0,Math.min(WPX,uR))/WPX*stw;
+    g.strokeStyle=COL.amber;g.lineWidth=1.6;
+    g.beginPath();g.moveTo(pR,36);g.lineTo(pL,36);g.stroke();
+    g.fillStyle=COL.amber;g.fillText('d',(pL+pR)/2-3,33);
+    const inL=uL>=0&&uL<=WPX, inR=uR>=0&&uR<=WPX;
+    $('rS').innerHTML=
+      'u<sub>L</sub> = fs<sub>u</sub>·x/z + c<sub>u</sub> = <b>'+fmt(uL,1)+' px</b>'+(inL?'':' (off-sensor)')+' &nbsp; u<sub>R</sub> = fs<sub>u</sub>·(x−b)/z + c<sub>u</sub> = <b>'+fmt(uR,1)+' px</b>'+(inR?'':' (off-sensor)')+'<br>'+
+      'disparity d = u<sub>L</sub> − u<sub>R</sub> = fs<sub>u</sub>b/z = <b>'+fmt(d,1)+' px</b> &nbsp; (fs<sub>u</sub> = 500, c<sub>u</sub> = 320)<br>'+
+      'depth from disparity: z = fs<sub>u</sub>b/d = 500·'+fmt(b)+'/'+fmt(d,1)+' = <b>'+fmt(FSU*b/d,2)+' m</b> ✓ &nbsp;·&nbsp; v<sub>L</sub> = v<sub>R</sub> always (horizontal epipolar lines)';
+  }
+  ['sSb','sSx','sSz'].forEach(id=>$(id).addEventListener('input',draw));
+  REDRAWS.push(draw); draw();
+}
+
+/* ============ scroll-spy nav ============ */
+function setupNav(){
+  const links=[...document.querySelectorAll('#navlinks a')];
+  const map={}; links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{
+    es.forEach(e=>{
+      if(e.isIntersecting){
+        links.forEach(a=>a.classList.remove('on'));
+        const a=map[e.target.id]; if(a)a.classList.add('on');
+      }
+    });
+  },{rootMargin:'-45% 0px -50% 0px'});
+  document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));
+}
+
+/* ============ boot ============ */
+function bootWidgets(){
+  try{bootDrive()}catch(e){}
+  try{bootLidar()}catch(e){}
+  try{bootCam()}catch(e){}
+  try{bootStereo()}catch(e){}
+  window.addEventListener('resize',()=>REDRAWS.forEach(f=>{try{f()}catch(e){}}));
+}
+(function(){
+  var mathDone=false, otherDone=false;
+  function renderMath(){
+    if(mathDone) return;
+    if(window.renderMathInElement){
+      try{renderMathInElement(document.body,{delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'\\[',right:'\\]',display:true},
+        {left:'\\(',right:'\\)',display:false}
+      ],throwOnError:false});}catch(e){}
+      mathDone=true;
+    }
+  }
+  function bootRest(){
+    if(otherDone) return; otherDone=true;
+    try{bootWidgets()}catch(e){}
+    try{setupNav()}catch(e){}
+  }
+  var tries=0;
+  (function pollKaTeX(){
+    renderMath();
+    if(!mathDone && tries++ < 160){ setTimeout(pollKaTeX,50); }
+  })();
+  window.addEventListener('load',renderMath);
+  if(document.readyState!=='loading') bootRest();
+  else document.addEventListener('DOMContentLoaded',bootRest);
+})();
+</script>
+</body>
+</html>

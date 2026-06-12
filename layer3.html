@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vision &amp; Language Foundation Models — Layer 3 Interactive Textbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="window.__katexReady=true;if(window.__doRender)window.__doRender();"></script>
+<style>
+/* ============================================================
+   DESIGN SYSTEM — "Signal & Field"
+   A computational-textbook identity: cool paper, deep indigo
+   ink, an electric coral reserved EXCLUSIVELY for things you
+   can touch (the signature), teal as the secondary data hue.
+   ============================================================ */
+:root{
+  --paper:#F4F5F8;
+  --surface:#FFFFFF;
+  --ink:#14162A;
+  --ink-soft:#474B66;
+  --ink-faint:#878BA6;
+  --indigo:#4338CA;
+  --indigo-deep:#2A2090;
+  --indigo-wash:#EEEEF8;
+  --coral:#FF5C49;
+  --coral-deep:#E8412E;
+  --teal:#0E9C92;
+  --teal-wash:#E4F3F1;
+  --amber:#C98314;
+  --amber-wash:#FBF1DC;
+  --tint:#EDEEF7;
+  --line:#DBDDE8;
+  --line-soft:#E7E8F0;
+  --code-bg:#191B30;
+  --code-ink:#E8E9F2;
+  --shadow:0 1px 2px rgba(20,22,42,.04),0 8px 30px rgba(20,22,42,.06);
+  --shadow-lg:0 4px 12px rgba(20,22,42,.08),0 20px 50px rgba(20,22,42,.10);
+  --serif:"Newsreader",Georgia,serif;
+  --display:"Space Grotesk",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --reading:760px;
+  --wide:1000px;
+  --sidebar:280px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:19px;
+  line-height:1.72;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+::selection{background:var(--coral);color:#fff}
+
+/* ---------- reading progress ---------- */
+#progress{
+  position:fixed;top:0;left:0;height:3px;width:0%;
+  background:linear-gradient(90deg,var(--indigo),var(--coral));
+  z-index:120;transition:width .12s linear;
+}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);
+  background:var(--surface);border-right:1px solid var(--line);
+  padding:30px 0 40px;overflow-y:auto;z-index:100;
+}
+.sidebar-brand{padding:0 26px 22px;border-bottom:1px solid var(--line-soft);margin-bottom:18px}
+.sidebar-brand .eyebrow{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--coral);font-weight:500;
+}
+.sidebar-brand h1{
+  font-family:var(--display);font-weight:700;font-size:22px;
+  line-height:1.12;margin-top:8px;letter-spacing:-.01em;color:var(--ink);
+}
+.sidebar-brand .sub{font-size:13px;color:var(--ink-faint);margin-top:7px;font-family:var(--display);font-weight:400}
+.toc{list-style:none;font-family:var(--display);font-size:14px}
+.toc>li{margin:1px 0}
+.toc .chap{
+  display:flex;gap:11px;align-items:baseline;padding:8px 26px;
+  color:var(--ink-soft);text-decoration:none;font-weight:500;
+  border-left:3px solid transparent;transition:all .15s;
+}
+.toc .chap .num{font-family:var(--mono);font-size:11px;color:var(--ink-faint);min-width:18px}
+.toc .chap:hover{background:var(--indigo-wash);color:var(--indigo)}
+.toc .chap.active{color:var(--indigo);border-left-color:var(--coral);background:var(--indigo-wash)}
+.toc .chap.active .num{color:var(--coral)}
+.toc .subs{list-style:none;padding:2px 0 6px}
+.toc .subs a{
+  display:block;padding:4px 26px 4px 55px;font-size:12.5px;
+  color:var(--ink-faint);text-decoration:none;border-left:3px solid transparent;
+}
+.toc .subs a:hover{color:var(--indigo)}
+.toc .subs a.active{color:var(--ink);border-left-color:var(--line)}
+
+/* ---------- mobile menu ---------- */
+.menu-btn{
+  display:none;position:fixed;top:14px;left:14px;z-index:130;
+  background:var(--ink);color:#fff;border:none;border-radius:9px;
+  width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:var(--shadow);
+}
+.scrim{display:none;position:fixed;inset:0;background:rgba(20,22,42,.4);z-index:99}
+
+/* ---------- main layout ---------- */
+.content{margin-left:var(--sidebar);padding:0 0 120px}
+.wrap{max-width:var(--reading);margin:0 auto;padding:0 28px}
+.wrap-wide{max-width:var(--wide);margin:0 auto;padding:0 28px}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;height:clamp(440px,72vh,640px);
+  display:flex;align-items:center;overflow:hidden;
+  background:linear-gradient(165deg,#15172E 0%,#221C6B 55%,#3A2D9E 100%);
+  margin-bottom:70px;
+}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;opacity:.9}
+.hero-inner{position:relative;z-index:2;max-width:var(--wide);margin:0 auto;padding:0 48px;width:100%}
+.hero .eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  color:#FF8C7E;font-weight:500;margin-bottom:20px;
+}
+.hero h1{
+  font-family:var(--display);font-weight:700;color:#fff;
+  font-size:clamp(40px,7vw,76px);line-height:.98;letter-spacing:-.03em;
+}
+.hero h1 em{font-style:normal;color:#B9B2FF}
+.hero .lead{
+  font-family:var(--serif);color:#C9CCE8;font-size:clamp(17px,2.2vw,21px);
+  max-width:620px;margin-top:26px;line-height:1.6;
+}
+.hero .scroll-cue{
+  margin-top:38px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:#9A9DD0;display:flex;align-items:center;gap:10px;
+}
+.hero .scroll-cue::before{content:"";width:34px;height:1px;background:#6E72B8}
+
+/* ---------- typography in body ---------- */
+.chapter{padding-top:34px;margin-top:34px}
+.chapter-head{margin-bottom:14px}
+.chapter-head .kicker{
+  font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:12px;
+}
+.chapter-head .kicker::after{content:"";flex:1;height:1px;background:var(--line)}
+.chapter-head h2{
+  font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,42px);
+  line-height:1.06;letter-spacing:-.02em;margin-top:14px;color:var(--ink);
+}
+h3{
+  font-family:var(--display);font-weight:600;font-size:25px;line-height:1.2;
+  margin:46px 0 4px;letter-spacing:-.01em;color:var(--ink);
+}
+h4{
+  font-family:var(--display);font-weight:500;font-size:18px;
+  margin:30px 0 2px;color:var(--indigo-deep);letter-spacing:-.005em;
+}
+.content p{margin:16px 0;color:var(--ink)}
+.content p.intro{font-size:21px;line-height:1.66;color:var(--ink-soft)}
+.content a{color:var(--indigo);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.content a:hover{text-decoration-color:var(--coral)}
+strong{font-weight:600;color:var(--ink)}
+em{font-style:italic}
+.term{font-weight:600;color:var(--indigo-deep);font-style:normal}
+code{font-family:var(--mono);font-size:.84em;background:var(--tint);padding:.12em .4em;border-radius:5px;color:var(--indigo-deep)}
+ul,ol{margin:16px 0 16px 4px;padding-left:26px}
+li{margin:8px 0;padding-left:4px}
+li::marker{color:var(--coral)}
+hr{border:none;border-top:1px solid var(--line);margin:54px 0}
+
+/* ---------- callout boxes ---------- */
+.box{border-radius:14px;padding:22px 26px;margin:28px 0;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
+.box .box-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.box .box-label::before{content:"";width:7px;height:7px;border-radius:50%}
+.box p:first-of-type,.box .box-label+p{margin-top:0}
+.box p:last-child{margin-bottom:0}
+
+.def{background:var(--indigo-wash);border-color:#D6D7F0}
+.def .box-label{color:var(--indigo)}
+.def .box-label::before{background:var(--indigo)}
+
+.intuition{background:var(--teal-wash);border-color:#C4E4E0}
+.intuition .box-label{color:var(--teal)}
+.intuition .box-label::before{background:var(--teal)}
+
+.note{background:var(--amber-wash);border-color:#EAD9AE}
+.note .box-label{color:var(--amber)}
+.note .box-label::before{background:var(--amber)}
+
+.derivation{background:var(--surface);border-color:var(--line);border-left:4px solid var(--ink)}
+.derivation .box-label{color:var(--ink)}
+.derivation .box-label::before{background:var(--ink)}
+.derivation .step{display:flex;gap:14px;margin:14px 0;align-items:flex-start}
+.derivation .step .s-num{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;background:var(--ink);
+  min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  margin-top:4px;flex-shrink:0;
+}
+.derivation .step .s-body{flex:1}
+.derivation .step .s-body p{margin:0 0 4px}
+
+/* ---------- math display ---------- */
+.katex-display{margin:20px 0!important;overflow-x:auto;overflow-y:hidden;padding:4px 0}
+.eqn{position:relative}
+.content .katex{font-size:1.04em}
+
+/* ---------- figures & demos ---------- */
+figure{margin:34px 0;text-align:center}
+figcaption{font-family:var(--display);font-size:13.5px;color:var(--ink-faint);margin-top:14px;line-height:1.5}
+figcaption b{color:var(--ink-soft);font-weight:600}
+.svg-fig{width:100%;height:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+
+.demo{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  margin:34px 0;box-shadow:var(--shadow-lg);overflow:hidden;
+}
+.demo-head{padding:18px 24px 16px;border-bottom:1px solid var(--line-soft);background:linear-gradient(180deg,#FFF,#FCFCFE)}
+.demo-head .tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:8px;
+}
+.demo-head .tag::before{content:"▶";font-size:8px}
+.demo-head h4{font-family:var(--display);font-weight:600;font-size:18px;color:var(--ink);margin:7px 0 0}
+.demo-body{padding:22px 24px}
+.demo canvas{display:block;max-width:100%;border-radius:10px;background:#FBFBFD;border:1px solid var(--line-soft)}
+.demo-controls{display:flex;flex-wrap:wrap;gap:18px 28px;margin-top:18px;align-items:flex-end}
+.ctrl{display:flex;flex-direction:column;gap:6px;min-width:150px;flex:1}
+.ctrl label{font-family:var(--display);font-size:12.5px;font-weight:500;color:var(--ink-soft);display:flex;justify-content:space-between;gap:10px}
+.ctrl label .val{font-family:var(--mono);color:var(--coral);font-weight:700}
+.demo .readout{font-family:var(--mono);font-size:13px;color:var(--ink-soft);background:var(--tint);padding:10px 14px;border-radius:8px;margin-top:14px;line-height:1.6}
+.demo .readout b{color:var(--indigo-deep)}
+
+/* coral = interactive (the signature) */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;
+  background:var(--line);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;border:none;
+}
+.btn{
+  font-family:var(--display);font-weight:500;font-size:13.5px;cursor:pointer;
+  background:var(--coral);color:#fff;border:none;padding:9px 18px;border-radius:9px;
+  transition:transform .1s,background .15s;
+}
+.btn:hover{background:var(--coral-deep)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--indigo);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--indigo-wash);color:var(--indigo)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{
+  font-family:var(--display);font-size:12.5px;font-weight:500;background:var(--surface);
+  border:none;padding:8px 14px;cursor:pointer;color:var(--ink-soft);border-right:1px solid var(--line);
+}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--indigo);color:#fff}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto;margin:30px 0}
+table{border-collapse:collapse;width:100%;font-size:15.5px;font-family:var(--display)}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-soft)}
+th{font-weight:600;color:var(--indigo-deep);border-bottom:2px solid var(--line);font-size:13px;letter-spacing:.02em}
+td{color:var(--ink-soft)}
+tr:hover td{background:var(--indigo-wash)}
+td code{font-size:.9em}
+
+/* ---------- pill / chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.chip{font-family:var(--mono);font-size:11px;background:var(--tint);color:var(--indigo-deep);padding:5px 11px;border-radius:20px;border:1px solid var(--line)}
+
+/* ---------- footer ---------- */
+.endcard{
+  background:linear-gradient(165deg,#15172E,#2A2090);color:#fff;border-radius:18px;
+  padding:44px;margin:60px 0 0;box-shadow:var(--shadow-lg);
+}
+.endcard .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#FF8C7E}
+.endcard h3{color:#fff;margin-top:10px}
+.endcard p{color:#C9CCE8}
+.endcard a{color:#B9B2FF}
+
+footer.page{padding:40px 0 0;color:var(--ink-faint);font-family:var(--display);font-size:13px;text-align:center}
+
+/* ---------- responsive ---------- */
+@media(max-width:1080px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .25s;width:300px;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-btn{display:block}
+  .scrim.show{display:block}
+  .content{margin-left:0}
+  .hero-inner{padding:0 26px}
+  .wrap,.wrap-wide{padding:0 22px}
+}
+@media(max-width:640px){
+  body{font-size:17.5px}
+  .content p.intro{font-size:18.5px}
+  .demo-controls{gap:14px}
+  .ctrl{min-width:120px}
+  .endcard{padding:28px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<button class="menu-btn" id="menuBtn" aria-label="Open contents">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">
+    <div class="brand-mark">L3</div>
+    <div class="brand-text"><strong>Vision &amp; Language</strong><span>Robotics &amp; VLA · Layer 3 of 6</span></div>
+  </div>
+  <nav>
+  <ul class="toc">
+    <li><a class="chap" href="#ch1"><span class="num">01</span><span>Images Become Tokens</span></a>
+      <ul class="subs">
+        <li><a href="#patches">Patches as words</a></li>
+        <li><a href="#vit">The Vision Transformer</a></li>
+        <li><a href="#bias">Inductive bias vs. data</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch2"><span class="num">02</span><span>Self-Supervised Vision</span></a>
+      <ul class="subs">
+        <li><a href="#whyssl">Learning without labels</a></li>
+        <li><a href="#dino">DINO: self-distillation</a></li>
+        <li><a href="#collapse">The collapse problem</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch3"><span class="num">03</span><span>Vision Tasks, Rebuilt</span></a>
+      <ul class="subs">
+        <li><a href="#detr">DETR: detection as sets</a></li>
+        <li><a href="#sam">SAM: promptable masks</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch4"><span class="num">04</span><span>The LLM Stack I — Tokens</span></a>
+      <ul class="subs">
+        <li><a href="#bpe">Byte-pair encoding</a></li>
+        <li><a href="#nexttoken">The next-token objective</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch5"><span class="num">05</span><span>The LLM Stack II — Scale</span></a>
+      <ul class="subs">
+        <li><a href="#decoder">Decoder-only &amp; the KV cache</a></li>
+        <li><a href="#scaling">Scaling laws</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch6"><span class="num">06</span><span>Making Models Useful</span></a>
+      <ul class="subs">
+        <li><a href="#sft">Instruction tuning</a></li>
+        <li><a href="#rlhf">RLHF &amp; reward models</a></li>
+        <li><a href="#dpo">DPO</a></li>
+        <li><a href="#decoding">Decoding strategies</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch7"><span class="num">07</span><span>Multimodal Fusion</span></a>
+      <ul class="subs">
+        <li><a href="#bridgespace">One space for two senses</a></li>
+        <li><a href="#adapters">Adapters &amp; cross-attention</a></li>
+        <li><a href="#grounding">Grounding: where models look</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch8"><span class="num">08</span><span>From VLM to VLA</span></a>
+      <ul class="subs">
+        <li><a href="#anatomy">The last missing piece</a></li>
+      </ul></li>
+  </ul>
+  </nav>
+  <div class="side-foot">Layer 3 · Vision &amp; Language<br>← <em>Layer 2 · Deep Learning Core</em> · → <em>Layer 4 · Decision Making</em></div>
+</aside>
+<div id="scrim"></div>
+
+<div class="content">
+
+  <header class="hero">
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero-inner">
+      <div class="eyebrow">Robotics &amp; VLA Curriculum · Layer 3</div>
+      <h1>Vision &amp; Language: <em>foundation models</em></h1>
+      <p class="lead">The pretrained giants a robot borrows for eyes and inner voice: Vision Transformers and self-supervised backbones, the full large-language-model stack from tokenizer to RLHF, and the fusion architectures that bolt them together. Built on Layers 1–2; pointed straight at the VLA.</p>
+      <div class="scroll-cue">Scroll to begin · 8 chapters</div>
+    </div>
+  </header>
+
+  <section class="wrap" id="preface">
+    <p class="intro">Layer 2 ended with a promise: a vision-language-action model is "a VLM with an action head." This layer pays the debt — it builds the VLM. The plot has three acts: teach transformers to <em>see</em> (Ch 1–3), follow the language model from raw bytes to helpful assistant (Ch 4–6), then weld eye to brain (Ch 7–8). Almost nothing here is new mathematics; it is Layer 1's probability and Layer 2's attention, deployed at scale with a few brilliant tricks.</p>
+    <div class="box note">
+      <div class="box-label">How to read this</div>
+      <p>Blue panels are <span class="term">definitions</span>; green panels build <span style="color:var(--teal);font-weight:600">intuition</span> (read these even if you skip equations); black-edged panels are <strong>step-by-step derivations</strong>; coral elements are <strong style="color:var(--coral)">interactive</strong> — drag, type, and run them. Amber panels link forward to Layers 4–6 and back to what you already built.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 1 ===================== -->
+  <section class="wrap chapter" id="ch1">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 01</div>
+      <h2>Images Become Tokens</h2>
+    </div>
+    <p class="intro">For a decade, "vision model" meant convolution. Then the Vision Transformer (ViT, 2020) asked a heretical question: what if an image is just a <em>sentence</em> — a sequence of patch-tokens — and the same transformer that reads text simply reads it? At sufficient scale, the answer turned out to be yes, and it changed everything downstream.</p>
+
+    <h3 id="patches">1.1 · Patches as words</h3>
+    <div class="box def">
+      <div class="box-label">Definition — patch embedding</div>
+      <p>Split an $H\times W$ image into non-overlapping $P\times P$ patches. Each patch is flattened into a vector of $P^2 C$ pixel values ($C$ channels) and mapped by one learned matrix $E$ into the model dimension $d$:</p>
+      $$\mathbf{z}_i = E\,\operatorname{vec}(\text{patch}_i)+\mathbf{p}_i,\qquad i=1,\dots,n,\qquad n=\frac{HW}{P^2}$$
+      <p>where $\mathbf{p}_i$ is a learned <span class="term">position embedding</span>. A $224\times224$ image with $P{=}16$ becomes $n=196$ tokens — a paragraph's worth of "visual words." A learnable <span class="term">[CLS]</span> token is prepended to collect a whole-image summary.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — cutting a photo into scrabble tiles</div>
+      <p>A patch is to an image what a word is to a sentence: a chunk small enough to have local meaning (an edge, an eye, a wheel-rim) and large enough not to be pixel noise. Once the photo is a bag of tiles plus a position label on each, the transformer needs no new ideas — attention already knows how to let every tile look at every other tile and ask "are we part of the same thing?" That question, asked in parallel across 196 tiles and 12+ layers, <em>is</em> visual perception in a ViT.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why position embeddings are not optional</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Recall Layer 2: attention computes $\operatorname{softmax}(QK^{\top}/\sqrt{d_k})\,V$ from token vectors alone. Shuffle the input tokens with any permutation $\pi$ and every dot product $q_i\cdot k_j$ is unchanged — only re-indexed. The output is the <em>same set of vectors, shuffled the same way</em>: attention is permutation-equivariant.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>So without $\mathbf{p}_i$, a ViT literally cannot tell an image from a jigsaw-scrambled version of it — the sky could sit below the grass. Adding a distinct learned vector per position breaks the symmetry: now "blue patch <em>at the top</em>" and "blue patch <em>at the bottom</em>" are different tokens.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Cost of the token view: self-attention compares every pair, so compute scales as $O(n^2 d)$. Halving the patch size quadruples $n$ and ×16's the attention cost — which is why patch size is the first dial anyone touches, and why high-resolution vision is expensive. Feel this trade-off in the demo.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The patch tokenizer — turn a picture into a sentence</h4></div>
+      <div class="demo-body">
+        <canvas id="patchCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>patch size $P$ (image is 224×224)</label><div class="seg" id="patchSeg"><button data-p="56">56</button><button data-p="32">32</button><button class="on" data-p="16">16</button><button data-p="8">8</button></div></div>
+        </div>
+        <div class="readout" id="patchReadout"></div>
+      </div>
+    </div>
+    <p>Left: the image with its patch grid. Right: the first rows of the actual token <em>sequence</em> the transformer receives — the picture, rewritten as a sentence. Watch the counter: at $P{=}8$ the sequence is 784 tokens and attention must score 614k pairs <em>per layer</em>. Resolution is paid for in quadratic coin.</p>
+
+    <h3 id="vit">1.2 · The Vision Transformer, assembled</h3>
+    <p>After patch embedding, a ViT <em>is</em> the Layer 2 transformer encoder, unchanged: $L$ blocks of (LayerNorm → multi-head self-attention → residual) then (LayerNorm → MLP → residual), with a linear classifier read off the [CLS] token. ViT-Base: $P{=}16$, $d{=}768$, $L{=}12$, 12 heads, ~86M parameters. That architectural <em>boringness</em> is the point — one architecture for text and pixels is what later makes single-model fusion (Ch 7) natural.</p>
+    <div class="box note">
+      <div class="box-label">You already built this</div>
+      <p>Every component here was derived in Layer 2: attention and $\sqrt{d_k}$ (Ch 5), residuals and LayerNorm (Ch 2–3), the MLP block (Ch 1). The only new idea in ViT is the tokenizer — the first 10 lines of the model.</p>
+    </div>
+
+    <h3 id="bias">1.3 · Inductive bias vs. data</h3>
+    <div class="box intuition">
+      <div class="box-label">Intuition — hard-wired instinct vs. learned experience</div>
+      <p>A CNN is born knowing two facts about images: nearby pixels matter to each other (locality) and a cat in the corner is still a cat (translation weight-sharing). These <span class="term">inductive biases</span> are training wheels — superb when data is scarce. A ViT is born knowing <em>nothing</em>: patch 3 has no built-in idea it neighbors patch 4. On small datasets it underperforms CNNs; but feed it tens of millions of images and it <em>learns</em> locality where useful and ignores it where not — early heads discover convolution-like local attention on their own, late heads attend globally. The recurring lesson of the foundation-model era, first taught here: <strong>at sufficient scale, learned structure beats hand-designed structure.</strong> Bet on data.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 2 ===================== -->
+  <section class="wrap chapter" id="ch2">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 02</div>
+      <h2>Self-Supervised Vision</h2>
+    </div>
+    <p class="intro">ViTs are data-hungry, and labeled data is the most expensive substance in machine learning. Self-supervised learning (SSL) removes the bottleneck: let the image label itself. The result — backbones like DINO and DINOv2 — is the visual encoder that robots actually borrow, trained on raw, unlabeled internet imagery.</p>
+
+    <h3 id="whyssl">2.1 · Learning without labels</h3>
+    <div class="box intuition">
+      <div class="box-label">Intuition — learning by predicting your own redactions</div>
+      <p>Layer 2 met two SSL families: <em>contrastive</em> (pull two augmented crops of the same image together — SimCLR/CLIP-style) and <em>masked</em> (hide patches, predict them — MAE). Both run the same con: take one data point, manufacture a question and its answer from it, and grade yourself. The supervision was inside the data all along — what is hidden or transformed is predictable from what remains, <em>if and only if</em> you understand the content. Understanding is forced as a side effect.</p>
+    </div>
+    <div class="box def">
+      <div class="box-label">Definition — the augmentation-invariance objective</div>
+      <p>Given augmentations $u=\operatorname{aug}_1(x)$, $v=\operatorname{aug}_2(x)$ (random crops, color jitter, blur) of one image, learn an encoder $f$ whose outputs agree:</p>
+      $$\min_\theta \; \mathbb{E}_x\,\big[\,\mathcal{D}\big(f_\theta(u),\,g(v)\big)\,\big]$$
+      <p>for some distance $\mathcal{D}$ and target-producer $g$. Everything interesting lives in the choice of $g$ — because the naive choice $g=f_\theta$ has a fatal bug, derived below.</p>
+    </div>
+
+    <h3 id="dino">2.2 · DINO — learn from a calmer copy of yourself</h3>
+    <div class="box def">
+      <div class="box-label">Definition — self-distillation with a momentum teacher</div>
+      <p>DINO trains two networks of identical architecture. The <span class="term">student</span> $\theta_s$ sees one crop and is trained by gradient descent to match the output distribution of the <span class="term">teacher</span> $\theta_t$ on another crop (cross-entropy between their softmax outputs). The teacher is never trained — it is an <span class="term">exponential moving average</span> (EMA) of the student's own history:</p>
+      $$\theta_t \;\leftarrow\; m\,\theta_t + (1-m)\,\theta_s,\qquad m\approx 0.996$$
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — your past self, smoothed</div>
+      <p>The teacher is the student's own parameters, averaged over thousands of recent steps — a calmer, steadier version of itself, immune to any single noisy gradient. The student chases this stable target; the target slowly absorbs the student's progress; repeat. It sounds circular — and the demo below shows why it isn't: an EMA filters the <em>noise</em> out of a trajectory while keeping its <em>direction</em>, so the student is always chasing a cleaner version of where it was already going. DINO's reward for this trick is famous: with zero labels, its attention maps segment objects — the [CLS] token's attention literally outlines the dog. Perception emerged from self-agreement alone.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The momentum teacher — EMA turns a drunk walk into a path</h4></div>
+      <div class="demo-body">
+        <canvas id="emaCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>teacher momentum $m$ <span class="val" id="emaMv">0.97</span></label><input type="range" id="emaM" min="0.5" max="0.999" step="0.001" value="0.97"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="emaRun">▸ Train</button> <button class="btn ghost" id="emaReset">Reset</button></div>
+        </div>
+        <div class="readout" id="emaReadout"></div>
+      </div>
+    </div>
+    <p>The coral trail is the student: noisy SGD steps toward the optimum (contour rings). The indigo trail is its EMA teacher. At $m=0.5$ the teacher just shadows the noise; at $m=0.99$ it glides — same information, no jitter. Push $m\to0.999$ and see the cost: the teacher lags far behind a fast-moving student. The momentum dial trades stability against freshness.</p>
+
+    <h3 id="collapse">2.3 · The collapse problem — and the two-line fix</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why "agree with yourself" can implode</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>The objective only rewards <em>agreement</em>. Consider the cheating solution: both networks output the same constant distribution $c$ for every input. Then student and teacher agree perfectly on every pair, the loss hits its minimum — and the representation carries zero information. Nothing in the loss forbids it. This is <span class="term">collapse</span>, and naive self-distillation reliably finds it.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>Fix 1 — centering.</strong> Subtract a running mean $\mathbf{c}$ from the teacher's logits before its softmax: $\operatorname{softmax}\big((z_t-\mathbf{c})/\tau_t\big)$. If the teacher starts always shouting dimension $k$, the center absorbs it and the advantage is cancelled — no single output can dominate.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Fix 2 — sharpening.</strong> Centering alone pushes toward the <em>uniform</em> distribution (a subtler collapse: maximal entropy, still zero information — recall Layer 1, Ch 8). So the teacher also uses a low temperature $\tau_t \approx 0.04$, sharpening its targets toward confident peaks. Centering fights peaky collapse, sharpening fights uniform collapse; held in tension, the only way to minimize the loss is to output <em>different, confident</em> distributions for different images — i.e., to actually encode content.</p></div></div>
+    </div>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>DINOv2 scales this recipe (plus a masked-patch objective) into the default plug-in vision backbone — frozen DINOv2 features power depth estimation, segmentation, and many robot perception stacks. EMA targets reappear in Layer 4's reinforcement learning as "target networks" stabilizing Q-learning: the same calmer-copy-of-yourself trick, keeping a different bootstrap from chasing its own tail.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 3 ===================== -->
+  <section class="wrap chapter" id="ch3">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 03</div>
+      <h2>Vision Tasks, Rebuilt</h2>
+    </div>
+    <p class="intro">Classification says "there is a cat." Robots need more: <em>where</em> is the cat, which pixels are cat, can I ask about an arbitrary region? Two transformer-era systems rebuilt these tasks from first principles — DETR turned detection into set prediction, and SAM turned segmentation into a promptable, reusable foundation skill.</p>
+
+    <h3 id="detr">3.1 · DETR — detection as set prediction</h3>
+    <p>Classic detectors were pipelines of heuristics: thousands of anchor boxes, then non-maximum suppression to delete duplicates. DETR (2020) replaced the pipeline with a question: detection's true output is a <em>set</em> of (box, class) pairs — so predict a set, directly.</p>
+    <div class="box def">
+      <div class="box-label">Definition — DETR's recipe</div>
+      <p>A CNN/ViT encodes the image into tokens. A transformer decoder receives $N$ learned <span class="term">object queries</span> (e.g. $N{=}100$ blank slots); each query cross-attends into the image tokens and emerges as one prediction $(\hat p_i,\hat b_i)$ — a class distribution and a box. Slots that find nothing predict the special class $\varnothing$ ("no object").</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — bipartite matching makes the loss well-defined</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>The puzzle: predictions are a set (no order), ground truth is a set. Which prediction should be graded against which truth? If slot 7 and slot 23 both claim the same dog, who owns it? An ordering-based loss would be arbitrary.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Answer: grade against the <em>best possible one-to-one assignment</em>. Pad ground truth with $\varnothing$ to size $N$, define a pairwise cost (how badly prediction $i$ explains truth $j$):</p>$$\mathcal{C}_{ij}=-\hat p_i(c_j)+\mathcal{L}_{\text{box}}(\hat b_i,b_j)$$<p>and find the permutation minimizing total cost:</p>$$\hat\sigma=\arg\min_{\sigma}\sum_{i=1}^{N}\mathcal{C}_{i,\sigma(i)}$$<p>solved exactly by the Hungarian algorithm. Then train with the ordinary losses <em>under that assignment</em>.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The matching is one-to-one, so two slots can never both be credited for one dog — duplicates become <em>costly</em> and the network learns not to produce them. Non-maximum suppression, the hand-written deduplicator, is no longer needed: the loss itself enforces uniqueness. A heuristic became a theorem about assignments.</p></div></div>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — the seating chart</div>
+      <p>Think of predictions as guests and ground-truth objects as seats (extra guests get the $\varnothing$ standing-room). The loss asks: <em>if everyone sat in the best possible seat, how unhappy would the room be?</em> — and grades that arrangement. Each guest learns to claim a different seat, because sharing is impossible by construction. Drag the guests in the demo and watch the chart re-solve.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Hungarian matching — drag predictions, watch the assignment re-solve</h4></div>
+      <div class="demo-body">
+        <canvas id="matchCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn ghost" id="matchShuffle">New scene</button></div>
+        </div>
+        <div class="readout" id="matchReadout"></div>
+      </div>
+    </div>
+    <p><strong>Drag the coral prediction dots.</strong> Squares are ground-truth objects; the dashed slot at right is $\varnothing$. Lines show the current optimal one-to-one assignment (re-solved live over all permutations); the readout shows total cost. Park two predictions on one object and watch the matcher refuse to double-count — one of them gets exiled to $\varnothing$ and charged for it.</p>
+
+    <h3 id="sam">3.2 · SAM — segmentation as a promptable skill</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the Segment Anything Model</div>
+      <p>SAM (2023) decomposes segmentation into three parts: a heavy ViT <span class="term">image encoder</span> run <em>once</em> per image; a featherweight <span class="term">prompt encoder</span> for points, boxes, or coarse masks; and a fast <span class="term">mask decoder</span> that cross-attends prompt against image embedding and emits a pixel mask in milliseconds. Trained on ~1.1B masks (SA-1B), it segments objects it has never been told about.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — point at it</div>
+      <p>SAM's interface is the oldest one humans have: <em>pointing</em>. "Segment the thing here." That makes it a foundation <em>skill</em> rather than a task-specific model — and because the expensive encoding happens once, you can ask many questions of one image cheaply. For robotics this pattern is gold: a VLA that wants "the red block's pixels" can point a coordinate (or pipe in a detector's box) and get a mask, no retraining. Note the shape of the design — <strong>big frozen encoder + small promptable decoder</strong> — because Chapter 7 reveals it as <em>the</em> recurring blueprint of the foundation-model era.</p>
+    </div>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>DETR's "learned queries that each claim one output slot" reappears in robot policies that emit action <em>chunks</em>, and in every perception stack that needs duplicate-free object lists for planning (Layer 5). SAM-style promptability — one frozen brain, many cheap questions — is how Layer 6's systems keep real-time budgets.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 4 ===================== -->
+  <section class="wrap chapter" id="ch4">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 04</div>
+      <h2>The LLM Stack I — Tokens &amp; the Objective</h2>
+    </div>
+    <p class="intro">Now the other hemisphere. A large language model is two decisions stacked on a transformer: how text becomes tokens, and what the model is asked to do with them. Both decisions are simpler than their consequences.</p>
+
+    <h3 id="bpe">4.1 · Byte-pair encoding — a learned dictionary</h3>
+    <p>Characters make sequences too long; whole words make the vocabulary unbounded (and "unhappiness" would share nothing with "happy"). <span class="term">Byte-pair encoding</span> (BPE) finds the middle: learn the vocabulary from data, by compression.</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the BPE algorithm (it fits in three steps)</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><strong>Start</strong> with the alphabet: every word in the corpus is a sequence of single characters. The initial vocabulary is just the characters.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>Count and merge.</strong> Find the most frequent <em>adjacent pair</em> of tokens in the corpus (say <code>t</code>+<code>h</code>). Add the merged token <code>th</code> to the vocabulary, and replace every occurrence. Record the merge rule.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Repeat</strong> step 2 for a budget of $V$ merges (GPT-style models: tens of thousands). Frequent words fuse into single tokens; rare words remain spelled from pieces — so the vocabulary is finite, yet <em>no</em> string is unrepresentable. To tokenize new text, replay the merge rules in learned order. That's the whole algorithm: greedy compression, run once, frozen forever.</p></div></div>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — and why you should care about its scars</div>
+      <p>BPE is a frequency mirror of its training corpus, and the model inherits its scars: rare words shatter into many tokens (costing context and quality), numbers split unpredictably (part of why arithmetic is hard for LLMs), and whitespace/code conventions tokenize oddly. When an LLM behaves strangely, the first suspect is often not the brain but the <em>eyes</em> — how the text was tokenized. Type in the demo and develop the instinct.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>A live BPE tokenizer — trained in your browser, right now</h4></div>
+      <div class="demo-body">
+        <canvas id="bpeCanvas" width="640" height="300"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>merges learned $V$ <span class="val" id="bpeNv">60</span></label><input type="range" id="bpeN" min="0" max="150" step="1" value="60"></div>
+          <div class="ctrl" style="flex:2"><label>type anything</label><input type="text" id="bpeText" value="the transformer learns attention" maxlength="48" style="font-family:var(--mono);font-size:13px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);width:100%"></div>
+        </div>
+        <div class="readout" id="bpeReadout"></div>
+      </div>
+    </div>
+    <p>A small BPE is trained live on this book's own prose; the slider replays its merge history. At 0 merges your text is raw characters; by 150, common fragments (<code>the</code>, <code>ing</code>, <code>at</code>…) have fused into single colored tokens. Type a rare word — <code>zyzzyva</code> — and watch it shatter while <code>attention</code> rides as a few chunks. Compression for the frequent, spelling for the rare.</p>
+
+    <h3 id="nexttoken">4.2 · The next-token objective — one loss to rule them all</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the objective from Layer 1's product rule</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Any joint distribution factorizes exactly by the chain rule of probability (Layer 1, Ch 4 — applied repeatedly):</p>$$P(x_1,\dots,x_T)=\prod_{t=1}^{T}P\big(x_t \mid x_{1:t-1}\big)$$<p>No approximation: modeling "the next token given the past," for every position, <em>is</em> modeling the full distribution over all text.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Train by maximum likelihood (Layer 1, Ch 5): minimize the negative log-likelihood, which is exactly cross-entropy (Layer 1, Ch 8) between the data and the model at every position:</p>$$\mathcal{L}=-\frac{1}{T}\sum_{t=1}^{T}\log P_\theta\big(x_t\mid x_{1:t-1}\big)$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Quality is reported as <span class="term">perplexity</span> $=e^{\mathcal{L}}$ — "on average, the model is as uncertain as a fair choice among $e^{\mathcal{L}}$ tokens." Every loss concept here was built in Layer 1; the only news is the target: <em>all of human text</em>.</p></div></div>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — autocomplete as a world model</div>
+      <p>"Predict the next token" sounds clerical. But predict the next token of <em>"The capital of France is"</em> and you must store geography. Of <em>"137 + 285 ="</em> — arithmetic. Of <em>"She hid the key because"</em> — a theory of motive. Text is a shadow cast by the world; compressing the shadow well forces a model of the caster. That is the bet of the LLM era, and Layers 1–2 gave you every tool it is built from: the objective is MLE, the loss is cross-entropy, the machine is a transformer.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 5 ===================== -->
+  <section class="wrap chapter" id="ch5">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 05</div>
+      <h2>The LLM Stack II — Decoding at Scale</h2>
+    </div>
+    <p class="intro">Two engineering facts shaped the modern LLM more than any architecture choice: a cache that makes generation affordable, and an empirical law that tells you how to spend a compute budget. Both are worth deriving, because both will constrain every robot brain in Layers 4–6.</p>
+
+    <h3 id="decoder">5.1 · Decoder-only generation &amp; the KV cache</h3>
+    <div class="box def">
+      <div class="box-label">Definition — causal (decoder-only) attention</div>
+      <p>A decoder-only transformer applies a <span class="term">causal mask</span>: position $t$ may attend only to positions $1..t$. Training is fully parallel (all $T$ next-token predictions at once, each seeing only its past); generation is sequential — sample a token, append, repeat.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — what caching saves, exactly</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>To generate token $t{+}1$, attention needs the new query $\mathbf{q}_{t+1}$ dotted against keys/values of <em>all</em> previous tokens. Naively, recompute every $\mathbf{k}_i,\mathbf{v}_i$ each step: step $t$ costs $t$ projections, so a $T$-token generation costs</p>$$\sum_{t=1}^{T} t=\frac{T(T+1)}{2}=O(T^2)\ \text{projections per layer.}$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>But $\mathbf{k}_i$ and $\mathbf{v}_i$ depend only on token $i$'s (fixed) representation — they never change once computed. So store them: the <span class="term">KV cache</span>. Each step now computes one new $\mathbf{k},\mathbf{v}$ and reads the rest:</p>$$\sum_{t=1}^{T}1=T=O(T)\ \text{projections per layer}$$<p>— a $T/2$-fold saving in that work ($\times50$ at $T{=}100$). The dot products $\mathbf{q}\cdot\mathbf{k}_i$ still number $t$ per step; those are the irreducible cost of attending to a growing past.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The bill moves to <em>memory</em>: the cache holds $2\cdot T\cdot L\cdot d$ values and its growth — not arithmetic — is what bounds context length and serving cost. "Compute vs. memory" is the central trade of LLM inference, and you can watch it in the demo.</p></div></div>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — take notes, don't re-read the book</div>
+      <p>Generating without a cache is re-reading the entire conversation from scratch before every single word you say. The cache is a notepad: each token's key/value is written down once, and every later word just consults the notes. For a robot whose VLA must emit actions at 10–50 Hz, this notepad is the difference between possible and impossible — latency budgets in Layer 6 are largely KV-cache budgets.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The KV cache — watch the work bill, with and without notes</h4></div>
+      <div class="demo-body">
+        <canvas id="kvCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>mode</label><div class="seg" id="kvSeg"><button class="on" data-c="no">no cache</button><button data-c="yes">KV cache</button></div></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="kvStep">▸ Generate 1 token</button> <button class="btn" id="kvRun">▸▸ Run to 12</button> <button class="btn ghost" id="kvReset">Reset</button></div>
+        </div>
+        <div class="readout" id="kvReadout"></div>
+      </div>
+    </div>
+    <p>Each row is one generation step; each cell is a K/V projection — <span style="color:var(--coral-deep);font-weight:600">coral if computed this step</span>, <span style="color:var(--teal);font-weight:600">teal if read from cache</span>. Without the cache the coral triangle grows quadratically; with it, exactly one coral cell per step. Same model, same output, a fraction of the bill.</p>
+
+    <h3 id="scaling">5.2 · Scaling laws — how to spend a compute budget</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the compute-loss scaling law (Chinchilla form)</div>
+      <p>Across decades of scale, an LLM's loss is well described by a smooth function of parameters $N$ and training tokens $D$:</p>
+      $$L(N,D)\;\approx\;E+\frac{A}{N^{\alpha}}+\frac{B}{D^{\beta}}$$
+      <p>with $E$ the irreducible entropy of text, and fitted constants ($\alpha\approx0.34$, $\beta\approx0.28$ in Hoffmann et al. 2022). Training compute is approximately $C\approx 6ND$ FLOPs.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the compute-optimal recipe</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Fix a budget $C=6ND$ and minimize $L$ over the split. Substitute $D=C/6N$:</p>$$L(N)=E+\frac{A}{N^{\alpha}}+\frac{B\,(6N)^{\beta}}{C^{\beta}}$$<p>The first term <em>falls</em> with $N$ (bigger brain), the second <em>rises</em> (bigger brain ⇒ fewer tokens affordable) — a U-shape in $\log N$, just like Layer 1's bias-variance curve but for compute allocation.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Set $dL/dN=0$: $\;\alpha A N^{-\alpha-1}=\beta B\,6^{\beta}N^{\beta-1}C^{-\beta}$, giving $N^{\ast}\propto C^{\beta/(\alpha+\beta)}$ and hence $D^{\ast}\propto C^{\alpha/(\alpha+\beta)}$. With $\alpha\approx\beta$: <strong>scale parameters and data together</strong>, $N^{\ast}\sim D^{\ast}\sim\sqrt{C}$ — numerically, roughly <em>20 training tokens per parameter</em>.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The 2022 punchline: earlier giants (e.g. 175B+ params) were badly <em>undertrained</em> — too much brain, too little reading. Chinchilla (70B params, 1.4T tokens) beat models 2–4× its size at equal compute. An empirical law, found by curve-fitting in the spirit of Layer 1's regression, redirected billion-dollar decisions.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The allocation dial — split a budget between brain and books</h4></div>
+      <div class="demo-body">
+        <canvas id="scaleCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>compute budget $\log_{10} C$ (FLOPs) <span class="val" id="scCv">22</span></label><input type="range" id="scC" min="19" max="25" step="0.1" value="22"></div>
+          <div class="ctrl"><label>model size $\log_{10} N$ (params) <span class="val" id="scNv">10.0</span></label><input type="range" id="scN" min="7.5" max="13" step="0.05" value="10"></div>
+        </div>
+        <div class="readout" id="scaleReadout"></div>
+      </div>
+    </div>
+    <p>The curve is predicted loss across all ways to split your budget; the coral dot is your chosen split, the teal marker the compute-optimal one. Go far right (huge model, starved of data) or far left (small model, drowning in data it can't absorb) and watch the loss climb — then raise the budget and watch the whole frontier sink and the optimum march rightward. <em>Scale them together.</em></p>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>Scaling laws are why VLA labs obsess over robot-data quantity (Layer 2's Open X-Embodiment) — the same $B/D^{\beta}$ term, with demonstrations as $D$. And the cache-vs-compute trade returns in Layer 6 as the dual-system design: a big slow VLM thinking at 1 Hz, a small fast policy acting at 50 Hz.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 6 ===================== -->
+  <section class="wrap chapter" id="ch6">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 06</div>
+      <h2>Making Models Useful</h2>
+    </div>
+    <p class="intro">A pretrained LLM is a savant of continuation, not an assistant: ask it a question and it may continue with <em>more questions</em>, because that's what its data did. The alignment stack — SFT, RLHF, DPO — converts "likely text" into "helpful behavior." It is also, quietly, a preview of Layer 4: this is your first reinforcement learning.</p>
+
+    <h3 id="sft">6.1 · Supervised fine-tuning — show, don't tell</h3>
+    <div class="box def">
+      <div class="box-label">Definition — SFT / instruction tuning</div>
+      <p>Continue training with the same next-token loss, but on a curated dataset of (instruction → good response) pairs, with loss applied on the response tokens. Same objective as Ch 4 — only the <em>distribution</em> changed: from "all text" to "text that answers."</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — imitation has a ceiling</div>
+      <p>SFT is pure imitation: clone the demonstrations. It works startlingly well, but it can't express <em>"this answer is better than that one"</em> — only "this answer existed." Many qualities we want (honesty over confident nonsense, refusing well, taste) are easier to <em>judge</em> than to <em>demonstrate</em>. That gap — judging is cheaper than doing — is exactly what the next idea exploits. Hold the thought for Layer 4, where the same gap separates imitation learning from reinforcement learning in robotics.</p>
+    </div>
+
+    <h3 id="rlhf">6.2 · RLHF — learning a judge, then pleasing it</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — a reward model from raw preferences</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Collect comparisons: for a prompt $x$, humans pick the better of two responses, $y_w \succ y_l$. Assume each response has a latent quality score $r(x,y)$ and that humans choose noisily by the score gap — the <span class="term">Bradley–Terry</span> model:</p>$$P(y_w \succ y_l)=\sigma\big(r(x,y_w)-r(x,y_l)\big)$$<p>This is Layer 1's logistic regression, verbatim: linear-in-score log-odds, squashed by the sigmoid.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Fit a neural reward model $r_\phi$ by maximum likelihood on the comparisons (Layer 1, Ch 5 — minimize $-\log\sigma(r_\phi(x,y_w)-r_\phi(x,y_l))$). We now have a learned <em>judge</em>.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Train the LLM as a policy $\pi_\theta$ to maximize the judge's score — but tethered to the SFT model $\pi_{\text{ref}}$, or it will find degenerate text that games $r_\phi$ (reward hacking):</p>$$\max_{\theta}\;\mathbb{E}_{y\sim\pi_\theta}\big[r_\phi(x,y)\big]-\beta\, D_{\mathrm{KL}}\big(\pi_\theta \,\|\, \pi_{\text{ref}}\big)$$<p>Layer 1's KL divergence as a leash: explore better answers, but stay a bounded number of bits from the model that already speaks sensibly. Optimized with PPO — a policy-gradient method Layer 4 derives properly.</p></div></div>
+    </div>
+
+    <h3 id="dpo">6.3 · DPO — cutting out the middleman</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — from RLHF's objective to a plain loss</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>The KL-regularized objective above has a <em>closed-form</em> optimal policy (write the Lagrangian per response and normalize):</p>$$\pi^{\ast}(y\mid x)\;\propto\;\pi_{\text{ref}}(y\mid x)\,\exp\!\big(r(x,y)/\beta\big)$$<p>— reweight the reference by exponentiated reward. Invert it: $\;r(x,y)=\beta\log\frac{\pi^{\ast}(y\mid x)}{\pi_{\text{ref}}(y\mid x)}+\text{const}.$</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Substitute this $r$ into the Bradley–Terry likelihood of step 6.2.1 — the constants cancel in the difference — and the reward model <em>vanishes</em>:</p>$$\mathcal{L}_{\text{DPO}}=-\log\sigma\!\Big(\beta\log\tfrac{\pi_\theta(y_w\mid x)}{\pi_{\text{ref}}(y_w\mid x)}-\beta\log\tfrac{\pi_\theta(y_l\mid x)}{\pi_{\text{ref}}(y_l\mid x)}\Big)$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Read it: <em>raise the preferred response's probability relative to the reference; lower the rejected one's</em> — a simple classification-style loss directly on preference pairs. No reward model, no RL loop, same optimum under the same assumptions. A derivation replaced an infrastructure stack; that's what good math is for.</p></div></div>
+    </div>
+
+    <h3 id="decoding">6.4 · Decoding — one distribution, many personalities</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — what temperature actually does</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>The model emits logits $z_i$; sampling uses $\;P_i\propto e^{z_i/T}$. Take two tokens with gap $\Delta=z_1-z_2$: their odds are $e^{\Delta/T}$. So $T$ rescales <em>every log-odds gap</em> by $1/T$.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Limits: $T\to0$ blows every gap to infinity — all mass on the argmax (greedy). $T\to\infty$ erases every gap — uniform randomness. $T{=}1$ is the model's honest belief. Layer 2 met this softmax dial in distillation; here it sets the <em>personality</em> of generation.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Truncation handles the long tail: <span class="term">top-k</span> keeps the $k$ likeliest tokens; <span class="term">top-p</span> (nucleus) keeps the smallest set with cumulative mass $\ge p$ — adaptive: tight when the model is confident, generous when uncertain. Renormalize, then sample. Most failure modes of "the model said something weird" are decoding settings, not weights.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The boldness dial — reshape a real next-token distribution</h4></div>
+      <div class="demo-body">
+        <canvas id="tempCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>temperature $T$ <span class="val" id="tmpTv">1.0</span></label><input type="range" id="tmpT" min="0.05" max="3" step="0.05" value="1"></div>
+          <div class="ctrl"><label>top-k <span class="val" id="tmpKv">12</span></label><input type="range" id="tmpK" min="1" max="12" step="1" value="12"></div>
+          <div class="ctrl"><label>top-p <span class="val" id="tmpPv">1.00</span></label><input type="range" id="tmpP" min="0.1" max="1" step="0.01" value="1"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="tmpSample">▸ Sample</button> <button class="btn ghost" id="tmpReset">Clear</button></div>
+        </div>
+        <div class="readout" id="tempReadout"></div>
+      </div>
+    </div>
+    <p>The prompt is <em>"The robot picked up the ___"</em>. Gray bars: the model's raw belief. Indigo bars: after your temperature/top-k/top-p surgery (struck-out tokens are truncated). Set $T{=}0.05$ and sampling becomes deterministic; $T{=}3$ and <code>banana</code> becomes a live option. Sample repeatedly and watch the entropy readout — you are literally turning Layer 1's uncertainty dial.</p>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>RLHF is reinforcement learning with a learned reward — Layer 4 builds the general machinery (policies, value functions, PPO) this chapter used as a black box. And a VLA choosing its next <em>action token</em> faces the same decoding question: greedy precision vs. sampled diversity, now with a gripper attached.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 7 ===================== -->
+  <section class="wrap chapter" id="ch7">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 07</div>
+      <h2>Multimodal Fusion — Building the VLM</h2>
+    </div>
+    <p class="intro">One model that sees (Ch 1–3). One model that reasons in language (Ch 4–6). The fusion problem sounds hard and turns out to be almost embarrassingly simple — because both sides already speak the same inner language: <em>sequences of vectors</em>.</p>
+
+    <h3 id="bridgespace">7.1 · One space for two senses</h3>
+    <div class="box intuition">
+      <div class="box-label">Intuition — everything is tokens now</div>
+      <p>Here is the payoff of Chapter 1's "heretical" move. A ViT turns an image into ~196 vectors. An LLM consumes a sequence of vectors (its token embeddings). These are the <em>same data type</em>. So the entire grand problem of multimodal AI reduces to one question: <strong>how do you make image vectors legible to a language model?</strong> Layer 2's CLIP gave the first answer — train both encoders so matching image/text pairs score high under the dot product (the agreement meter of Layer 1, all the way down). CLIP proves a shared meaning-space is learnable. But CLIP can only <em>compare</em>; it cannot <em>discuss</em>. For that, the image tokens must enter the LLM itself.</p>
+    </div>
+
+    <h3 id="adapters">7.2 · Two ways in: adapters and cross-attention</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the projection-adapter VLM (LLaVA pattern)</div>
+      <p>Freeze (or lightly tune) a pretrained vision encoder $f_V$ and a pretrained LLM. Learn a small <span class="term">projector</span> $W$ — a linear map or 2-layer MLP — carrying patch tokens into the LLM's embedding space, then splice them into the prompt as if they were words:</p>
+      $$\big[\;W f_V(\text{image})_{1:n}\;;\;\text{embed}(\text{"What is on the table?"})\;\big]\;\longrightarrow\;\text{LLM}\;\longrightarrow\;\text{"A red block."}$$
+      <p>Trained on image–caption pairs then visual-instruction data, with the usual next-token loss. The trainable part can be a thousandth of the system.</p>
+    </div>
+    <div class="box def">
+      <div class="box-label">Definition — the cross-attention VLM (Flamingo pattern)</div>
+      <p>Alternatively, leave the LLM's input stream purely textual and insert fresh <span class="term">cross-attention</span> layers between its blocks: text tokens form queries, image tokens form keys and values (a learned resampler first condenses patches to a fixed few). Only the inserted layers train. Vision becomes something the model <em>consults</em> rather than reads inline.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why a mere linear map can possibly suffice</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>What must the projector preserve? The LLM consumes embeddings through attention — dot products (Layer 1's agreement meter). So image tokens are "legible" if their <em>relative geometry</em> (which vectors agree with which) lands meaningfully in the LLM's space.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Both encoders were pretrained on (descriptions of) the same world, so both spaces already encode similar neighborhood structure — "red things near red things, graspable near graspable." Aligning two spaces that share structure is mostly a rotation-and-stretch job, and Layer 1, Ch 2 told you what rotations and stretches are: <em>one matrix</em>. $W$ is a translator between two dialects of the same semantics, not a perception module.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The empirical confirmation (LLaVA, 2023): a 2-layer projector plus ~half a million instruction examples yields a conversational VLM on academic hardware. The heavy lifting was already done — by the pretraining of the two giants being joined. <strong>Pretrain big pieces once, weld with small learned joints</strong>: the era's recurring blueprint (recall SAM in Ch 3).</p></div></div>
+    </div>
+
+    <svg class="svg-fig" viewBox="0 0 760 240" role="img" aria-label="VLM anatomy diagram">
+      <defs><marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#474B66"/></marker></defs>
+      <rect x="20" y="30" width="130" height="70" rx="10" fill="#EEEEF8" stroke="#4338CA"/>
+      <text x="85" y="60" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#2A2090">Vision encoder</text>
+      <text x="85" y="78" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">ViT / DINOv2 · frozen</text>
+      <rect x="20" y="140" width="130" height="70" rx="10" fill="#FFF" stroke="#DBDDE8"/>
+      <text x="85" y="170" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#14162A">Instruction</text>
+      <text x="85" y="188" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">"what's on the table?"</text>
+      <rect x="210" y="30" width="110" height="70" rx="10" fill="#FFF" stroke="#FF5C49" stroke-width="2"/>
+      <text x="265" y="60" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#E8412E">Projector W</text>
+      <text x="265" y="78" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">tiny · trained</text>
+      <rect x="380" y="75" width="180" height="90" rx="10" fill="#14162A"/>
+      <text x="470" y="112" text-anchor="middle" font-family="Space Grotesk" font-size="14" font-weight="700" fill="#fff">LLM</text>
+      <text x="470" y="132" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#9A9DD0">decoder-only · pretrained</text>
+      <rect x="620" y="85" width="120" height="70" rx="10" fill="#E4F3F1" stroke="#0E9C92"/>
+      <text x="680" y="115" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#0E9C92">"A red block."</text>
+      <text x="680" y="133" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">next-token loss</text>
+      <line x1="150" y1="65" x2="208" y2="65" stroke="#474B66" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <line x1="320" y1="65" x2="378" y2="100" stroke="#474B66" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <line x1="150" y1="175" x2="378" y2="140" stroke="#474B66" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <line x1="560" y1="120" x2="618" y2="120" stroke="#474B66" stroke-width="1.6" marker-end="url(#arr3)"/>
+      <text x="345" y="48" font-family="JetBrains Mono" font-size="10" fill="#878BA6">image tokens</text>
+      <text x="250" y="200" font-family="JetBrains Mono" font-size="10" fill="#878BA6">text tokens (embedded)</text>
+    </svg>
+    <p style="font-family:var(--mono);font-size:12.5px;color:var(--ink-faint);margin-top:10px">The LLaVA-pattern VLM: two pretrained giants, one small trained joint (coral). Production VLMs — Qwen-VL, PaliGemma, InternVL, and frontier assistants — are elaborations of this diagram.</p>
+
+    <h3 id="grounding">7.3 · Grounding — where the model looks</h3>
+    <p>Once image tokens sit in the same sequence as words, attention does the rest: generating the word <em>"red"</em>, the model's queries score highest against the patches whose vectors carry redness. The text is <span class="term">grounded</span> — each word causally traceable to evidence in pixels. You can watch a toy version of it:</p>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Where is the model looking? — attention from words to patches</h4></div>
+      <div class="demo-body">
+        <canvas id="fuseCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>token being generated</label><div class="seg" id="fuseSeg"><button class="on" data-w="red">"red"</button><button data-w="block">"block"</button><button data-w="ball">"ball"</button><button data-w="table">"table"</button><button data-w="the">"the"</button></div></div>
+        </div>
+        <div class="readout" id="fuseReadout"></div>
+      </div>
+    </div>
+    <p>Heat shows attention weight from the chosen word's query onto each image patch. Content words lock onto their objects; <em>"the"</em> — a function word with no referent — attends diffusely. This word→patch traffic is precisely what a VLA will reuse: swap the output vocabulary from words to motor commands, and "attend to the red block" becomes <em>reach for</em> the red block.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 8 ===================== -->
+  <section class="wrap chapter" id="ch8">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 08</div>
+      <h2>From VLM to VLA</h2>
+    </div>
+    <p class="intro">Stand back and look at what three layers have assembled.</p>
+
+    <h3 id="anatomy">8.1 · The last missing piece</h3>
+    <p>A vision-language-action model, as Layer 2's finale previewed, is a VLM whose output head emits robot actions instead of (or alongside) words. You now own every part of that sentence: the vision encoder is Ch 1–2 of this layer; the language backbone is Ch 4–6; the splice between them is Ch 7; the transformer they all share is Layer 2; and every loss, gradient, and probability underneath is Layer 1. RT-2 literally fine-tunes a VLM to print action tokens from its existing vocabulary; π0-style models bolt a continuous action head onto a pretrained VLM. <em>The robot brain is this chapter's diagram with one extra arrow.</em></p>
+    <div class="box intuition">
+      <div class="box-label">The whole layer, in one paragraph</div>
+      <p><strong>Images became sentences</strong> (patches as tokens), so one architecture could read everything. <strong>Vision learned without labels</strong> (a student chasing its calmer EMA self, saved from collapse by centering + sharpening), and classic tasks were rebuilt as set prediction (DETR) and promptable skills (SAM). <strong>Language modeling</strong> turned out to be Layer 1's chain rule plus MLE at planetary scale, made affordable by a notepad (the KV cache) and budgeted by an empirical law (scale brain and books together). <strong>Alignment</strong> turned likely text into helpful text — logistic regression on preferences, a KL leash, and DPO's beautiful shortcut. And <strong>fusion</strong> was almost an anticlimax: both giants already thought in vectors, so one small matrix could translate. What is still missing is the subject of the next layer: none of these models has ever <em>acted</em> and felt the consequences.</p>
+    </div>
+    <div class="box note">
+      <div class="box-label">Where this goes next</div>
+      <p>Layer 4 — <strong>Decision Making</strong> — adds the missing ingredient: consequences. Reinforcement learning (policies, value functions, the PPO that RLHF borrowed), imitation learning and its compounding-error problem, and the demonstration-driven methods that train real robot policies. The VLM you built here is about to get hands.</p>
+    </div>
+
+    <div class="endcard">
+      <div class="eyebrow">You've finished Layer 3</div>
+      <h3>The eyes and the inner voice are built</h3>
+      <p>Layer 1 gave the mathematics, Layer 2 the engine, Layer 3 the pretrained giants and the welds between them. From here the curriculum turns from <em>perceiving and describing</em> the world to <em>acting</em> in it: decision making (Layer 4), the physical robot (Layer 5), and the full vision-language-action systems (Layer 6) where everything you've built converges.</p>
+      <p style="margin-top:18px;font-family:var(--mono);font-size:13px;color:#9A9DD0">Patches → tokens · Self-distillation → sight · Chain rule → language · One matrix → fusion.</p>
+    </div>
+
+    <footer class="page">An interactive textbook for the Robotics &amp; VLA curriculum · Layer 3 of 6 · Built to be read with a pen in hand.</footer>
+  </section>
+
+</div><!-- /content -->
+
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  /* ---------- KaTeX (robust, polling) ---------- */
+  window.__doRender=function(el){
+    if(!window.renderMathInElement) return;
+    renderMathInElement(el||document.body,{
+      delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'\\[',right:'\\]',display:true},
+        {left:'$',right:'$',display:false},
+        {left:'\\(',right:'\\)',display:false}
+      ],
+      throwOnError:false,
+      macros:{"\\R":"\\mathbb{R}","\\E":"\\mathbb{E}"}
+    });
+  };
+  (function(){
+    if(window.renderMathInElement){ window.__doRender(); return; }
+    var tries=0, iv=setInterval(function(){
+      if(window.renderMathInElement){ clearInterval(iv); window.__doRender(); }
+      else if(++tries>200){ clearInterval(iv); }
+    },50);
+  })();
+
+  var C={ink:'#14162A',inkSoft:'#474B66',faint:'#878BA6',indigo:'#4338CA',indigoDeep:'#2A2090',
+         coral:'#FF5C49',coralDeep:'#E8412E',teal:'#0E9C92',line:'#DBDDE8',wash:'#EEEEF8',amber:'#C98314'};
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var DISP='600 13px "Space Grotesk",sans-serif', MONO='12px "JetBrains Mono",monospace';
+
+  var redraws=[];
+  function fit(cv,aspect){
+    var dpr=window.devicePixelRatio||1;
+    cv.style.width='100%';
+    var w=cv.clientWidth||cv.parentElement.clientWidth;
+    var h=Math.round(w/aspect);
+    cv.style.height=h+'px';
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+    var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {w:w,h:h,ctx:ctx};
+  }
+  function register(fn){ redraws.push(fn); fn(); }
+  window.addEventListener('resize',function(){clearTimeout(window._rt);window._rt=setTimeout(function(){redraws.forEach(function(f){f();});},160);});
+  function gauss(){var u1=Math.random()||1e-9,u2=Math.random();return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);}
+
+  /* ---------- NAV ---------- */
+  var prog=document.getElementById('progress');
+  var chapLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .chap'));
+  var chapSecs=chapLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  var subLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .subs a'));
+  var subTargets=subLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  function onScroll(){
+    var st=window.scrollY||document.documentElement.scrollTop;
+    var docH=document.documentElement.scrollHeight-window.innerHeight;
+    prog.style.width=(docH>0?(st/docH*100):0)+'%';
+    var active=-1;
+    for(var i=0;i<chapSecs.length;i++){ if(chapSecs[i]&&chapSecs[i].offsetTop-140<=st) active=i; }
+    chapLinks.forEach(function(a,i){a.classList.toggle('active',i===active);});
+    var sa=-1;
+    for(var j=0;j<subTargets.length;j++){ if(subTargets[j]&&subTargets[j].offsetTop-160<=st) sa=j; }
+    subLinks.forEach(function(a,i){a.classList.toggle('active',i===sa);});
+  }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+  var sidebar=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),menuBtn=document.getElementById('menuBtn');
+  function closeMenu(){sidebar.classList.remove('open');scrim.classList.remove('show');}
+  menuBtn.addEventListener('click',function(){sidebar.classList.toggle('open');scrim.classList.toggle('show');});
+  scrim.addEventListener('click',closeMenu);
+  document.querySelectorAll('.toc a').forEach(function(a){a.addEventListener('click',closeMenu);});
+
+  /* ---------- HERO: token stream ---------- */
+  (function(){
+    var cv=document.getElementById('heroCanvas'); if(!cv) return;
+    var ctx,W,H,toks=[];
+    function build(){
+      var hdr=cv.parentElement,dpr=window.devicePixelRatio||1;
+      W=hdr.clientWidth;H=hdr.clientHeight;
+      cv.width=W*dpr;cv.height=H*dpr;ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+      toks=[];
+      for(var i=0;i<70;i++)toks.push({x:Math.random()*W,lane:Math.random(),sp:0.5+Math.random()*1.3,
+        sz:5+Math.random()*9,ph:Math.random()*6.28,hot:Math.random()<0.13});
+    }
+    var t=0;
+    function draw(){
+      ctx.fillStyle='rgba(20,18,52,0.22)';ctx.fillRect(0,0,W,H);
+      t+=0.016;
+      toks.forEach(function(p){
+        p.x+=p.sp;if(p.x>W+20){p.x=-20;p.lane=Math.random();p.hot=Math.random()<0.13;}
+        var y=H*(0.15+0.7*p.lane)+Math.sin(t*1.2+p.ph)*9;
+        ctx.fillStyle=p.hot?'rgba(255,120,104,0.9)':'rgba(150,152,230,0.4)';
+        var r=3, s=p.sz;
+        ctx.beginPath();
+        ctx.moveTo(p.x+r,y);ctx.arcTo(p.x+s,y,p.x+s,y+s,r);ctx.arcTo(p.x+s,y+s,p.x,y+s,r);
+        ctx.arcTo(p.x,y+s,p.x,y,r);ctx.arcTo(p.x,y,p.x+s,y,r);ctx.fill();
+      });
+    }
+    build();
+    if(REDUCE){ctx.fillStyle='#141234';ctx.fillRect(0,0,W,H);for(var k=0;k<200;k++)draw();}
+    else{(function loop(){draw();requestAnimationFrame(loop);})();}
+    window.addEventListener('resize',function(){clearTimeout(window._hr);window._hr=setTimeout(build,160);});
+  })();
+
+  /* ================= 1. PATCH TOKENIZER ================= */
+  (function(){
+    var cv=document.getElementById('patchCanvas'); if(!cv) return;
+    var rd=document.getElementById('patchReadout'),P=16;
+    var scene=document.createElement('canvas');scene.width=224;scene.height=224;
+    (function(){var s=scene.getContext('2d');
+      var sky=s.createLinearGradient(0,0,0,224);sky.addColorStop(0,'#BFD3F2');sky.addColorStop(1,'#E8EFFA');
+      s.fillStyle=sky;s.fillRect(0,0,224,224);
+      s.fillStyle='#D9C9A8';s.fillRect(0,150,224,74); // table
+      s.fillStyle='#E8412E';s.fillRect(38,108,52,46); // red block
+      s.fillStyle='#B5301F';s.fillRect(38,108,52,8);
+      s.fillStyle='#3D55C8';s.beginPath();s.arc(160,132,24,0,7);s.fill(); // blue ball
+      s.fillStyle='rgba(255,255,255,0.5)';s.beginPath();s.arc(152,124,7,0,7);s.fill();
+      s.fillStyle='rgba(20,22,42,0.12)';s.beginPath();s.ellipse(64,156,34,6,0,0,7);s.fill();
+      s.beginPath();s.ellipse(160,158,26,5,0,0,7);s.fill();
+    })();
+    var W,H,ctx,S;
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var IS=Math.min(W*0.46,H-46), ox=14, oy=(H-IS)/2;
+      ctx.drawImage(scene,ox,oy,IS,IS);
+      var n1=224/P, cell=IS/n1;
+      ctx.strokeStyle='rgba(20,22,42,0.45)';ctx.lineWidth=1;
+      for(var g=0;g<=n1;g++){
+        ctx.beginPath();ctx.moveTo(ox+g*cell,oy);ctx.lineTo(ox+g*cell,oy+IS);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(ox,oy+g*cell);ctx.lineTo(ox+IS,oy+g*cell);ctx.stroke();
+      }
+      ctx.strokeStyle=C.ink;ctx.lineWidth=1.5;ctx.strokeRect(ox,oy,IS,IS);
+      // sequence strip
+      var sx=ox+IS+26, availW=W-sx-14;
+      var ts=Math.max(10,Math.min(26,Math.floor(availW/12)-3));
+      var perRow=Math.floor(availW/(ts+3));
+      var maxShow=Math.min(n1*n1, perRow*Math.max(3,Math.floor((H-90)/(ts+3))));
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('token sequence (first '+maxShow+' of '+(n1*n1)+'):',sx,oy+4);
+      // CLS token
+      var ty=oy+14;
+      ctx.fillStyle=C.coralDeep;ctx.fillRect(sx,ty,ts,ts);
+      ctx.fillStyle='#fff';ctx.font='600 '+Math.max(7,ts*0.34)+'px "Space Grotesk"';
+      ctx.textAlign='center';ctx.fillText('CLS',sx+ts/2,ty+ts*0.62);ctx.textAlign='left';
+      var idx=0;
+      for(var i=0;i<maxShow;i++){
+        var slot=i+1, row=Math.floor(slot/perRow), col=slot%perRow;
+        var px=sx+col*(ts+3), py=ty+row*(ts+3);
+        if(py+ts>H-8)break;
+        var sr=Math.floor(i/n1), sc=i%n1;
+        ctx.drawImage(scene,sc*P,sr*P,P,P,px,py,ts,ts);
+        ctx.strokeStyle='rgba(20,22,42,0.25)';ctx.lineWidth=0.8;ctx.strokeRect(px+0.5,py+0.5,ts-1,ts-1);
+        idx++;
+      }
+      var n=n1*n1;
+      rd.innerHTML='P='+P+' → n = (224/'+P+')² = <b>'+n+' tokens</b> (+1 CLS). Attention scores per layer: n² ≈ <b>'+(n*n).toLocaleString()+'</b> pairs. '+(P>=56?'Coarse tiles: cheap, but the ball is barely two tokens — fine detail is gone.':P>=16?'The standard trade: enough detail to see objects, a paragraph-sized sequence.':'Fine tiles: beautiful detail, brutal quadratic bill — this is why high-res vision is expensive.');
+    }
+    document.querySelectorAll('#patchSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#patchSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      P=+btn.dataset.p;draw();});});
+    register(draw);
+  })();
+
+  /* ================= 2. EMA TEACHER ================= */
+  (function(){
+    var cv=document.getElementById('emaCanvas'); if(!cv) return;
+    var em=document.getElementById('emaM'),mv=document.getElementById('emaMv'),rd=document.getElementById('emaReadout');
+    var W,H,ctx,S,anim=null;
+    var stu,tea,stTrail,teTrail;
+    var OPT={x:0.74,y:0.5};
+    function reset(){stu={x:0.12,y:0.82};tea={x:0.12,y:0.82};stTrail=[{x:stu.x,y:stu.y}];teTrail=[{x:tea.x,y:tea.y}];}
+    reset();
+    function base(){
+      ctx.clearRect(0,0,W,H);
+      // contours
+      for(var r=5;r>=1;r--){
+        ctx.strokeStyle='rgba(67,56,202,'+(0.07+0.05*(6-r))+')';ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.ellipse(OPT.x*W,OPT.y*H,r*0.07*W,r*0.055*H,0,0,7);ctx.stroke();
+      }
+      ctx.fillStyle=C.indigoDeep;ctx.font=MONO;ctx.fillText('optimum',OPT.x*W+8,OPT.y*H-8);
+      ctx.fillStyle=C.indigo;ctx.beginPath();ctx.arc(OPT.x*W,OPT.y*H,3,0,7);ctx.fill();
+      function trail(tr,col,wd){ctx.strokeStyle=col;ctx.lineWidth=wd;ctx.beginPath();
+        tr.forEach(function(p,i){if(i===0)ctx.moveTo(p.x*W,p.y*H);else ctx.lineTo(p.x*W,p.y*H);});ctx.stroke();}
+      trail(stTrail,'rgba(255,92,73,0.55)',1.4);
+      trail(teTrail,'rgba(42,32,144,0.85)',2.6);
+      ctx.fillStyle=C.coralDeep;ctx.beginPath();ctx.arc(stu.x*W,stu.y*H,6,0,7);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle=C.indigoDeep;ctx.beginPath();ctx.arc(tea.x*W,tea.y*H,7,0,7);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.stroke();
+      ctx.font=DISP;ctx.fillStyle=C.coralDeep;ctx.fillText('student (noisy SGD)',14,22);
+      ctx.fillStyle=C.indigoDeep;ctx.fillText('teacher (EMA)',14,42);
+    }
+    function draw(){S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;base();}
+    em.addEventListener('input',function(){mv.textContent=(+em.value).toFixed(3);});
+    mv.textContent=(+em.value).toFixed(3);
+    document.getElementById('emaReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);reset();base();rd.innerHTML='Press <b>Train</b>: the student takes 220 noisy gradient steps; the teacher averages them.';});
+    document.getElementById('emaRun').addEventListener('click',function(){
+      if(anim)cancelAnimationFrame(anim);reset();
+      var m=+em.value,steps=0;
+      function frame(){
+        for(var k=0;k<3;k++){
+          if(steps>=220)break;
+          var gx=(stu.x-OPT.x),gy=(stu.y-OPT.y);
+          stu.x+= -0.05*gx + gauss()*0.018;
+          stu.y+= -0.05*gy + gauss()*0.018;
+          tea.x=m*tea.x+(1-m)*stu.x;
+          tea.y=m*tea.y+(1-m)*stu.y;
+          stTrail.push({x:stu.x,y:stu.y});teTrail.push({x:tea.x,y:tea.y});
+          steps++;
+        }
+        base();
+        if(steps<220){anim=requestAnimationFrame(frame);}
+        else{
+          var dS=Math.hypot(stu.x-OPT.x,stu.y-OPT.y),dT=Math.hypot(tea.x-OPT.x,tea.y-OPT.y);
+          // jitter estimate: avg step-to-step displacement late in training
+          var js=0,jt=0,n0=Math.max(1,stTrail.length-60);
+          for(var i=n0;i<stTrail.length-1;i++){js+=Math.hypot(stTrail[i+1].x-stTrail[i].x,stTrail[i+1].y-stTrail[i].y);
+            jt+=Math.hypot(teTrail[i+1].x-teTrail[i].x,teTrail[i+1].y-teTrail[i].y);}
+          js/=(stTrail.length-1-n0);jt/=(stTrail.length-1-n0);
+          rd.innerHTML='m='+m.toFixed(3)+' → teacher jitter is <b>'+(jt/js*100).toFixed(0)+'%</b> of the student\u2019s (step-to-step). '+(m>0.99?'Very smooth — but notice the lag early on: the teacher trusts its history and arrives late.':m<0.8?'Low momentum: the "teacher" is barely smoother than the student — a noisy target to chase.':'A good middle: the noise is filtered, the direction is kept. This stable target is what DINO\u2019s student distills from.');
+        }
+      } frame();
+    });
+    register(draw);
+  })();
+
+  /* ================= 3. HUNGARIAN MATCHING ================= */
+  (function(){
+    var cv=document.getElementById('matchCanvas'); if(!cv) return;
+    var rd=document.getElementById('matchReadout');
+    var W,H,ctx,S;
+    var gts=[],preds=[],dragI=-1;
+    var NOOBJ_COST=0.30;
+    function shuffle(){
+      gts=[];var cols=['#E8412E','#3D55C8','#0E9C92'];
+      for(var i=0;i<3;i++)gts.push({x:0.14+Math.random()*0.5,y:0.18+Math.random()*0.62,c:cols[i]});
+      preds=[];
+      for(var j=0;j<4;j++)preds.push({x:0.15+Math.random()*0.55,y:0.15+Math.random()*0.66});
+    }
+    shuffle();
+    function perms(arr){ // permutations of array
+      if(arr.length<=1)return [arr];
+      var out=[];
+      for(var i=0;i<arr.length;i++){
+        var rest=arr.slice(0,i).concat(arr.slice(i+1));
+        perms(rest).forEach(function(p){out.push([arr[i]].concat(p));});
+      }
+      return out;
+    }
+    var ALLP=perms([0,1,2,3]);
+    function cost(pi,tj){ // target j: 0..2 real, 3 = no-object
+      if(tj===3)return NOOBJ_COST;
+      var d=Math.hypot(preds[pi].x-gts[tj].x,preds[pi].y-gts[tj].y);
+      return d;
+    }
+    function solve(){
+      var best=null,bc=1e9;
+      ALLP.forEach(function(p){
+        var c=0;for(var i=0;i<4;i++)c+=cost(i,p[i]);
+        if(c<bc){bc=c;best=p;}
+      });
+      return {assign:best,cost:bc};
+    }
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      ctx.strokeStyle=C.line;ctx.strokeRect(0.5,0.5,W-1,H-1);
+      var sol=solve();
+      // no-object slot
+      var nx=W*0.86,ny=H*0.5;
+      ctx.setLineDash([6,5]);ctx.strokeStyle=C.faint;ctx.lineWidth=1.6;
+      ctx.strokeRect(nx-34,ny-26,68,52);ctx.setLineDash([]);
+      ctx.font=DISP;ctx.fillStyle=C.faint;ctx.textAlign='center';ctx.fillText('∅ no object',nx,ny+44);ctx.textAlign='left';
+      // assignment lines
+      for(var i=0;i<4;i++){
+        var tj=sol.assign[i],p=preds[i];
+        var tx= tj===3? nx : gts[tj].x*W, ty= tj===3? ny : gts[tj].y*H;
+        ctx.strokeStyle= tj===3?'rgba(135,139,166,0.6)':'rgba(20,22,42,0.5)';
+        ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(p.x*W,p.y*H);ctx.lineTo(tx,ty);ctx.stroke();
+      }
+      // GT squares
+      gts.forEach(function(g,i){
+        ctx.fillStyle=g.c;ctx.globalAlpha=0.16;ctx.fillRect(g.x*W-26,g.y*H-26,52,52);ctx.globalAlpha=1;
+        ctx.strokeStyle=g.c;ctx.lineWidth=2.4;ctx.strokeRect(g.x*W-26,g.y*H-26,52,52);
+        ctx.font=MONO;ctx.fillStyle=g.c;ctx.fillText('GT'+(i+1),g.x*W-24,g.y*H-32);
+      });
+      // predictions
+      preds.forEach(function(p,i){
+        ctx.fillStyle=C.coralDeep;ctx.beginPath();ctx.arc(p.x*W,p.y*H,10,0,7);ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=2.4;ctx.stroke();
+        ctx.fillStyle='#fff';ctx.font='700 10px "Space Grotesk"';ctx.textAlign='center';
+        ctx.fillText(''+(i+1),p.x*W,p.y*H+3.5);ctx.textAlign='left';
+      });
+      var matched=sol.assign.map(function(t,i){return t===3?null:i;}).filter(function(v){return v!==null;}).length;
+      rd.innerHTML='Optimal assignment cost = <b>'+sol.cost.toFixed(3)+'</b> ('+matched+' predictions matched, '+(4-matched)+' sent to ∅ at '+NOOBJ_COST.toFixed(2)+' each). Drag the coral dots — the matcher re-solves all 24 assignments every frame, and it will never give one object two owners.';
+    }
+    function pick(e){
+      var r=cv.getBoundingClientRect();
+      var x=(e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
+      for(var i=0;i<4;i++){if(Math.hypot(preds[i].x-x,preds[i].y-y)<0.05)return i;}
+      return -1;
+    }
+    cv.addEventListener('pointerdown',function(e){dragI=pick(e);if(dragI>=0)cv.setPointerCapture(e.pointerId);});
+    cv.addEventListener('pointermove',function(e){
+      if(dragI<0)return;
+      var r=cv.getBoundingClientRect();
+      preds[dragI].x=Math.max(0.03,Math.min(0.97,(e.clientX-r.left)/r.width));
+      preds[dragI].y=Math.max(0.05,Math.min(0.95,(e.clientY-r.top)/r.height));
+      draw();
+    });
+    cv.addEventListener('pointerup',function(){dragI=-1;});
+    document.getElementById('matchShuffle').addEventListener('click',function(){shuffle();draw();});
+    register(draw);
+  })();
+
+  /* ================= 4. BPE ================= */
+  (function(){
+    var cv=document.getElementById('bpeCanvas'); if(!cv) return;
+    var bn=document.getElementById('bpeN'),nv=document.getElementById('bpeNv'),
+        inp=document.getElementById('bpeText'),rd=document.getElementById('bpeReadout');
+    var corpus="the transformer learns attention the model reads the tokens and the attention layers attend to the patches the student learns from the teacher and the teacher is the average of the student the network learns the representation and the model learns to predict the next token the attention is all you need and the tokens flow through the layers of the transformer";
+    // train merges
+    var merges=[];
+    (function train(){
+      var words={};
+      corpus.split(/[^a-z]+/).forEach(function(w){if(w)words[w]=(words[w]||0)+1;});
+      var seqs={};
+      Object.keys(words).forEach(function(w){seqs[w]={toks:w.split(''),n:words[w]};});
+      for(var m=0;m<150;m++){
+        var counts={};
+        Object.keys(seqs).forEach(function(w){
+          var t=seqs[w].toks,n=seqs[w].n;
+          for(var i=0;i+1<t.length;i++){var k=t[i]+'\u0001'+t[i+1];counts[k]=(counts[k]||0)+n;}
+        });
+        var bestK=null,bestC=1;
+        Object.keys(counts).forEach(function(k){if(counts[k]>bestC){bestC=counts[k];bestK=k;}});
+        if(!bestK)break;
+        var pair=bestK.split('\u0001');
+        merges.push(pair);
+        Object.keys(seqs).forEach(function(w){
+          var t=seqs[w].toks,out=[];
+          for(var i=0;i<t.length;i++){
+            if(i+1<t.length&&t[i]===pair[0]&&t[i+1]===pair[1]){out.push(pair[0]+pair[1]);i++;}
+            else out.push(t[i]);
+          }
+          seqs[w].toks=out;
+        });
+      }
+    })();
+    function tokenize(text,V){
+      var out=[];
+      text.toLowerCase().split(/([^a-z]+)/).forEach(function(seg){
+        if(!seg)return;
+        if(!/[a-z]/.test(seg)){out.push({t:seg,sp:true});return;}
+        var t=seg.split('');
+        for(var m=0;m<V&&m<merges.length;m++){
+          var pair=merges[m],nt=[];
+          for(var i=0;i<t.length;i++){
+            if(i+1<t.length&&t[i]===pair[0]&&t[i+1]===pair[1]){nt.push(pair[0]+pair[1]);i++;}
+            else nt.push(t[i]);
+          }
+          t=nt;
+        }
+        t.forEach(function(x){out.push({t:x,sp:false});});
+      });
+      return out;
+    }
+    var PAL=['#4338CA','#0E9C92','#C98314','#E8412E','#2A2090','#7C3AED'];
+    var W,H,ctx,S;
+    function draw(){
+      S=fit(cv,640/300);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var V=+bn.value;nv.textContent=V;
+      var toks=tokenize(inp.value||' ',V);
+      var x=16,y=44,hgt=34,ci=0,nWord=0;
+      ctx.font='600 16px "JetBrains Mono"';
+      toks.forEach(function(tk){
+        var w=ctx.measureText(tk.t).width+(tk.sp?2:16);
+        if(x+w>W-14){x=16;y+=hgt+12;}
+        if(y>H-30)return;
+        if(!tk.sp){
+          var col=PAL[ci%PAL.length];ci++;nWord++;
+          ctx.fillStyle=col;ctx.globalAlpha=0.14;
+          ctx.fillRect(x,y-22,w-4,hgt);ctx.globalAlpha=1;
+          ctx.strokeStyle=col;ctx.lineWidth=1.4;ctx.strokeRect(x,y-22,w-4,hgt);
+          ctx.fillStyle=col;ctx.fillText(tk.t,x+6,y);
+          x+=w+4;
+        } else { x+=8; }
+      });
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('merges replayed: '+Math.min(V,merges.length),16,22);
+      var chars=(inp.value||'').replace(/[^a-z]/gi,'').length;
+      rd.innerHTML='<b>'+nWord+' tokens</b> for '+chars+' letters ('+(chars?(chars/Math.max(1,nWord)).toFixed(2):'0')+' chars/token). '+(V===0?'No merges: pure spelling — every letter is a token.':V<30?'Early merges fuse the most common pairs (watch <b>th</b>, <b>e&nbsp;</b>-type pairs go first).':'Frequent fragments now ride as single tokens; rare words still shatter. Compression for the common, spelling for the rare.');
+    }
+    bn.addEventListener('input',draw);
+    inp.addEventListener('input',draw);
+    register(draw);
+  })();
+
+  /* ================= 5a. KV CACHE ================= */
+  (function(){
+    var cv=document.getElementById('kvCanvas'); if(!cv) return;
+    var rd=document.getElementById('kvReadout');
+    var W,H,ctx,S,mode='no',T=0,MAXT=12,anim=null;
+    var words=['The','robot','sees','the','red','block','and','reaches','out','to','grasp','it'];
+    function totalWork(t,m){ // cumulative projections after t steps
+      if(m==='yes')return t;
+      var s=0;for(var i=1;i<=t;i++)s+=i;return s;
+    }
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var ox=86,oy=34,availW=W-ox-110,availH=H-oy-16;
+      var cell=Math.min(availW/MAXT,availH/MAXT,22);
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('step ↓   K/V for token →',ox,22);
+      for(var t=1;t<=T;t++){
+        var y=oy+(t-1)*(cell+3);
+        ctx.fillStyle=C.faint;ctx.font='10px "JetBrains Mono"';
+        ctx.fillText(words[t-1],8,y+cell*0.7);
+        for(var i=1;i<=t;i++){
+          var x=ox+(i-1)*(cell+3);
+          var fresh = (mode==='no') || (i===t);
+          ctx.fillStyle= fresh? C.coralDeep : C.teal;
+          ctx.globalAlpha= fresh?0.9:0.55;
+          ctx.fillRect(x,y,cell,cell);ctx.globalAlpha=1;
+        }
+      }
+      // work bars
+      var bw=86,bx=W-bw-12;
+      var w0=totalWork(T,'no'),w1=totalWork(T,'yes'),wm=totalWork(MAXT,'no');
+      ctx.font=MONO;ctx.fillStyle=C.ink;
+      ctx.fillText('projections',bx,26);
+      ctx.fillStyle=C.wash;ctx.fillRect(bx,34,bw,12);ctx.fillRect(bx,72,bw,12);
+      ctx.fillStyle=C.coralDeep;ctx.fillRect(bx,34,bw*(w0/wm),12);
+      ctx.fillStyle=C.teal;ctx.fillRect(bx,72,bw*(w1/wm),12);
+      ctx.fillStyle=C.coralDeep;ctx.fillText('no cache: '+w0,bx,60);
+      ctx.fillStyle=C.teal;ctx.fillText('cache: '+w1,bx,98);
+      var cur=totalWork(T,mode);
+      rd.innerHTML= T===0? 'Press <b>Generate</b>. Coral cells = K/V projections computed at that step; teal = read from the cache for free.'
+        : 'After '+T+' tokens: this mode has computed <b>'+cur+'</b> K/V projections; '+(mode==='no'?('the cache would need only <b>'+totalWork(T,'yes')+'</b>. The coral triangle is the quadratic bill — T(T+1)/2.'):('without the cache it would be <b>'+totalWork(T,'no')+'</b>. One coral cell per step: the notepad is written once, read forever.'));
+    }
+    function step(){if(T<MAXT){T++;draw();}}
+    document.getElementById('kvStep').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);step();});
+    document.getElementById('kvRun').addEventListener('click',function(){
+      if(anim)cancelAnimationFrame(anim);
+      var last=0;
+      function frame(ts){
+        if(ts-last>260){step();last=ts;}
+        if(T<MAXT)anim=requestAnimationFrame(frame);
+      }
+      anim=requestAnimationFrame(frame);
+    });
+    document.getElementById('kvReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);T=0;draw();});
+    document.querySelectorAll('#kvSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#kvSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      mode=btn.dataset.c;draw();});});
+    register(draw);
+  })();
+
+  /* ================= 5b. SCALING LAWS ================= */
+  (function(){
+    var cv=document.getElementById('scaleCanvas'); if(!cv) return;
+    var sc=document.getElementById('scC'),cvv=document.getElementById('scCv'),
+        sn=document.getElementById('scN'),nvv=document.getElementById('scNv'),rd=document.getElementById('scaleReadout');
+    var E=1.69,A=406.4,B=410.7,al=0.34,be=0.28;
+    function loss(N,D){return E+A/Math.pow(N,al)+B/Math.pow(D,be);}
+    var W,H,ctx,S;
+    function fmt(x){
+      if(x>=1e12)return (x/1e12).toFixed(1)+'T';
+      if(x>=1e9)return (x/1e9).toFixed(1)+'B';
+      if(x>=1e6)return (x/1e6).toFixed(1)+'M';
+      return Math.round(x).toLocaleString();
+    }
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var logC=+sc.value;cvv.textContent=logC.toFixed(1);
+      var Cb=Math.pow(10,logC);
+      // feasible logN range so that D >= 1e6 tokens and N >= 3e6
+      var lo=Math.max(6.5,logC-Math.log10(6)-13), hi=Math.min(13.5,logC-Math.log10(6)-6);
+      if(+sn.value<lo)sn.value=lo; if(+sn.value>hi)sn.value=hi;
+      sn.min=lo;sn.max=hi;
+      var logN=+sn.value;nvv.textContent=logN.toFixed(2);
+      var pad=52;
+      // curve of loss vs logN at this budget
+      var pts=[],minL=1e9,maxL=0,minAt=lo;
+      for(var i=0;i<=160;i++){
+        var ln=lo+(hi-lo)*i/160, N=Math.pow(10,ln), D=Cb/(6*N), L=loss(N,D);
+        pts.push([ln,L]);
+        if(L<minL){minL=L;minAt=ln;}
+        if(L>maxL&&L<8)maxL=Math.min(L,8);
+      }
+      maxL=Math.min(maxL,minL+1.6);
+      function PX(ln){return pad+(ln-lo)/(hi-lo)*(W-pad-16);}
+      function PY(L){return 26+(1-(Math.min(L,maxL)-minL+0.05)/(maxL-minL+0.05))*(H-72)* -1 + (H-46);}
+      // simpler: map minL..maxL to bottom..top
+      function PY2(L){var f=(Math.min(L,maxL)-minL)/(maxL-minL+1e-9);return (H-46)-(1-f)*(H-76);}
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(pad,H-46);ctx.lineTo(W-16,H-46);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.textAlign='center';
+      for(var g=Math.ceil(lo);g<=Math.floor(hi);g++){ctx.fillText('10^'+g,PX(g),H-28);}
+      ctx.fillText('model size N (params) →',W/2,H-10);ctx.textAlign='left';
+      ctx.save();ctx.translate(14,H/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText('predicted loss',0,0);ctx.restore();
+      ctx.strokeStyle=C.indigo;ctx.lineWidth=2.6;ctx.beginPath();
+      pts.forEach(function(p,i){var x=PX(p[0]),y=PY2(p[1]);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+      ctx.stroke();
+      // optimum
+      ctx.fillStyle=C.teal;ctx.beginPath();ctx.arc(PX(minAt),PY2(minL),6,0,7);ctx.fill();
+      ctx.font=MONO;ctx.fillStyle=C.teal;ctx.fillText('optimal',PX(minAt)-24,PY2(minL)-12);
+      // current
+      var N=Math.pow(10,logN),D=Cb/(6*N),L=loss(N,D);
+      ctx.fillStyle=C.coralDeep;ctx.beginPath();ctx.arc(PX(logN),PY2(L),7,0,7);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+      var Nopt=Math.pow(10,minAt),Dopt=Cb/(6*Nopt);
+      rd.innerHTML='Your split: N = <b>'+fmt(N)+'</b> params × D = <b>'+fmt(D)+'</b> tokens ('+(D/N).toFixed(0)+' tok/param) → loss <b>'+L.toFixed(3)+'</b>. Optimal at this budget: '+fmt(Nopt)+' × '+fmt(Dopt)+' ('+(Dopt/Nopt).toFixed(0)+' tok/param) → '+minL.toFixed(3)+'. '+(logN>minAt+0.7?'<b>Undertrained giant</b> — too much brain, too few books (the pre-Chinchilla mistake).':logN<minAt-0.7?'<b>Overtrained dwarf</b> — the model is too small to absorb all that data.':'Near the compute-optimal frontier — brain and books in balance.');
+    }
+    [sc,sn].forEach(function(s){s.addEventListener('input',draw);});
+    register(draw);
+  })();
+
+  /* ================= 6. DECODING DIAL ================= */
+  (function(){
+    var cv=document.getElementById('tempCanvas'); if(!cv) return;
+    var tT=document.getElementById('tmpT'),tK=document.getElementById('tmpK'),tP=document.getElementById('tmpP');
+    var tv=document.getElementById('tmpTv'),kv=document.getElementById('tmpKv'),pv=document.getElementById('tmpPv');
+    var rd=document.getElementById('tempReadout');
+    var toks=['block','cube','box','ball','tool','cup','wrench','screw','apple','plate','toy','banana'];
+    var logits=[3.1,2.4,2.2,1.9,1.2,0.9,0.6,0.3,0.0,-0.3,-0.6,-1.2];
+    var samples=[];
+    var W,H,ctx,S;
+    function compute(){
+      var T=+tT.value,k=+tK.value,p=+tP.value;
+      var raw=logits.map(function(z){return Math.exp(z);});
+      var sR=raw.reduce(function(a,b){return a+b;},0);raw=raw.map(function(x){return x/sR;});
+      var ex=logits.map(function(z){return Math.exp(z/T);});
+      var idx=ex.map(function(v,i){return i;}).sort(function(a,b){return ex[b]-ex[a];});
+      var keep=new Array(12).fill(false);
+      // top-k
+      for(var i=0;i<Math.min(k,12);i++)keep[idx[i]]=true;
+      // top-p within kept (nucleus on temperature dist)
+      var sAll=0;idx.forEach(function(i){if(keep[i])sAll+=ex[i];});
+      var cum=0;
+      for(var j=0;j<idx.length;j++){
+        var i2=idx[j];if(!keep[i2])continue;
+        if(cum/sAll>=p){keep[i2]=false;continue;}
+        cum+=ex[i2];
+      }
+      var sK=0;ex.forEach(function(v,i){if(keep[i])sK+=v;});
+      var post=ex.map(function(v,i){return keep[i]? v/sK:0;});
+      return {raw:raw,post:post,keep:keep};
+    }
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      tv.textContent=(+tT.value).toFixed(2);kv.textContent=tK.value;pv.textContent=(+tP.value).toFixed(2);
+      var d=compute();
+      var bw=(W-40)/12,base=H-58;
+      var maxP=Math.max.apply(null,d.raw.concat(d.post));
+      var Hent=0;
+      for(var i=0;i<12;i++){
+        var x=24+i*bw;
+        // raw (gray)
+        ctx.fillStyle='rgba(135,139,166,0.35)';
+        ctx.fillRect(x+2,base-d.raw[i]/maxP*(H-110),bw*0.36,d.raw[i]/maxP*(H-110));
+        // post (indigo)
+        ctx.fillStyle= d.keep[i]? C.indigo : 'rgba(67,56,202,0.12)';
+        ctx.fillRect(x+bw*0.42,base-d.post[i]/maxP*(H-110),bw*0.36,d.post[i]/maxP*(H-110));
+        ctx.save();ctx.translate(x+bw*0.5,base+10);ctx.rotate(0.6);
+        ctx.font='11px "JetBrains Mono"';
+        ctx.fillStyle= d.keep[i]? C.ink : C.faint;
+        ctx.fillText(toks[i],0,0);ctx.restore();
+        if(!d.keep[i]){
+          ctx.strokeStyle=C.coralDeep;ctx.lineWidth=1.4;
+          ctx.beginPath();ctx.moveTo(x+4,base+4);ctx.lineTo(x+bw-6,base+22);ctx.stroke();
+        }
+        if(d.post[i]>0)Hent+=-d.post[i]*Math.log2(d.post[i]);
+      }
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('gray = model belief (T=1) · indigo = after T / top-k / top-p · struck = truncated',20,18);
+      ctx.fillStyle=C.ink;ctx.fillText('entropy of sampling dist: '+Hent.toFixed(2)+' bits',20,38);
+      rd.innerHTML='"The robot picked up the <b>'+(samples.length?samples.join(', '):'…')+'</b>"'+(samples.length?' ('+samples.length+' samples)':' — press Sample.')+' '+(Hent<0.3?'Nearly deterministic: greedy in all but name.':Hent>2.4?'High entropy — adventurous, occasionally absurd.':'Moderate entropy: varied but sensible.');
+    }
+    function sample(){
+      var d=compute(),r=Math.random(),c=0;
+      for(var i=0;i<12;i++){c+=d.post[i];if(r<=c){samples.push(toks[i]);break;}}
+      if(samples.length>8)samples.shift();
+      draw();
+    }
+    [tT,tK,tP].forEach(function(s){s.addEventListener('input',draw);});
+    document.getElementById('tmpSample').addEventListener('click',sample);
+    document.getElementById('tmpReset').addEventListener('click',function(){samples=[];draw();});
+    register(draw);
+  })();
+
+  /* ================= 7. GROUNDING HEATMAP ================= */
+  (function(){
+    var cv=document.getElementById('fuseCanvas'); if(!cv) return;
+    var rd=document.getElementById('fuseReadout'),word='red';
+    var scene=document.createElement('canvas');scene.width=240;scene.height=160;
+    (function(){var s=scene.getContext('2d');
+      var sky=s.createLinearGradient(0,0,0,160);sky.addColorStop(0,'#C5D6F0');sky.addColorStop(1,'#E9F0FA');
+      s.fillStyle=sky;s.fillRect(0,0,240,160);
+      s.fillStyle='#D9C9A8';s.fillRect(0,104,240,56);
+      s.fillStyle='#E8412E';s.fillRect(34,70,46,40);
+      s.fillStyle='#B5301F';s.fillRect(34,70,46,7);
+      s.fillStyle='#3D55C8';s.beginPath();s.arc(170,92,20,0,7);s.fill();
+      s.fillStyle='rgba(255,255,255,0.5)';s.beginPath();s.arc(163,85,6,0,7);s.fill();
+    })();
+    var GX=12,GY=8; // patch grid
+    function attn(w,cx,cy){ // cx,cy in [0,1]
+      function bump(x0,y0,s){var dx=cx-x0,dy=cy-y0;return Math.exp(-(dx*dx+dy*dy)/(2*s*s));}
+      if(w==='red')return bump(0.24,0.56,0.10)+0.04;
+      if(w==='block')return bump(0.24,0.56,0.13)+0.05;
+      if(w==='ball')return bump(0.71,0.575,0.10)+0.04;
+      if(w==='table')return bump(0.5,0.82,0.30)*0.9+0.05;
+      return 0.5+0.15*Math.sin(cx*9)*Math.sin(cy*7); // "the": diffuse
+    }
+    var W,H,ctx,S;
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var IW=Math.min(W-28,(H-70)*1.5), IH=IW/1.5, ox=(W-IW)/2, oy=14;
+      ctx.drawImage(scene,ox,oy,IW,IH);
+      // attention overlay
+      var cw=IW/GX,ch=IH/GY,vals=[],mx=0;
+      for(var r=0;r<GY;r++)for(var c=0;c<GX;c++){
+        var v=attn(word,(c+0.5)/GX,(r+0.5)/GY);vals.push(v);if(v>mx)mx=v;
+      }
+      var i=0;
+      for(var r2=0;r2<GY;r2++)for(var c2=0;c2<GX;c2++){
+        var a=vals[i++]/mx;
+        ctx.fillStyle='rgba(255,92,73,'+(a*0.62)+')';
+        ctx.fillRect(ox+c2*cw,oy+r2*ch,cw,ch);
+      }
+      ctx.strokeStyle='rgba(20,22,42,0.25)';ctx.lineWidth=0.7;
+      for(var g=0;g<=GX;g++){ctx.beginPath();ctx.moveTo(ox+g*cw,oy);ctx.lineTo(ox+g*cw,oy+IH);ctx.stroke();}
+      for(var g2=0;g2<=GY;g2++){ctx.beginPath();ctx.moveTo(ox,oy+g2*ch);ctx.lineTo(ox+IW,oy+g2*ch);ctx.stroke();}
+      ctx.strokeStyle=C.ink;ctx.lineWidth=1.4;ctx.strokeRect(ox,oy,IW,IH);
+      ctx.font=DISP;ctx.fillStyle=C.ink;
+      ctx.fillText('generating: "A '+(word==='the'?'the …':word)+'"  →  attention over image patches',ox,oy+IH+26);
+      var msgs={red:'The query for "red" agrees most with patches whose vectors encode redness — the block lights up, the blue ball stays cold.',
+        block:'"block" attends to the same region as "red" but slightly wider — shape evidence, not just color.',
+        ball:'The attention jumps object: same mechanism, different referent.',
+        table:'A surface, not an object: broad attention across the bottom half.',
+        the:'A function word with nothing to look at — attention spreads thin and diffuse. Grounding is for content words.'};
+      rd.innerHTML=msgs[word];
+    }
+    document.querySelectorAll('#fuseSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#fuseSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      word=btn.dataset.w;draw();});});
+    register(draw);
+  })();
+
+});
+</script>
+</body>
+</html>
