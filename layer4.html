@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Making — Layer 4 Interactive Textbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="window.__katexReady=true;if(window.__doRender)window.__doRender();"></script>
+<style>
+/* ============================================================
+   DESIGN SYSTEM — "Signal & Field"
+   A computational-textbook identity: cool paper, deep indigo
+   ink, an electric coral reserved EXCLUSIVELY for things you
+   can touch (the signature), teal as the secondary data hue.
+   ============================================================ */
+:root{
+  --paper:#F4F5F8;
+  --surface:#FFFFFF;
+  --ink:#14162A;
+  --ink-soft:#474B66;
+  --ink-faint:#878BA6;
+  --indigo:#4338CA;
+  --indigo-deep:#2A2090;
+  --indigo-wash:#EEEEF8;
+  --coral:#FF5C49;
+  --coral-deep:#E8412E;
+  --teal:#0E9C92;
+  --teal-wash:#E4F3F1;
+  --amber:#C98314;
+  --amber-wash:#FBF1DC;
+  --tint:#EDEEF7;
+  --line:#DBDDE8;
+  --line-soft:#E7E8F0;
+  --code-bg:#191B30;
+  --code-ink:#E8E9F2;
+  --shadow:0 1px 2px rgba(20,22,42,.04),0 8px 30px rgba(20,22,42,.06);
+  --shadow-lg:0 4px 12px rgba(20,22,42,.08),0 20px 50px rgba(20,22,42,.10);
+  --serif:"Newsreader",Georgia,serif;
+  --display:"Space Grotesk",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --reading:760px;
+  --wide:1000px;
+  --sidebar:280px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:19px;
+  line-height:1.72;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+::selection{background:var(--coral);color:#fff}
+
+/* ---------- reading progress ---------- */
+#progress{
+  position:fixed;top:0;left:0;height:3px;width:0%;
+  background:linear-gradient(90deg,var(--indigo),var(--coral));
+  z-index:120;transition:width .12s linear;
+}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);
+  background:var(--surface);border-right:1px solid var(--line);
+  padding:30px 0 40px;overflow-y:auto;z-index:100;
+}
+.sidebar-brand{padding:0 26px 22px;border-bottom:1px solid var(--line-soft);margin-bottom:18px}
+.sidebar-brand .eyebrow{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--coral);font-weight:500;
+}
+.sidebar-brand h1{
+  font-family:var(--display);font-weight:700;font-size:22px;
+  line-height:1.12;margin-top:8px;letter-spacing:-.01em;color:var(--ink);
+}
+.sidebar-brand .sub{font-size:13px;color:var(--ink-faint);margin-top:7px;font-family:var(--display);font-weight:400}
+.toc{list-style:none;font-family:var(--display);font-size:14px}
+.toc>li{margin:1px 0}
+.toc .chap{
+  display:flex;gap:11px;align-items:baseline;padding:8px 26px;
+  color:var(--ink-soft);text-decoration:none;font-weight:500;
+  border-left:3px solid transparent;transition:all .15s;
+}
+.toc .chap .num{font-family:var(--mono);font-size:11px;color:var(--ink-faint);min-width:18px}
+.toc .chap:hover{background:var(--indigo-wash);color:var(--indigo)}
+.toc .chap.active{color:var(--indigo);border-left-color:var(--coral);background:var(--indigo-wash)}
+.toc .chap.active .num{color:var(--coral)}
+.toc .subs{list-style:none;padding:2px 0 6px}
+.toc .subs a{
+  display:block;padding:4px 26px 4px 55px;font-size:12.5px;
+  color:var(--ink-faint);text-decoration:none;border-left:3px solid transparent;
+}
+.toc .subs a:hover{color:var(--indigo)}
+.toc .subs a.active{color:var(--ink);border-left-color:var(--line)}
+
+/* ---------- mobile menu ---------- */
+.menu-btn{
+  display:none;position:fixed;top:14px;left:14px;z-index:130;
+  background:var(--ink);color:#fff;border:none;border-radius:9px;
+  width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:var(--shadow);
+}
+.scrim{display:none;position:fixed;inset:0;background:rgba(20,22,42,.4);z-index:99}
+
+/* ---------- main layout ---------- */
+.content{margin-left:var(--sidebar);padding:0 0 120px}
+.wrap{max-width:var(--reading);margin:0 auto;padding:0 28px}
+.wrap-wide{max-width:var(--wide);margin:0 auto;padding:0 28px}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;height:clamp(440px,72vh,640px);
+  display:flex;align-items:center;overflow:hidden;
+  background:linear-gradient(165deg,#15172E 0%,#221C6B 55%,#3A2D9E 100%);
+  margin-bottom:70px;
+}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;opacity:.9}
+.hero-inner{position:relative;z-index:2;max-width:var(--wide);margin:0 auto;padding:0 48px;width:100%}
+.hero .eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  color:#FF8C7E;font-weight:500;margin-bottom:20px;
+}
+.hero h1{
+  font-family:var(--display);font-weight:700;color:#fff;
+  font-size:clamp(40px,7vw,76px);line-height:.98;letter-spacing:-.03em;
+}
+.hero h1 em{font-style:normal;color:#B9B2FF}
+.hero .lead{
+  font-family:var(--serif);color:#C9CCE8;font-size:clamp(17px,2.2vw,21px);
+  max-width:620px;margin-top:26px;line-height:1.6;
+}
+.hero .scroll-cue{
+  margin-top:38px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:#9A9DD0;display:flex;align-items:center;gap:10px;
+}
+.hero .scroll-cue::before{content:"";width:34px;height:1px;background:#6E72B8}
+
+/* ---------- typography in body ---------- */
+.chapter{padding-top:34px;margin-top:34px}
+.chapter-head{margin-bottom:14px}
+.chapter-head .kicker{
+  font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:12px;
+}
+.chapter-head .kicker::after{content:"";flex:1;height:1px;background:var(--line)}
+.chapter-head h2{
+  font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,42px);
+  line-height:1.06;letter-spacing:-.02em;margin-top:14px;color:var(--ink);
+}
+h3{
+  font-family:var(--display);font-weight:600;font-size:25px;line-height:1.2;
+  margin:46px 0 4px;letter-spacing:-.01em;color:var(--ink);
+}
+h4{
+  font-family:var(--display);font-weight:500;font-size:18px;
+  margin:30px 0 2px;color:var(--indigo-deep);letter-spacing:-.005em;
+}
+.content p{margin:16px 0;color:var(--ink)}
+.content p.intro{font-size:21px;line-height:1.66;color:var(--ink-soft)}
+.content a{color:var(--indigo);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.content a:hover{text-decoration-color:var(--coral)}
+strong{font-weight:600;color:var(--ink)}
+em{font-style:italic}
+.term{font-weight:600;color:var(--indigo-deep);font-style:normal}
+code{font-family:var(--mono);font-size:.84em;background:var(--tint);padding:.12em .4em;border-radius:5px;color:var(--indigo-deep)}
+ul,ol{margin:16px 0 16px 4px;padding-left:26px}
+li{margin:8px 0;padding-left:4px}
+li::marker{color:var(--coral)}
+hr{border:none;border-top:1px solid var(--line);margin:54px 0}
+
+/* ---------- callout boxes ---------- */
+.box{border-radius:14px;padding:22px 26px;margin:28px 0;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
+.box .box-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.box .box-label::before{content:"";width:7px;height:7px;border-radius:50%}
+.box p:first-of-type,.box .box-label+p{margin-top:0}
+.box p:last-child{margin-bottom:0}
+
+.def{background:var(--indigo-wash);border-color:#D6D7F0}
+.def .box-label{color:var(--indigo)}
+.def .box-label::before{background:var(--indigo)}
+
+.intuition{background:var(--teal-wash);border-color:#C4E4E0}
+.intuition .box-label{color:var(--teal)}
+.intuition .box-label::before{background:var(--teal)}
+
+.note{background:var(--amber-wash);border-color:#EAD9AE}
+.note .box-label{color:var(--amber)}
+.note .box-label::before{background:var(--amber)}
+
+.derivation{background:var(--surface);border-color:var(--line);border-left:4px solid var(--ink)}
+.derivation .box-label{color:var(--ink)}
+.derivation .box-label::before{background:var(--ink)}
+.derivation .step{display:flex;gap:14px;margin:14px 0;align-items:flex-start}
+.derivation .step .s-num{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;background:var(--ink);
+  min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  margin-top:4px;flex-shrink:0;
+}
+.derivation .step .s-body{flex:1}
+.derivation .step .s-body p{margin:0 0 4px}
+
+/* ---------- math display ---------- */
+.katex-display{margin:20px 0!important;overflow-x:auto;overflow-y:hidden;padding:4px 0}
+.eqn{position:relative}
+.content .katex{font-size:1.04em}
+
+/* ---------- figures & demos ---------- */
+figure{margin:34px 0;text-align:center}
+figcaption{font-family:var(--display);font-size:13.5px;color:var(--ink-faint);margin-top:14px;line-height:1.5}
+figcaption b{color:var(--ink-soft);font-weight:600}
+.svg-fig{width:100%;height:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+
+.demo{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  margin:34px 0;box-shadow:var(--shadow-lg);overflow:hidden;
+}
+.demo-head{padding:18px 24px 16px;border-bottom:1px solid var(--line-soft);background:linear-gradient(180deg,#FFF,#FCFCFE)}
+.demo-head .tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:8px;
+}
+.demo-head .tag::before{content:"▶";font-size:8px}
+.demo-head h4{font-family:var(--display);font-weight:600;font-size:18px;color:var(--ink);margin:7px 0 0}
+.demo-body{padding:22px 24px}
+.demo canvas{display:block;max-width:100%;border-radius:10px;background:#FBFBFD;border:1px solid var(--line-soft)}
+.demo-controls{display:flex;flex-wrap:wrap;gap:18px 28px;margin-top:18px;align-items:flex-end}
+.ctrl{display:flex;flex-direction:column;gap:6px;min-width:150px;flex:1}
+.ctrl label{font-family:var(--display);font-size:12.5px;font-weight:500;color:var(--ink-soft);display:flex;justify-content:space-between;gap:10px}
+.ctrl label .val{font-family:var(--mono);color:var(--coral);font-weight:700}
+.demo .readout{font-family:var(--mono);font-size:13px;color:var(--ink-soft);background:var(--tint);padding:10px 14px;border-radius:8px;margin-top:14px;line-height:1.6}
+.demo .readout b{color:var(--indigo-deep)}
+
+/* coral = interactive (the signature) */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;
+  background:var(--line);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;border:none;
+}
+.btn{
+  font-family:var(--display);font-weight:500;font-size:13.5px;cursor:pointer;
+  background:var(--coral);color:#fff;border:none;padding:9px 18px;border-radius:9px;
+  transition:transform .1s,background .15s;
+}
+.btn:hover{background:var(--coral-deep)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--indigo);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--indigo-wash);color:var(--indigo)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{
+  font-family:var(--display);font-size:12.5px;font-weight:500;background:var(--surface);
+  border:none;padding:8px 14px;cursor:pointer;color:var(--ink-soft);border-right:1px solid var(--line);
+}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--indigo);color:#fff}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto;margin:30px 0}
+table{border-collapse:collapse;width:100%;font-size:15.5px;font-family:var(--display)}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-soft)}
+th{font-weight:600;color:var(--indigo-deep);border-bottom:2px solid var(--line);font-size:13px;letter-spacing:.02em}
+td{color:var(--ink-soft)}
+tr:hover td{background:var(--indigo-wash)}
+td code{font-size:.9em}
+
+/* ---------- pill / chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.chip{font-family:var(--mono);font-size:11px;background:var(--tint);color:var(--indigo-deep);padding:5px 11px;border-radius:20px;border:1px solid var(--line)}
+
+/* ---------- footer ---------- */
+.endcard{
+  background:linear-gradient(165deg,#15172E,#2A2090);color:#fff;border-radius:18px;
+  padding:44px;margin:60px 0 0;box-shadow:var(--shadow-lg);
+}
+.endcard .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#FF8C7E}
+.endcard h3{color:#fff;margin-top:10px}
+.endcard p{color:#C9CCE8}
+.endcard a{color:#B9B2FF}
+
+footer.page{padding:40px 0 0;color:var(--ink-faint);font-family:var(--display);font-size:13px;text-align:center}
+
+/* ---------- responsive ---------- */
+@media(max-width:1080px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .25s;width:300px;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-btn{display:block}
+  .scrim.show{display:block}
+  .content{margin-left:0}
+  .hero-inner{padding:0 26px}
+  .wrap,.wrap-wide{padding:0 22px}
+}
+@media(max-width:640px){
+  body{font-size:17.5px}
+  .content p.intro{font-size:18.5px}
+  .demo-controls{gap:14px}
+  .ctrl{min-width:120px}
+  .endcard{padding:28px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<button class="menu-btn" id="menuBtn" aria-label="Open contents">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">
+    <div class="brand-mark">L4</div>
+    <div class="brand-text"><strong>Decision Making</strong><span>Robotics &amp; VLA · Layer 4 of 6</span></div>
+  </div>
+  <nav>
+  <ul class="toc">
+    <li><a class="chap" href="#ch1"><span class="num">01</span><span>The Agent Loop</span></a>
+      <ul class="subs">
+        <li><a href="#loop">Acting under consequences</a></li>
+        <li><a href="#mdp">Markov decision processes</a></li>
+        <li><a href="#returns">Returns &amp; the discount</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch2"><span class="num">02</span><span>Value &amp; Bellman</span></a>
+      <ul class="subs">
+        <li><a href="#value">Value functions</a></li>
+        <li><a href="#bellman">The Bellman equations</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch3"><span class="num">03</span><span>Learning from Experience</span></a>
+      <ul class="subs">
+        <li><a href="#td">Temporal-difference learning</a></li>
+        <li><a href="#qlearn">Q-learning, live</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch4"><span class="num">04</span><span>Explore vs. Exploit</span></a>
+      <ul class="subs">
+        <li><a href="#bandit">Bandits &amp; regret</a></li>
+        <li><a href="#ucb">Optimism under uncertainty</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch5"><span class="num">05</span><span>Policy Gradients</span></a>
+      <ul class="subs">
+        <li><a href="#whypg">Why learn the policy itself</a></li>
+        <li><a href="#reinforce">REINFORCE, derived</a></li>
+        <li><a href="#baseline">Baselines &amp; advantage</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch6"><span class="num">06</span><span>From REINFORCE to PPO</span></a>
+      <ul class="subs">
+        <li><a href="#ratio">Importance ratios</a></li>
+        <li><a href="#ppo">The clipped objective</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch7"><span class="num">07</span><span>Imitation Learning</span></a>
+      <ul class="subs">
+        <li><a href="#bc">Behavior cloning</a></li>
+        <li><a href="#drift">Compounding errors</a></li>
+        <li><a href="#chunking">DAgger &amp; action chunking</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch8"><span class="num">08</span><span>World Models</span></a>
+      <ul class="subs">
+        <li><a href="#whymodel">Learning from imagination</a></li>
+        <li><a href="#latent">Latent world models</a></li>
+        <li><a href="#mpc">Planning &amp; MPC</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch9"><span class="num">09</span><span>Toward Robot Policies</span></a>
+      <ul class="subs">
+        <li><a href="#offline">Why robots can't just explore</a></li>
+        <li><a href="#recipe">The modern recipe</a></li>
+      </ul></li>
+  </ul>
+  </nav>
+  <div class="side-foot">Layer 4 · Decision Making<br>← <em>Layer 3 · Vision &amp; Language</em> · → <em>Layer 5 · Robotics</em></div>
+</aside>
+<div id="scrim"></div>
+
+<div class="content">
+
+  <header class="hero">
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero-inner">
+      <div class="eyebrow">Robotics &amp; VLA Curriculum · Layer 4</div>
+      <h1>Decision Making: <em>learning to act</em></h1>
+      <p class="lead">Everything so far perceives and describes. This layer adds consequences: Markov decision processes, value functions, Q-learning, the policy-gradient theorem, PPO, and the imitation-learning toolkit that actually trains robot hands. The mathematics of trial, error, and improvement.</p>
+      <div class="scroll-cue">Scroll to begin · 9 chapters</div>
+    </div>
+  </header>
+
+  <section class="wrap" id="preface">
+    <p class="intro">A language model predicts and is done; nothing it says comes back to change its world. An agent is different: each action alters the situation the next decision faces, and the feedback — reward — arrives late, sparse, and without explanation. This layer builds the calculus of that setting. The payoff is the missing half of the VLA story: Layer 3 built a model that can <em>say</em> "pick up the red block"; Layer 4 is about what it takes to <em>do</em> it, and to get better at doing it.</p>
+    <div class="box note">
+      <div class="box-label">How to read this</div>
+      <p>Blue panels are <span class="term">definitions</span>; green panels build <span style="color:var(--teal);font-weight:600">intuition</span> (readable even if you skip equations); black-edged panels are <strong>step-by-step derivations</strong>; coral elements are <strong style="color:var(--coral)">interactive</strong> — several demos in this layer train an agent live in your browser. Amber panels link back to Layers 1–3 and forward to the robot.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 1 ===================== -->
+  <section class="wrap chapter" id="ch1">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 01</div>
+      <h2>The Agent Loop</h2>
+    </div>
+    <p class="intro">Reinforcement learning begins by being honest about what acting is like: you see a situation, you choose, the world answers with a new situation and a number, and you never get to ask "what would have happened otherwise?" One formalism captures all of it.</p>
+
+    <h3 id="loop">1.1 · Acting under consequences</h3>
+    <p>At each time step $t$ the <span class="term">agent</span> observes a state $s_t$, picks an action $a_t$, and the <span class="term">environment</span> replies with a reward $r_{t+1}$ and a next state $s_{t+1}$. Loop forever (or until a terminal state). Three things make this harder than the supervised learning of Layers 1–3:</p>
+    <ul>
+      <li><strong>No labels.</strong> Nobody says which action was correct — only a scalar score, possibly long after the fact.</li>
+      <li><strong>Consequences.</strong> Actions change future states. A bad move now can poison every option later. Data is not i.i.d.; <em>you generate your own dataset by behaving.</em></li>
+      <li><strong>Credit assignment.</strong> The win arrives at move 40; which of the 39 earlier moves deserves the credit?</li>
+    </ul>
+    <div class="box intuition">
+      <div class="box-label">Intuition — the slot machine bolted to a chessboard</div>
+      <p>Supervised learning is studying with an answer key. Reinforcement learning is a casino where the slot machine is bolted to a chessboard: every pull both pays out <em>and rearranges the pieces</em>. You must learn the payouts and the rearrangements at once, from a single stream of irreversible experience. Every concept in this layer — values, exploration, policy gradients — is a coping strategy for that situation.</p>
+    </div>
+
+    <h3 id="mdp">1.2 · Markov decision processes</h3>
+    <div class="box def">
+      <div class="box-label">Definition — MDP</div>
+      <p>A <span class="term">Markov decision process</span> is the tuple $(\mathcal{S},\mathcal{A},P,R,\gamma)$: states, actions, transition dynamics $P(s'\mid s,a)$, reward function $R(s,a)$, and a discount $\gamma\in[0,1)$. The <span class="term">Markov property</span> is the load-bearing assumption:</p>
+      $$P(s_{t+1}\mid s_t,a_t,\,s_{t-1},a_{t-1},\dots)=P(s_{t+1}\mid s_t,a_t)$$
+      <p>— the present state summarizes everything the past could tell you about the future. A <span class="term">policy</span> $\pi(a\mid s)$ is the agent's behavior: a distribution over actions in each state.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — the board is the memory</div>
+      <p>In chess you never need the game's move history to choose well — the current board position contains it all. That is Markov-ness: <em>state = sufficient summary</em>. When it fails (a robot whose camera can't see behind itself), the fix is to enrich the state — stack recent frames, add memory — until it holds again. Notice the design pressure this puts on Layers 2–3: a VLA's "state" is whatever its vision encoder distills from pixels, so perception quality literally determines whether the world looks Markov to the policy.</p>
+    </div>
+
+    <h3 id="returns">1.3 · Returns and the discount</h3>
+    <div class="box def">
+      <div class="box-label">Definition — return</div>
+      <p>The agent maximizes not the next reward but the <span class="term">return</span> — the discounted sum of everything still to come:</p>
+      $$G_t=r_{t+1}+\gamma\, r_{t+2}+\gamma^2 r_{t+3}+\cdots=\sum_{k=0}^{\infty}\gamma^{k}\,r_{t+k+1}$$
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why $\gamma\lt1$ tames infinity, and sets a horizon</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>With bounded rewards $|r|\le r_{\max}$, is the infinite sum even finite? Let $S=\sum_{k=0}^{\infty}\gamma^{k}$. Multiply by $\gamma$ and subtract — every term cancels but the first:</p>$$S-\gamma S=1\;\;\Rightarrow\;\;S=\frac{1}{1-\gamma}$$<p>so $|G_t|\le r_{\max}/(1-\gamma)$: finite, well-defined. (Layer 1's limit arguments, earning their keep.)</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>The same number is the <span class="term">effective horizon</span>: the weights $\gamma^k$ sum to $1/(1-\gamma)$, so the agent cares about roughly that many future steps. $\gamma=0.9$ → ~10 steps of foresight; $\gamma=0.99$ → ~100. The discount is an <em>impatience dial</em>.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>One more reading: $\gamma$ as per-step survival probability — a future reward is worth less because you might not get there. All three readings (convergence trick, horizon, hazard) are the same geometry. Feel it in the demo.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The impatience dial — how far into the future an agent can see</h4></div>
+      <div class="demo-body">
+        <canvas id="discCanvas" width="640" height="320"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>discount $\gamma$ <span class="val" id="discGv">0.90</span></label><input type="range" id="discG" min="0.50" max="0.99" step="0.01" value="0.90"></div>
+        </div>
+        <div class="readout" id="discReadout"></div>
+      </div>
+    </div>
+    <p>Each bar is a future reward of 1; its height is what it's worth <em>today</em>, $\gamma^k$. The teal marker sits at the effective horizon $1/(1-\gamma)$. At $\gamma=0.5$ the agent is a goldfish; at $0.99$ it plans a hundred steps out — and pays for it, because credit assignment over 100 steps is brutally noisy. Choosing $\gamma$ is choosing how long a story your agent can follow.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 2 ===================== -->
+  <section class="wrap chapter" id="ch2">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 02</div>
+      <h2>Value &amp; the Bellman Equations</h2>
+    </div>
+    <p class="intro">The central trick of reinforcement learning is to replace "what will my total future be?" — unknowable — with a number attached to each state: its value. One recursive equation defines that number, and nearly every RL algorithm is a way of solving it.</p>
+
+    <h3 id="value">2.1 · Value functions</h3>
+    <div class="box def">
+      <div class="box-label">Definition — state value and action value</div>
+      $$V^{\pi}(s)=\mathbb{E}_{\pi}\big[\,G_t \mid s_t=s\,\big]
+      \qquad\quad
+      Q^{\pi}(s,a)=\mathbb{E}_{\pi}\big[\,G_t \mid s_t=s,\,a_t=a\,\big]$$
+      <p>$V$ scores a situation under policy $\pi$; $Q$ scores a situation <em>and a first move</em>, then following $\pi$. The best achievable versions are $V^{\ast}$, $Q^{\ast}$, and an optimal policy is simply $\pi^{\ast}(s)=\arg\max_a Q^{\ast}(s,a)$ — <strong>know $Q^{\ast}$ and acting well is a lookup.</strong></p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — altitude on the landscape of futures</div>
+      <p>Value is altitude: standing in state $s$, how high does the expected future pile up from here? Rewards are scattered coins; value is the smell of coins on the wind. A chess engine's evaluation function, a commuter's sense that this on-ramp is a mistake, your hunch that an argument is going badly — all are value functions: compressed summaries of futures too long to enumerate.</p>
+    </div>
+
+    <h3 id="bellman">2.2 · The Bellman equations</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — value today = reward now + discounted value tomorrow</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Factor one $\gamma$ out of the return's tail — pure algebra on the definition:</p>$$G_t=r_{t+1}+\gamma\big(r_{t+2}+\gamma r_{t+3}+\cdots\big)=r_{t+1}+\gamma\,G_{t+1}$$<p>The infinite future telescopes into <em>one step plus the same problem, one step later</em>.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Take expectations under $\pi$ and the dynamics (Layer 1's tower of expectations):</p>$$V^{\pi}(s)=\mathbb{E}_{a\sim\pi,\;s'\sim P}\big[\,R(s,a)+\gamma\,V^{\pi}(s')\,\big]$$<p>— the <span class="term">Bellman expectation equation</span>. A self-consistency condition: each state's value must equal the average of (immediate reward + discounted value of where you land).</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>For the <em>best</em> behavior, choose the maximizing action instead of averaging over $\pi$:</p>$$V^{\ast}(s)=\max_{a}\;\mathbb{E}_{s'}\big[\,R(s,a)+\gamma\,V^{\ast}(s')\,\big]
+      \qquad
+      Q^{\ast}(s,a)=\mathbb{E}_{s'}\big[\,R(s,a)+\gamma\,\max_{a'}Q^{\ast}(s',a')\,\big]$$<p>the <span class="term">Bellman optimality equations</span>. One unknown function, defined in terms of itself — and that recursion is an instruction: <em>iterate it</em>. Start with any guess $V_0$, apply the right-hand side repeatedly ($V_{k+1}=\mathcal{T}V_k$), and the iterates converge — the backup is a $\gamma$-contraction, each sweep shrinking the worst-case error by $\gamma$. Watch exactly this in the demo: value flows backward from the reward like heat.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Value iteration — watch value ripple backward from the goal</h4></div>
+      <div class="demo-body">
+        <canvas id="bellCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>discount $\gamma$ <span class="val" id="bellGv">0.90</span></label><input type="range" id="bellG" min="0.50" max="0.99" step="0.01" value="0.90"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="bellStep">▸ One sweep</button> <button class="btn" id="bellRun">▸▸ Run to convergence</button> <button class="btn ghost" id="bellReset">Reset</button></div>
+        </div>
+        <div class="readout" id="bellReadout"></div>
+      </div>
+    </div>
+    <p>The grid is a tiny world: a goal worth $+1$, a pit worth $-1$, walls in gray. Each sweep applies the Bellman backup once to every cell. Sweep 1: only the goal's neighbors learn anything. Sweep 2: their neighbors. Value propagates outward at one step per sweep — <em>the future leaking backward into the present</em> — and the arrows (the greedy policy) organize themselves into a route long before the numbers converge. Lower $\gamma$ and watch the glow shrink: a short-sighted agent literally cannot see the goal from far away.</p>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>Layer 1's fixed-point thinking and Layer 2's recursive structures were rehearsals for this equation. Everything in the next chapter — TD learning, Q-learning, and by extension the value heads inside modern robot policies — is the Bellman backup, applied with progressively less knowledge of the world.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 3 ===================== -->
+  <section class="wrap chapter" id="ch3">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 03</div>
+      <h2>Learning from Experience</h2>
+    </div>
+    <p class="intro">Value iteration cheated: it used the dynamics $P$ — a map of the world. A real agent has no map; it has only the road. This chapter removes the map, one assumption at a time, and arrives at the first algorithm that learns to act purely from lived experience.</p>
+
+    <h3 id="td">3.1 · Temporal-difference learning</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the TD update from a sampled Bellman backup</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>The Bellman equation says $V(s)$ <em>should</em> equal $\mathbb{E}[r+\gamma V(s')]$. Without $P$, we can't compute the expectation — but we can <em>sample</em> it: live one transition $(s,a,r,s')$ and use $r+\gamma V(s')$ as a one-sample estimate of the target (Layer 1, Ch 5: a sample is an unbiased stand-in for its mean).</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Nudge the current guess toward the sampled target — Layer 1's gradient step on a squared error, with step size $\alpha$:</p>$$V(s)\;\leftarrow\;V(s)+\alpha\,\underbrace{\big[\,r+\gamma V(s')-V(s)\,\big]}_{\delta,\ \text{the TD error}}$$<p>The bracket $\delta$ is the <span class="term">TD error</span>: <em>surprise</em> — the gap between what just happened (plus the value of where you landed) and what you believed.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Note what we did: the target $r+\gamma V(s')$ contains our own current guess $V(s')$. We are updating a guess toward a guess — <span class="term">bootstrapping</span>. The alternative (Monte Carlo) waits for the episode to end and uses the true return $G_t$: unbiased but high-variance and slow. TD trades a little bias for a lot of variance reduction and learns <em>during</em> the episode. (Dopamine neurons in the brain famously fire in proportion to a TD-error-like signal — this equation is one of machine learning's great convergences with neuroscience.)</p></div></div>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — revising your ETA mid-journey</div>
+      <p>You leave work guessing "home in 30 minutes." Ten minutes in, traffic is light; you now guess 15 more. Monte Carlo says: wait until you're home, then update the original guess with the actual total. TD says: update <em>right now</em> — your 10-minutes-in estimate is already better information than your at-the-desk estimate. Propagating corrections from better guesses to earlier guesses, while still driving, is bootstrapping. It is how value information travels backward through time without waiting for endings.</p>
+    </div>
+
+    <h3 id="qlearn">3.2 · Q-learning — and an agent you can train</h3>
+    <div class="box def">
+      <div class="box-label">Definition — Q-learning</div>
+      <p>Apply the same sampled-backup idea to the <em>optimality</em> equation for $Q$ (so no model and no fixed policy is needed — the $\max$ supplies the "best behavior" part):</p>
+      $$Q(s,a)\;\leftarrow\;Q(s,a)+\alpha\Big[\,r+\gamma\max_{a'}Q(s',a')-Q(s,a)\,\Big]$$
+      <p>Act however you like (typically <span class="term">ε-greedy</span>: best-known action with probability $1-\varepsilon$, random otherwise), and the table still converges to $Q^{\ast}$ under mild conditions — Q-learning is <span class="term">off-policy</span>: it learns the optimal answer while behaving sub-optimally enough to keep exploring.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Train a Q-learner — live, in your browser</h4></div>
+      <div class="demo-body">
+        <canvas id="qCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>exploration $\varepsilon$ <span class="val" id="qEpsv">0.20</span></label><input type="range" id="qEps" min="0" max="0.6" step="0.01" value="0.2"></div>
+          <div class="ctrl"><label>learning rate $\alpha$ <span class="val" id="qAlphav">0.30</span></label><input type="range" id="qAlpha" min="0.05" max="0.9" step="0.05" value="0.3"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="qTrain">▸ Train 150 episodes</button> <button class="btn ghost" id="qReset">Reset</button></div>
+        </div>
+        <div class="readout" id="qReadout"></div>
+      </div>
+    </div>
+    <p>The agent starts at <strong>S</strong>, seeking the $+1$ goal past a row of $-1$ pits — a cliff walk. Heat shows $\max_a Q$; arrows show the greedy policy; the faint trail is the latest episode. Watch the learning <em>happen</em>: early episodes flail, the cells near the cliff turn coral (learned fear), and a route crystallizes. Then experiment: $\varepsilon=0$ from scratch often locks onto the first mediocre path it stumbles into — no exploration, no discovery. $\varepsilon=0.6$ keeps falling off the cliff forever. The dial between them is the subject of the next chapter.</p>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>Replace the table with a neural network and you have DQN — deep RL's 2013 breakthrough (Atari from pixels). The bootstrap target then needs stabilizing with a slowly-updated <em>target network</em>: precisely Layer 3's EMA-teacher trick (DINO, Ch 2) — keep a calmer copy of yourself to learn from, or the bootstrap chases its own tail.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 4 ===================== -->
+  <section class="wrap chapter" id="ch4">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 04</div>
+      <h2>Explore vs. Exploit</h2>
+    </div>
+    <p class="intro">Strip away states and transitions until only one decision remains, repeated: which slot machine do I pull? This is the multi-armed bandit — the exploration problem in its purest form, small enough to reason about exactly and important enough that its answer shapes every RL system above it.</p>
+
+    <h3 id="bandit">4.1 · Bandits and the price of not knowing</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the bandit problem and regret</div>
+      <p>$K$ arms; arm $a$ pays out with unknown mean $\mu_a$. At each pull choose an arm, observe a sample. Performance is measured by <span class="term">regret</span> — what you lost to ignorance:</p>
+      $$\text{Regret}(T)=T\,\mu^{\ast}-\mathbb{E}\Big[\sum_{t=1}^{T}\mu_{a_t}\Big],\qquad \mu^{\ast}=\max_a \mu_a$$
+      <p>Always exploiting a wrong favorite → regret grows <em>linearly</em> forever. Good algorithms achieve logarithmic regret: mistakes become vanishingly rare.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — the restaurant problem</div>
+      <p>You know a reliably good restaurant. A new one opened. Every dinner is one pull: exploit the known 8/10, or explore the unknown that might be a 9 — or a 4? Order your favorite forever and you may die never knowing the best restaurant in town was next door; try a new place nightly and you eat a lot of bad dinners. <em>Every</em> learning agent faces this — including a robot deciding whether to attempt a grasp the familiar way or a promising new way, and including the ε dial you just turned in the Q-learning demo.</p>
+    </div>
+
+    <h3 id="ucb">4.2 · Optimism in the face of uncertainty</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the UCB rule from a confidence interval</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>After $n_a$ pulls, the sample mean $\hat\mu_a$ estimates $\mu_a$ — with error bars. Hoeffding's inequality (the quantitative cousin of Layer 1's CLT) bounds the surprise: $P\big(\mu_a>\hat\mu_a+u\big)\le e^{-2 n_a u^2}$. Demand this failure probability shrink like $1/t$ (so total lifetime failures stay bounded) and solve for $u$:</p>$$e^{-2n_a u^2}=t^{-c}\;\;\Rightarrow\;\;u=\sqrt{\frac{c\,\ln t}{2\,n_a}}$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>So with high confidence the truth lies below $\hat\mu_a+u$. The <span class="term">UCB</span> rule: act as if every arm is as good as it could plausibly be —</p>$$a_t=\arg\max_a\;\hat\mu_a+\sqrt{\frac{2\ln t}{n_a}}$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Read the two terms as a built-in conscience: the first votes for known quality (exploit), the second is large exactly for under-tried arms (explore) and <em>shrinks automatically</em> as evidence accumulates — no ε to hand-tune. Either the optimistic bet pays off (great) or it corrects your error bars (also great). Optimism converts uncertainty itself into the exploration signal, and yields the logarithmic regret ε-greedy can't.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Four machines, hidden odds — feel the dilemma, then automate it</h4></div>
+      <div class="demo-body">
+        <canvas id="banditCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>auto-play $\varepsilon$ <span class="val" id="banEpsv">0.10</span></label><input type="range" id="banEps" min="0" max="0.5" step="0.01" value="0.1"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="banAuto">▸ Auto-play 200 (ε-greedy)</button> <button class="btn" id="banUcb">▸ Auto-play 200 (UCB)</button> <button class="btn ghost" id="banReset">New machines</button></div>
+        </div>
+        <div class="readout" id="banditReadout"></div>
+      </div>
+    </div>
+    <p><strong>Click a machine to pull it yourself</strong> — estimates (bars) and error whiskers update live; true means stay hidden until you've gathered evidence. Then race the strategies on fresh machines and watch the regret curves: ε-greedy keeps paying a constant exploration tax (linear regret, forever), while UCB's curve bends flat as its confidence bounds tighten. Optimism, with receipts.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 5 ===================== -->
+  <section class="wrap chapter" id="ch5">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 05</div>
+      <h2>Policy Gradients</h2>
+    </div>
+    <p class="intro">Q-learning learns values and reads the policy off them with an argmax. But a robot arm's action is seven continuous joint torques — you cannot argmax over a continuum at 50 Hz. The fix is the most direct idea in RL: parameterize the policy itself and ascend the gradient of expected return. The derivation is three honest steps, and it powers everything from robot locomotion to RLHF.</p>
+
+    <h3 id="whypg">5.1 · Why learn the policy itself</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the policy-optimization objective</div>
+      <p>A stochastic policy $\pi_\theta(a\mid s)$ (for a robot: e.g. a Gaussian over torques whose mean and spread a network outputs — Layer 2 machinery). Maximize expected return over trajectories $\tau=(s_0,a_0,s_1,\dots)$:</p>
+      $$J(\theta)=\mathbb{E}_{\tau\sim\pi_\theta}\big[R(\tau)\big],\qquad R(\tau)=\sum_t \gamma^t r_{t+1}$$
+      <p>The puzzle: $\theta$ affects $J$ only by reshaping a <em>distribution we sample from</em>. The reward function may be a black box (a success detector, a human thumbs-up). How can we differentiate through that?</p>
+    </div>
+
+    <h3 id="reinforce">5.2 · REINFORCE, derived</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the log-derivative trick</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Write the expectation as an integral and push the gradient inside:</p>$$\nabla_\theta J=\nabla_\theta\!\int\! P(\tau;\theta)\,R(\tau)\,d\tau=\int \nabla_\theta P(\tau;\theta)\,R(\tau)\,d\tau$$<p>Stuck: $\nabla P$ is not an expectation — we can't estimate it by sampling.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>The trick (one line of Layer 1 calculus, $\nabla\log f=\nabla f/f$, rearranged): $\;\nabla_\theta P=P\,\nabla_\theta\log P$. Substitute — and an expectation reappears:</p>$$\nabla_\theta J=\int P(\tau;\theta)\,\nabla_\theta\log P(\tau;\theta)\,R(\tau)\,d\tau=\mathbb{E}_{\tau}\big[\,R(\tau)\,\nabla_\theta\log P(\tau;\theta)\,\big]$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Expand $\log P(\tau;\theta)=\log p(s_0)+\sum_t\log\pi_\theta(a_t\mid s_t)+\sum_t\log P(s_{t+1}\mid s_t,a_t)$. The dynamics terms don't contain $\theta$ — their gradient vanishes. <em>The world's physics drops out of the gradient:</em></p>$$\nabla_\theta J=\mathbb{E}_{\tau\sim\pi_\theta}\Big[\,R(\tau)\sum_t\nabla_\theta\log\pi_\theta(a_t\mid s_t)\,\Big]$$<p>Estimate by sampling rollouts; ascend. That is <span class="term">REINFORCE</span>. Read it aloud: <strong>make the actions of high-reward trajectories more probable, of low-reward ones less.</strong> Trial, error, and reinforcement — now a theorem.</p></div></div>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — evolution at the speed of gradients</div>
+      <p>REINFORCE never asks <em>why</em> a trajectory scored well — it has no model of the world, no labels, no critique. It simply breeds: behaviors correlated with reward get amplified, the rest fade. Note the price of such generality: a whole trajectory's worth of decisions shares one scalar grade, so the gradient estimate is extremely noisy. The rest of policy-gradient research — baselines, critics, PPO — is a war on that variance.</p>
+    </div>
+
+    <h3 id="baseline">5.3 · Baselines — grading on a curve</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — subtracting a baseline changes nothing (except everything)</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Claim: replacing $R(\tau)$ with $R(\tau)-b$ for any action-independent $b$ leaves the gradient's <em>expectation</em> unchanged. The cross-term is:</p>$$\mathbb{E}_{a\sim\pi_\theta}\big[\,b\,\nabla_\theta\log\pi_\theta(a\mid s)\,\big]=b\sum_a \pi_\theta\,\frac{\nabla_\theta\pi_\theta}{\pi_\theta}=b\,\nabla_\theta\underbrace{\sum_a\pi_\theta(a\mid s)}_{=\,1}=0$$<p>Probabilities sum to one; the gradient of a constant is zero. Unbiased.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>But the <em>variance</em> changes enormously. With $b\approx$ average return, good trajectories get a positive push and bad ones a <em>negative</em> push — instead of "everything gets reinforced, winners slightly more." The natural choice is $b=V(s)$, making the learning signal the <span class="term">advantage</span>:</p>$$A(s,a)=Q(s,a)-V(s)$$<p>— "how much better than <em>typical for this state</em> was this action?" Grading on a curve.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Learning $V$ with a second network (trained by TD, Ch 3) gives the <span class="term">actor–critic</span> family: the actor $\pi_\theta$ proposes, the critic $V_\phi$ grades, each improving the other's signal. Every serious policy-gradient system — including the PPO inside RLHF — is an actor–critic.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>REINFORCE learns to aim — watch a policy distribution evolve</h4></div>
+      <div class="demo-body">
+        <canvas id="pgCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>learning rate <span class="val" id="pgLrv">0.10</span></label><input type="range" id="pgLr" min="0.02" max="0.5" step="0.01" value="0.1"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="pgRun">▸ Train</button> <button class="btn ghost" id="pgReset">Reset (new target)</button></div>
+        </div>
+        <div class="readout" id="pgReadout"></div>
+      </div>
+    </div>
+    <p>The policy is a Gaussian over launch angle (curve); the hidden-quality target zone glows teal. Each round samples 10 shots (dots, colored by reward), then takes one REINFORCE-with-baseline step: above-average shots pull the mean toward themselves, below-average shots push it away. Watch two things emerge unprogrammed: the mean migrates to the target, and the spread <em>shrinks by itself</em> once exploration stops paying — the policy learns its own confidence. With a high learning rate, watch it occasionally lunge past the target and have to crawl back: variance in action, and the cliff edge PPO exists to fence.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 6 ===================== -->
+  <section class="wrap chapter" id="ch6">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 06</div>
+      <h2>From REINFORCE to PPO</h2>
+    </div>
+    <p class="intro">REINFORCE has a fatal workflow problem: every gradient step needs <em>fresh</em> rollouts (the expectation is under the current policy), and in robotics a rollout costs real time on real hardware. We want to squeeze many updates from each batch of experience — without the policy walking off a cliff. The fix, PPO, is the default policy optimizer of the modern era, and you have already used it: it trained the RLHF models of Layer 3.</p>
+
+    <h3 id="ratio">6.1 · Importance ratios — recycling old experience</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — evaluating a new policy on old data</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>The general identity (one line, from Layer 1's expectation definition): for distributions $q$ (data source) and $p$ (target),</p>$$\mathbb{E}_{x\sim p}\big[f(x)\big]=\sum_x q(x)\,\frac{p(x)}{q(x)}\,f(x)=\mathbb{E}_{x\sim q}\Big[\frac{p(x)}{q(x)}\,f(x)\Big]$$<p>Samples from the wrong distribution can estimate the right expectation — if each sample is reweighted by how much more (or less) the target distribution likes it.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Apply with $q=\pi_{\text{old}}$ (the policy that collected the data) and $p=\pi_\theta$ (the one we're improving). Per action, the weight is the <span class="term">importance ratio</span>, and the surrogate objective becomes:</p>$$r_t(\theta)=\frac{\pi_\theta(a_t\mid s_t)}{\pi_{\text{old}}(a_t\mid s_t)},\qquad
+      L(\theta)=\mathbb{E}_t\big[\,r_t(\theta)\,A_t\,\big]$$<p>At $\theta=\theta_{\text{old}}$ all ratios are 1 and the gradient matches REINFORCE-with-baseline exactly — but now we may take <em>several</em> steps on the same batch.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The catch: the reweighting is only trustworthy while $\pi_\theta$ stays close to $\pi_{\text{old}}$. Let them drift apart and the ratios explode — a few wildly-weighted samples hijack the update, the policy lunges, performance collapses, and (unlike supervised learning) <em>the broken policy now collects the next dataset</em>. RL failures compound.</p></div></div>
+    </div>
+
+    <h3 id="ppo">6.2 · The clipped objective</h3>
+    <div class="box def">
+      <div class="box-label">Definition — PPO-Clip</div>
+      $$L^{\text{CLIP}}(\theta)=\mathbb{E}_t\Big[\min\Big(r_t(\theta)\,A_t,\;\operatorname{clip}\big(r_t(\theta),\,1-\epsilon,\,1+\epsilon\big)\,A_t\Big)\Big]$$
+      <p>with $\epsilon\approx0.2$. Outside the trust band $[1-\epsilon,\,1+\epsilon]$, the objective goes <em>flat</em> — and a flat objective has zero gradient: no incentive to push further.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — reading the clip, case by case</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><strong>Good action ($A_t>0$):</strong> the objective rewards raising $r_t$ — but the clip caps the reward at $(1+\epsilon)A_t$. Beyond a ${+}\epsilon$ probability increase, the gradient is exactly zero: "yes, do this more — <em>up to 20% more, then stop</em>."</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>Bad action ($A_t\lt0$):</strong> symmetric: suppress it, but the min/clip pair zeroes the gradient once $r_t$ falls below $1-\epsilon$. No annihilating an action's probability on one batch's say-so.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The $\min$ makes the objective a <em>pessimistic lower bound</em> on the true surrogate — clipping only ever removes incentive, never adds it. The result: many safe epochs per batch of expensive experience. PPO is not the cleverest optimizer; it is the one that fails least dramatically — which, in a field where the policy curates its own future data, is the crown. (Layer 3's RLHF objective — reward minus a KL leash — is this same instinct; PPO enforces it per-update, mechanically.)</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The trust region you can see — PPO's clip, drawn</h4></div>
+      <div class="demo-body">
+        <canvas id="clipCanvas" width="640" height="340"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>advantage $A$ <span class="val" id="clipAv">+1.0</span></label><input type="range" id="clipA" min="-2" max="2" step="0.1" value="1"></div>
+          <div class="ctrl"><label>clip range $\epsilon$ <span class="val" id="clipEv">0.20</span></label><input type="range" id="clipE" min="0.05" max="0.5" step="0.01" value="0.2"></div>
+        </div>
+        <div class="readout" id="clipReadout"></div>
+      </div>
+    </div>
+    <p>Horizontal axis: the ratio $r$ (how much the update has already changed this action's probability). Dashed: the naive objective $rA$, promising unbounded reward for unbounded change. Solid indigo: PPO's clipped version — identical near $r=1$, then flat (shaded) where the gradient dies. Flip $A$ negative and watch the geometry mirror. The whole stability story of modern policy optimization is in this one kinked line.</p>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>PPO fine-tuned the RLHF assistants of Layer 3 and trains locomotion policies for real quadrupeds and humanoids (usually in simulation — Layer 5's sim-to-real problem). And the advantage function returns in Layer 6: several VLA post-training recipes weight imitation by advantage estimates — "clone the demos, but clone the <em>good</em> ones harder."</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 7 ===================== -->
+  <section class="wrap chapter" id="ch7">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 07</div>
+      <h2>Imitation Learning</h2>
+    </div>
+    <p class="intro">There is an easier way to teach a robot than reward and exploration: show it. Imitation learning looks like a humble return to Layer 1's supervised learning — and it is, which is why it works so well. But acting on your own predictions breaks supervised learning's core assumption in a precise, quantifiable way, and that breakage shapes how every modern robot policy is trained.</p>
+
+    <h3 id="bc">7.1 · Behavior cloning — supervised learning, again</h3>
+    <div class="box def">
+      <div class="box-label">Definition — behavior cloning (BC)</div>
+      <p>Collect expert demonstrations $\{(s_i,a_i)\}$ — for robots, typically teleoperation: a human drives the arm, and (observation, action) pairs are logged. Fit a policy by maximum likelihood:</p>
+      $$\hat\theta=\arg\max_\theta\sum_i \log \pi_\theta(a_i\mid s_i)$$
+      <p>This is exactly Layer 1's supervised template and Layer 3's next-token objective — with motor commands as the vocabulary. No reward function, no exploration, no Bellman: just "predict what the expert did here."</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — the student driver</div>
+      <p>BC is a student watching the instructor drive and memorizing situation → response. The catch reveals itself the first time the student drives alone: the instructor <em>never drifted toward the shoulder</em>, so the tape contains no examples of shoulders — or of recovering from them. One small mistake and the student is somewhere the lesson never covered, where their behavior is undefined, which produces a bigger mistake, which leads somewhere stranger still. The errors do not add; they <strong>compound</strong>.</p>
+    </div>
+
+    <h3 id="drift">7.2 · Compounding errors, quantified</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why BC's cost grows like $T^2$, not $T$</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Suppose the cloned policy errs with small probability $\varepsilon$ per step <em>on states the expert visits</em> — that is all supervised training can promise, because that is the only distribution it ever saw (Layer 1, Ch 7: guarantees hold on the training distribution).</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Run the policy for $T$ steps. If the first error occurs at step $t$, the agent leaves the expert's state distribution — and off-distribution, the model has <em>no</em> guarantee: assume worst-case cost 1 for each of the remaining $T-t$ steps. The expected total cost is then bounded by</p>$$\sum_{t=1}^{T}\varepsilon\,(T-t)\;\le\;\varepsilon\,\frac{T^2}{2}=O(\varepsilon T^{2})$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Supervised learning's usual bill is $O(\varepsilon T)$ — errors add. Acting makes it $O(\varepsilon T^{2})$ — errors <em>breed</em>, because each one shifts the distribution the next prediction faces (Ross &amp; Bagnell, 2010). This single quadratic is the theoretical heart of robot learning: it says a 99%-accurate imitator is not "almost perfect," it is a time bomb on long tasks, and it tells us exactly what to fix — the <em>distribution</em>, not just the accuracy.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Watch the drift — a cloned driver leaves the training distribution</h4></div>
+      <div class="demo-body">
+        <canvas id="driftCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>per-step error $\varepsilon$ <span class="val" id="driftEv">0.06</span></label><input type="range" id="driftE" min="0.01" max="0.15" step="0.01" value="0.06"></div>
+          <div class="ctrl" style="flex:0"><label>training data</label><div class="seg" id="driftSeg"><button class="on" data-m="bc">expert only (BC)</button><button data-m="da">+ corrections (DAgger)</button></div></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="driftRun">▸ Roll out 6 drivers</button></div>
+        </div>
+        <div class="readout" id="driftReadout"></div>
+      </div>
+    </div>
+    <p>The expert line hugs the road's center; the shaded band is the training distribution. In <strong>BC</strong> mode, small steering noise eventually nudges a rollout outside the band — where the policy has never been — and its noise triples: watch trajectories that survive 200 steps suddenly unravel. Switch to <strong>DAgger</strong>-style data (corrections recorded off-center) and the same noise gets caught and steered home: bounded error, $O(\varepsilon T)$. The difference between the modes is not a smarter model. It is <em>which states appear in the dataset</em>.</p>
+
+    <h3 id="chunking">7.3 · DAgger, and the action-chunking trick</h3>
+    <div class="box def">
+      <div class="box-label">Definition — DAgger (Dataset Aggregation)</div>
+      <p>Iterate: (1) roll out the <em>current</em> policy; (2) have the expert label the states it actually visited — including its mistakes — with the correct action; (3) aggregate into the dataset and retrain. The training distribution chases the policy's own distribution, the off-distribution cliff disappears, and the regret bound drops to $O(\varepsilon T)$. The instructor grabs the wheel, and the grab is recorded.</p>
+    </div>
+    <p>DAgger needs an expert on call, which is expensive — so practical systems attack the same quadratic from a second angle: <em>make fewer decisions</em>. If each decision point is an opportunity to inject error, predict a <span class="term">chunk</span> of the next $k$ actions at once (ACT and the ALOHA system do exactly this; diffusion policies and the flow-matching action heads of Layer 2's VLAs generate whole short trajectories per inference). The error-injection rate drops from every step to every $k$ steps:</p>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Action chunking — fewer decisions, less compounding</h4></div>
+      <div class="demo-body">
+        <canvas id="chunkCanvas" width="640" height="340"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>chunk size $k$ (actions per decision) <span class="val" id="chunkKv">1</span></label><input type="range" id="chunkK" min="1" max="16" step="1" value="1"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="chunkRun">▸ Roll out 8 arms</button></div>
+        </div>
+        <div class="readout" id="chunkReadout"></div>
+      </div>
+    </div>
+    <p>Eight rollouts trace a target motion (a reach-and-place arc), each decision injecting a small heading error. At $k{=}1$ — a fresh decision (and a fresh error) every step — the bundle frays into a random walk. At $k{=}8$ the same per-decision error budget buys an 8× smoother bundle: drift accumulates per <em>decision</em>, not per step. The cost is reactivity: a chunked policy is briefly blind between decisions, which is why real systems blend overlapping chunks. This dial — replan rate vs. stability — is set in every VLA you'll meet in Layer 6.</p>
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again</div>
+      <p>Teleoperated demonstrations + behavior cloning (with chunking) is the workhorse that trains today's manipulation policies — it is how the π0 and ACT lineages of Layer 2 are actually fed. The compounding-error analysis explains the field's data obsession (Open X-Embodiment), and DAgger's "label where the policy goes" idea returns whenever robot fleets log interventions by human supervisors.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 8 ===================== -->
+  <section class="wrap chapter" id="ch8">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 08</div>
+      <h2>World Models</h2>
+    </div>
+    <p class="intro">Everything so far learned from experience that actually happened — and real experience is the most expensive substance in robotics. There is a third paradigm beside trial-and-error and imitation: learn a model of <em>how the world works</em>, then practice inside it. Plan in it, dream in it, generate data from it. This is model-based RL, lately rebranded under a grander name it has earned: world models.</p>
+
+    <h3 id="whymodel">8.1 · Learning from imagination</h3>
+    <div class="box def">
+      <div class="box-label">Definition — dynamics model, and model-based RL</div>
+      <p>A <span class="term">world model</span> (dynamics model) is a learned approximation of the environment's transition and reward structure:</p>
+      $$\hat f_\phi:\;(s_t,a_t)\;\longmapsto\;\hat s_{t+1},\;\hat r_{t+1}$$
+      <p>fit by supervised learning (Layer 1's template!) on logged transitions $(s,a,r,s')$. <span class="term">Model-based RL</span> uses $\hat f$ to manufacture experience: roll out imagined trajectories and feed them to any algorithm from Chapters 3–6 — or plan through the model directly. Note the beautiful inversion: prediction error here needs no labels and no reward; <em>the next timestep grades you for free</em> (the same self-supervision trick as Layer 3).</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — crash in your head, not in the car</div>
+      <p>You do not learn to drive by sampling crashes; you carry a physics engine in your skull and rehearse there. A chess player "seeing" five moves ahead is rolling out a learned model of the board. Model-free RL learns from scar tissue; model-based RL learns from daydreams — and daydreams are free, parallel, and resettable. The entire economic argument for world models in robotics is in that sentence: real robot-hours are scarce and breakable, imagined robot-hours cost GPU electricity.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why imagination buys sample efficiency (the Dyna argument)</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Recall how tabular Q-learning propagates information (Ch 3): each <em>real</em> transition performs one backup, pushing value one step backward along the path actually walked. Reward $d$ steps from the start needs value to hop backward $d$ times — many real visits.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><span class="term">Dyna</span> (Sutton, 1990): after every real step, store the transition in a memory $\mathcal{M}$, then perform $n$ extra backups on transitions <em>replayed from $\mathcal{M}$</em>. Value now hops backward up to $n{+}1$ times per real step — the propagation that needed many episodes happens between footsteps:</p>$$\text{real experience: }1\text{ backup/step}\qquad\Longrightarrow\qquad\text{Dyna: }1+n\text{ backups/step}$$</div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Same equations, same convergence target $Q^{\ast}$ — only the <em>real-step bill</em> shrinks, often by an order of magnitude. (Biology appears to agree: rodent hippocampi replay compressed maze trajectories during rest, and learning suffers if the replay is disrupted — brains seem to run something like Dyna at night.) Measure the speedup yourself below.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Dyna-Q — an agent that practices between footsteps</h4></div>
+      <div class="demo-body">
+        <canvas id="dynaCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>imagined backups per real step $n$ <span class="val" id="dynaNv">0</span></label><input type="range" id="dynaN" min="0" max="30" step="1" value="0"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="dynaTrain">▸ Train 50 episodes</button> <button class="btn ghost" id="dynaReset">Reset</button></div>
+        </div>
+        <div class="readout" id="dynaReadout"></div>
+      </div>
+    </div>
+    <p>Same cliff-walk, same Q-learning — plus a memory of every transition seen, replayed $n$ times per real step. Train at $n{=}0$ and note the real steps needed; reset, set $n{=}20$, train again: the gray curve (your previous run) and the indigo curve (this run) share the x-axis of <em>real environment steps</em> — the only currency a robot cares about. Imagination doesn't change what is learned, only how much of the learning the real world has to pay for.</p>
+
+    <h3 id="latent">8.2 · Latent world models — dreaming in representation space</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the latent world-model recipe (World Models 2018, Dreamer lineage)</div>
+      <p>For pixel observations, don't model pixels. Three learned parts:</p>
+      $$\underbrace{z_t=e_\phi(o_t)}_{\text{encoder}}\qquad
+      \underbrace{\hat z_{t+1}=g_\phi(z_t,a_t)}_{\text{latent dynamics}}\qquad
+      \underbrace{\hat r_{t+1}=r_\phi(z_t,a_t)}_{\text{reward head}}$$
+      <p>then train the policy (an actor–critic, Ch 5) entirely on <em>imagined latent rollouts</em> — thousands of dream-trajectories per second, no renderer, no robot. DreamerV3 solves dozens of domains this way with one set of hyperparameters; "learning inside the dream" is now a standard tool.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — a map is judged by the journeys it supports</div>
+      <p>Why latent? Predicting pixels wastes capacity on leaves and clouds that don't matter for action — and Layer 2/3 already taught encoders to keep what matters. MuZero pushes the logic to its endpoint: its "model" never reconstructs observations at all, predicting only the three things planning consumes — reward, value, policy. A subway map omits every street and is the <em>better</em> map for it. The quality bar for a world model is not photorealism; it is whether decisions made inside it transfer outside it.</p>
+    </div>
+    <div class="box derivation">
+      <div class="box-label">Derivation — the compounding-error bound (imagination's speed limit)</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Let the model's one-step prediction error be $\varepsilon$, and suppose errors get amplified by at most a factor $L$ per step as they feed forward (the dynamics' sensitivity — a Lipschitz constant; eigenvalues again, Layer 1 Ch 2). The error after $t$ imagined steps obeys the recursion:</p>$$e_{t+1}\;\le\;L\,e_t+\varepsilon$$<p>— yesterday's error, amplified, plus a fresh mistake.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Unroll it (the geometric series of Chapter 1, third appearance in this layer):</p>$$e_T\;\le\;\varepsilon\,(1+L+L^2+\cdots+L^{T-1})=\varepsilon\,\frac{L^{T}-1}{L-1}$$<p>If $L\le1$ (stable dynamics): error grows at most <em>linearly</em>, $e_T\le\varepsilon T$. If $L>1$ (sensitive dynamics): <strong>exponential</strong> divergence — the weather-forecast curse: tomorrow accurate, ten days out fiction.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>This is Chapter 7's compounding disease wearing a new costume — there the <em>policy's</em> errors fed back through the world; here the <em>model's</em> errors feed back through themselves. Same arithmetic, same prescriptions: keep imagined horizons short, blend imagined rollouts with learned value bootstraps for the far future (exactly what Dreamer does), and — the strongest medicine — <em>keep re-anchoring to reality</em>. That medicine has a name, and it's next.</p></div></div>
+    </div>
+
+    <h3 id="mpc">8.3 · Planning with an imperfect model — MPC</h3>
+    <div class="box def">
+      <div class="box-label">Definition — model predictive control (receding-horizon planning)</div>
+      <p>At each real step: (1) from the current <em>real</em> state, search the model for the best $H$-step action sequence, $\max_{a_{0:H-1}}\sum_t \gamma^t\hat r_t$; (2) execute only the first action(s); (3) observe where you actually are, and <strong>replan</strong>. Imagination proposes; reality vetoes, $H$ steps at a time.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — walking across town with your eyes open</div>
+      <p>An open-loop plan is crossing town blindfolded after memorizing the route: every small model error is carried forever, and by the derivation above it compounds. MPC is ordinary walking: a rough plan to the corner, executed while watching, re-aimed continuously. Feedback resets the error clock — between replans the error grows for at most $H$ steps, then reality zeroes it. The demo lets you turn one dial from pure MPC ($H{=}1$) to pure blind faith and watch the bound come true.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Imagination vs. reality — replan often, or trust the dream</h4></div>
+      <div class="demo-body">
+        <canvas id="planCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>model error $\varepsilon$ <span class="val" id="planEv">0.10</span></label><input type="range" id="planE" min="0.02" max="0.25" step="0.01" value="0.10"></div>
+          <div class="ctrl"><label>replan every $H$ steps <span class="val" id="planHv">4</span></label><input type="range" id="planH" min="1" max="40" step="1" value="4"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="planRun">▸ Execute</button></div>
+        </div>
+        <div class="readout" id="planReadout"></div>
+      </div>
+    </div>
+    <p>Dashed indigo rays are the plans — what the model <em>believes</em> each leg will do (it doesn't know its own bias). The amber path is what reality does with them. At $H{=}40$ one confident dream curls helplessly away from the goal; at $H{=}4$ the same flawed model gets there in a gentle spiral of small corrections. <strong>You don't need a perfect model; you need a feedback loop.</strong> That principle — the entire field of control theory in one sentence — is where Layer 5 begins.</p>
+
+    <div class="box note">
+      <div class="box-label">Where you'll meet this again — and where this is all going</div>
+      <p>Layer 5's simulators are <em>hand-built</em> world models, and the sim-to-real gap is exactly the $\varepsilon$ of our bound. The frontier is learned simulators: action-conditioned <strong>video world models</strong> (the Genie line; NVIDIA's Cosmos world foundation models for physical AI) that dream photorealistic robot experience for policies to train on, and representation-space predictors (the JEPA family) that bet, like MuZero, that dreaming in latents beats dreaming in pixels. The converging recipe for Layer 6 is already visible: a VLA for acting, a world model for rehearsing, imitation for grounding, RL for surpassing.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 9 ===================== -->
+  <section class="wrap chapter" id="ch9">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 09</div>
+      <h2>Toward Robot Policies</h2>
+    </div>
+    <p class="intro">Three toolkits now sit on the bench: reinforcement (learn from consequences, discover the new, needs exploration), imitation (learn from demonstration, safe and data-efficient, capped at the teacher), and world models (learn the world itself, rehearse for free, limited by model error). Real robot learning is the art of mixing them — under constraints a gridworld never had.</p>
+
+    <h3 id="offline">8.1 · Why robots can't just explore</h3>
+    <p>The Q-learner in Chapter 3 fell off the cliff ten thousand times and reset, free of charge. A physical robot exploring torque-space breaks wrists — its own or the dishwasher's. Three constraints define the real setting:</p>
+    <ul>
+      <li><strong>Exploration is expensive and dangerous</strong> — so most learning must come from demonstrations, simulation, or logged data.</li>
+      <li><strong>Reward is hard to specify.</strong> "Fold the laundry" has no reward function anyone can write; mis-specified proxies get gamed (Layer 3's reward-hacking, with hardware). Demonstrations sidestep this: the data <em>is</em> the objective.</li>
+      <li><strong>Offline learning hits a wall:</strong> train value functions on a fixed dataset and the $\max_{a'}$ in the Bellman backup gleefully selects actions the dataset never contains — extrapolation error, the off-distribution disease of Ch 7 wearing a value-function costume. Offline-RL methods (conservative value estimates, behavior-constrained policies) all amount to <em>stay near the data</em> — PPO's trust region, DAgger's distribution-matching, and Layer 3's KL leash, one instinct in many notations.</li>
+    </ul>
+
+    <h3 id="recipe">8.2 · The modern recipe</h3>
+    <div class="box def">
+      <div class="box-label">Definition — how a robot policy is actually trained (2026 edition)</div>
+      <p><strong>1. Pretrain</strong> the perception-language backbone on internet data (Layers 2–3). <strong>2. Imitate</strong>: behavior-clone large teleoperation corpora with action chunking — the safe, scalable core. <strong>3. Refine</strong>: where a success signal exists, push past the teacher — RL in simulation (the standard route for locomotion), advantage-weighted imitation, or human-preference fine-tuning à la RLHF. <strong>4. Multiply the data</strong>: world models — simulators hand-built or learned (Ch 8) — manufacture the experience reality is too slow and too breakable to provide. Imitation supplies competence; reinforcement supplies <em>improvement</em>; imagination supplies <em>scale</em>.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">The whole layer, in one paragraph</div>
+      <p><strong>Acting was formalized</strong> as an MDP, with the discount taming infinite futures into a horizon. <strong>Value</strong> compressed the future into a number, and the Bellman equation — value now = reward + discounted value next — turned it into something solvable, then learnable from raw experience (TD's surprise signal, Q-learning's live agent). <strong>Exploration</strong> got its own theory: regret, and optimism as the principled cure. <strong>Policy gradients</strong> differentiated straight through "sample, then score" — the physics dropped out of the gradient — and PPO fenced the updates so recycled experience couldn't walk the policy off a cliff. <strong>Imitation</strong> brought it home: cloning is just Layer 1's supervised learning, its quadratic compounding-error flaw is provable, and the fixes — corrections, chunking, staying near the data — are the design rules of every real robot policy. And <strong>world models</strong> closed the circle: learn the world itself, practice in the dream (Dyna, Dreamer), respect imagination's speed limit — the compounding-error bound, again — and let replanning's feedback loop forgive what the model gets wrong. One thread ran through everything: <em>an agent curates its own dataset by behaving, so all stability in this field is some way of respecting the distribution you trained on.</em></p>
+    </div>
+    <div class="box note">
+      <div class="box-label">Where this goes next</div>
+      <p>Layer 5 — <strong>Robotics</strong> — supplies the body these policies have been pretending to have: kinematics and dynamics, control loops, sensing, simulation and the sim-to-real gap. Then Layer 6 assembles all six layers into the full vision-language-action systems.</p>
+    </div>
+
+    <div class="endcard">
+      <div class="eyebrow">You've finished Layer 4</div>
+      <h3>The mathematics of getting better</h3>
+      <p>Perception (Layers 1–3) told the robot what the world is. This layer told it what to <em>do</em> — and how to improve from consequences, demonstrations, and carefully fenced trial and error. What remains is the machine itself: the arms, joints, sensors, and simulators of Layer 5, and the grand assembly of Layer 6.</p>
+      <p style="margin-top:18px;font-family:var(--mono);font-size:13px;color:#9A9DD0">Bellman → backup · surprise → learning · log-trick → policy gradients · clip → trust · demos → robots · dreams → data.</p>
+    </div>
+
+    <footer class="page">An interactive textbook for the Robotics &amp; VLA curriculum · Layer 4 of 6 · Built to be read with a pen in hand.</footer>
+  </section>
+
+</div><!-- /content -->
+
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  /* ---------- KaTeX (robust, polling) ---------- */
+  window.__doRender=function(el){
+    if(!window.renderMathInElement) return;
+    renderMathInElement(el||document.body,{
+      delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'\\[',right:'\\]',display:true},
+        {left:'$',right:'$',display:false},
+        {left:'\\(',right:'\\)',display:false}
+      ],
+      throwOnError:false,
+      macros:{"\\R":"\\mathbb{R}","\\E":"\\mathbb{E}"}
+    });
+  };
+  (function(){
+    if(window.renderMathInElement){ window.__doRender(); return; }
+    var tries=0, iv=setInterval(function(){
+      if(window.renderMathInElement){ clearInterval(iv); window.__doRender(); }
+      else if(++tries>200){ clearInterval(iv); }
+    },50);
+  })();
+
+  var C={ink:'#14162A',inkSoft:'#474B66',faint:'#878BA6',indigo:'#4338CA',indigoDeep:'#2A2090',
+         coral:'#FF5C49',coralDeep:'#E8412E',teal:'#0E9C92',line:'#DBDDE8',wash:'#EEEEF8',amber:'#C98314'};
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var DISP='600 13px "Space Grotesk",sans-serif', MONO='12px "JetBrains Mono",monospace';
+
+  var redraws=[];
+  function fit(cv,aspect){
+    var dpr=window.devicePixelRatio||1;
+    cv.style.width='100%';
+    var w=cv.clientWidth||cv.parentElement.clientWidth;
+    var h=Math.round(w/aspect);
+    cv.style.height=h+'px';
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+    var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {w:w,h:h,ctx:ctx};
+  }
+  function register(fn){ redraws.push(fn); fn(); }
+  window.addEventListener('resize',function(){clearTimeout(window._rt);window._rt=setTimeout(function(){redraws.forEach(function(f){f();});},160);});
+  function gauss(){var u1=Math.random()||1e-9,u2=Math.random();return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);}
+
+  /* ---------- NAV ---------- */
+  var prog=document.getElementById('progress');
+  var chapLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .chap'));
+  var chapSecs=chapLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  var subLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .subs a'));
+  var subTargets=subLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  function onScroll(){
+    var st=window.scrollY||document.documentElement.scrollTop;
+    var docH=document.documentElement.scrollHeight-window.innerHeight;
+    prog.style.width=(docH>0?(st/docH*100):0)+'%';
+    var active=-1;
+    for(var i=0;i<chapSecs.length;i++){ if(chapSecs[i]&&chapSecs[i].offsetTop-140<=st) active=i; }
+    chapLinks.forEach(function(a,i){a.classList.toggle('active',i===active);});
+    var sa=-1;
+    for(var j=0;j<subTargets.length;j++){ if(subTargets[j]&&subTargets[j].offsetTop-160<=st) sa=j; }
+    subLinks.forEach(function(a,i){a.classList.toggle('active',i===sa);});
+  }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+  var sidebar=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),menuBtn=document.getElementById('menuBtn');
+  function closeMenu(){sidebar.classList.remove('open');scrim.classList.remove('show');}
+  menuBtn.addEventListener('click',function(){sidebar.classList.toggle('open');scrim.classList.toggle('show');});
+  scrim.addEventListener('click',closeMenu);
+  document.querySelectorAll('.toc a').forEach(function(a){a.addEventListener('click',closeMenu);});
+
+  /* ---------- HERO: branching rollouts seeking a reward band ---------- */
+  (function(){
+    var cv=document.getElementById('heroCanvas'); if(!cv) return;
+    var ctx,W,H,parts=[],bandY,bandH;
+    function build(){
+      var hdr=cv.parentElement,dpr=window.devicePixelRatio||1;
+      W=hdr.clientWidth;H=hdr.clientHeight;
+      cv.width=W*dpr;cv.height=H*dpr;ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+      bandY=H*0.32;bandH=H*0.16;
+      parts=[];
+      for(var i=0;i<60;i++)parts.push(spawn(Math.random()*W));
+    }
+    function spawn(x){return {x:x===undefined?-5:x,y:H*0.5+gauss()*H*0.08,vy:0,t:Math.floor(Math.random()*20)};}
+    function draw(){
+      ctx.fillStyle='rgba(20,18,52,0.18)';ctx.fillRect(0,0,W,H);
+      // reward band
+      ctx.fillStyle='rgba(255,120,104,0.05)';ctx.fillRect(W*0.72,bandY,W*0.28,bandH);
+      parts.forEach(function(p,i){
+        p.t++;
+        if(p.t%14===0)p.vy=(Math.random()-0.5)*1.7; // branch decision
+        var nx=p.x+1.6, ny=p.y+p.vy;
+        var inBand=(nx>W*0.72&&ny>bandY&&ny<bandY+bandH);
+        ctx.strokeStyle=inBand?'rgba(255,130,112,0.9)':'rgba(150,152,230,0.34)';
+        ctx.lineWidth=inBand?2:1.2;
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(nx,ny);ctx.stroke();
+        p.x=nx;p.y=ny;
+        if(p.x>W+5||p.y<-10||p.y>H+10)parts[i]=spawn();
+      });
+    }
+    build();
+    if(REDUCE){ctx.fillStyle='#141234';ctx.fillRect(0,0,W,H);for(var k=0;k<260;k++)draw();}
+    else{(function loop(){draw();requestAnimationFrame(loop);})();}
+    window.addEventListener('resize',function(){clearTimeout(window._hr);window._hr=setTimeout(build,160);});
+  })();
+
+  /* ================= 1. DISCOUNT DIAL ================= */
+  (function(){
+    var cv=document.getElementById('discCanvas'); if(!cv) return;
+    var dg=document.getElementById('discG'),gv=document.getElementById('discGv'),rd=document.getElementById('discReadout');
+    var W,H,ctx,S,N=46;
+    function draw(){
+      S=fit(cv,640/320);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var g=+dg.value;gv.textContent=g.toFixed(2);
+      var pad=40,bw=(W-pad-16)/N,base=H-44;
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(pad,base);ctx.lineTo(W-16,base);ctx.stroke();
+      var G=0;
+      for(var k=0;k<N;k++){
+        var w=Math.pow(g,k);G+=w;
+        var x=pad+k*bw,h=w*(H-92);
+        ctx.fillStyle='rgba(67,56,202,'+(0.25+0.65*w)+')';
+        ctx.fillRect(x+1,base-h,bw-2,h);
+      }
+      var hor=1/(1-g);
+      if(hor<N){
+        var hx=pad+hor*bw;
+        ctx.strokeStyle=C.teal;ctx.setLineDash([6,5]);ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(hx,base);ctx.lineTo(hx,30);ctx.stroke();ctx.setLineDash([]);
+        ctx.font=MONO;ctx.fillStyle=C.teal;
+        ctx.fillText('horizon 1/(1−γ) ≈ '+hor.toFixed(1),Math.min(hx+8,W-190),42);
+      }
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.textAlign='center';
+      for(var t=0;t<=40;t+=10)ctx.fillText('t='+t,pad+t*bw,base+18);
+      ctx.textAlign='left';
+      ctx.font=DISP;ctx.fillStyle=C.ink;
+      ctx.fillText('present value of each future reward of 1',pad,20);
+      rd.innerHTML='Return of an all-1 reward stream: G = Σγᵏ = 1/(1−γ) = <b>'+ (1/(1-g)).toFixed(1)+'</b>. '+(g<0.7?'Short horizon: rewards beyond a handful of steps are nearly invisible — a goldfish agent.':g<0.95?'A medium horizon — typical for tasks of tens of steps.':'Long horizon: far rewards still register, but the credit-assignment signal for any one step is now very dilute.');
+    }
+    dg.addEventListener('input',draw);
+    register(draw);
+  })();
+
+  /* ---------- shared gridworld spec for demos 2 & 3 ---------- */
+  var GW={cols:9,rows:5,goal:[0,8],pits:[[4,2],[4,3],[4,4],[4,5],[4,6]],walls:[[2,4],[1,4]],start:[4,0]};
+  function gwKey(r,c){return r+','+c;}
+  function gwIs(list,r,c){for(var i=0;i<list.length;i++)if(list[i][0]===r&&list[i][1]===c)return true;return false;}
+  function gwTerminalR(r,c){
+    if(r===GW.goal[0]&&c===GW.goal[1])return 1;
+    if(gwIs(GW.pits,r,c))return -1;
+    return null;
+  }
+  var GWMOVES=[[-1,0],[1,0],[0,-1],[0,1]]; // up down left right
+  function gwStep(r,c,a){
+    var nr=r+GWMOVES[a][0],nc=c+GWMOVES[a][1];
+    if(nr<0||nr>=GW.rows||nc<0||nc>=GW.cols||gwIs(GW.walls,nr,nc)){nr=r;nc=c;}
+    return [nr,nc];
+  }
+  function gwDrawBase(ctx,W,H){
+    var cell=Math.min((W-24)/GW.cols,(H-24)/GW.rows);
+    var ox=(W-cell*GW.cols)/2, oy=(H-cell*GW.rows)/2;
+    return {cell:cell,ox:ox,oy:oy};
+  }
+  function valColor(v){
+    if(v>0)return 'rgba(67,56,202,'+Math.min(0.85,v*0.85)+')';
+    if(v<0)return 'rgba(232,65,46,'+Math.min(0.85,-v*0.85)+')';
+    return 'rgba(0,0,0,0)';
+  }
+  function gwPaintCells(ctx,g,valueOf){
+    for(var r=0;r<GW.rows;r++)for(var c=0;c<GW.cols;c++){
+      var x=g.ox+c*g.cell,y=g.oy+r*g.cell;
+      if(gwIs(GW.walls,r,c)){ctx.fillStyle='#C8CAD8';ctx.fillRect(x,y,g.cell,g.cell);continue;}
+      var term=gwTerminalR(r,c);
+      var v= term!==null? term : valueOf(r,c);
+      ctx.fillStyle='#FBFBFD';ctx.fillRect(x,y,g.cell,g.cell);
+      ctx.fillStyle=valColor(v);ctx.fillRect(x,y,g.cell,g.cell);
+      ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.strokeRect(x+0.5,y+0.5,g.cell,g.cell);
+      if(term===1){ctx.fillStyle='#fff';ctx.font='700 '+(g.cell*0.34)+'px "Space Grotesk"';ctx.textAlign='center';ctx.fillText('+1',x+g.cell/2,y+g.cell*0.62);ctx.textAlign='left';}
+      if(term===-1){ctx.fillStyle='#fff';ctx.font='700 '+(g.cell*0.34)+'px "Space Grotesk"';ctx.textAlign='center';ctx.fillText('−1',x+g.cell/2,y+g.cell*0.62);ctx.textAlign='left';}
+    }
+    // start label
+    var sx=g.ox+GW.start[1]*g.cell,sy=g.oy+GW.start[0]*g.cell;
+    ctx.fillStyle=C.inkSoft;ctx.font='600 '+(g.cell*0.3)+'px "Space Grotesk"';
+    ctx.textAlign='center';ctx.fillText('S',sx+g.cell/2,sy+g.cell*0.64);ctx.textAlign='left';
+  }
+  function gwArrow(ctx,g,r,c,a,col){
+    var x=g.ox+c*g.cell+g.cell/2,y=g.oy+r*g.cell+g.cell/2,L=g.cell*0.26;
+    var dx=GWMOVES[a][1]*L,dy=GWMOVES[a][0]*L;
+    ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(x-dx*0.6,y-dy*0.6);ctx.lineTo(x+dx,y+dy);ctx.stroke();
+    var ang=Math.atan2(dy,dx);
+    ctx.beginPath();ctx.moveTo(x+dx,y+dy);
+    ctx.lineTo(x+dx-7*Math.cos(ang-0.45),y+dy-7*Math.sin(ang-0.45));
+    ctx.lineTo(x+dx-7*Math.cos(ang+0.45),y+dy-7*Math.sin(ang+0.45));
+    ctx.closePath();ctx.fill();
+  }
+
+  /* ================= 2. VALUE ITERATION ================= */
+  (function(){
+    var cv=document.getElementById('bellCanvas'); if(!cv) return;
+    var bg=document.getElementById('bellG'),gv=document.getElementById('bellGv'),rd=document.getElementById('bellReadout');
+    var W,H,ctx,S,V=[],sweeps=0,anim=null;
+    function reset(){V=[];for(var r=0;r<GW.rows;r++){V.push([]);for(var c=0;c<GW.cols;c++)V[r].push(0);}sweeps=0;}
+    reset();
+    function sweep(){
+      var g=+bg.value,nv=[],delta=0;
+      for(var r=0;r<GW.rows;r++){nv.push([]);
+        for(var c=0;c<GW.cols;c++){
+          if(gwTerminalR(r,c)!==null||gwIs(GW.walls,r,c)){nv[r].push(0);continue;}
+          var best=-1e9;
+          for(var a=0;a<4;a++){
+            var s2=gwStep(r,c,a),tr=gwTerminalR(s2[0],s2[1]);
+            var q= tr!==null? tr : g*V[s2[0]][s2[1]];
+            if(q>best)best=q;
+          }
+          nv[r].push(best);
+          delta=Math.max(delta,Math.abs(best-V[r][c]));
+        }
+      }
+      V=nv;sweeps++;return delta;
+    }
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var g=gwDrawBase(ctx,W,H);
+      gwPaintCells(ctx,g,function(r,c){return V[r][c];});
+      // greedy arrows where value is informative
+      var gm=+bg.value;
+      for(var r=0;r<GW.rows;r++)for(var c=0;c<GW.cols;c++){
+        if(gwTerminalR(r,c)!==null||gwIs(GW.walls,r,c))continue;
+        var best=-1e9,ba=-1;
+        for(var a=0;a<4;a++){
+          var s2=gwStep(r,c,a),tr=gwTerminalR(s2[0],s2[1]);
+          var q= tr!==null? tr : gm*V[s2[0]][s2[1]];
+          if(q>best){best=q;ba=a;}
+        }
+        if(best>0.004)gwArrow(ctx,g,r,c,ba,'rgba(20,22,42,0.55)');
+      }
+      rd.innerHTML='Sweeps: <b>'+sweeps+'</b>. '+(sweeps===0?'Every non-terminal value starts at 0 — the agent knows nothing.':sweeps<3?'Value has reached cells '+sweeps+' step'+(sweeps>1?'s':'')+' from a terminal — one ring per sweep.':'The wavefront has spread; arrows near the cliff already route around it. Values are converging toward the fixed point V*.');
+    }
+    bg.addEventListener('input',function(){gv.textContent=(+bg.value).toFixed(2);reset();draw();});
+    gv.textContent=(+bg.value).toFixed(2);
+    document.getElementById('bellStep').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);sweep();draw();});
+    document.getElementById('bellReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);reset();draw();});
+    document.getElementById('bellRun').addEventListener('click',function(){
+      if(anim)cancelAnimationFrame(anim);
+      var last=0;
+      function frame(ts){
+        if(ts-last>220){var d=sweep();draw();last=ts;
+          if(d<1e-4||sweeps>60){rd.innerHTML='Converged after <b>'+sweeps+'</b> sweeps (max change below 10⁻⁴). The values satisfy the Bellman optimality equation everywhere at once — and the arrows are the optimal policy, read off for free.';return;}}
+        anim=requestAnimationFrame(frame);
+      }
+      anim=requestAnimationFrame(frame);
+    });
+    register(draw);
+  })();
+
+  /* ================= 3. Q-LEARNING ================= */
+  (function(){
+    var cv=document.getElementById('qCanvas'); if(!cv) return;
+    var qe=document.getElementById('qEps'),ev=document.getElementById('qEpsv'),
+        qa=document.getElementById('qAlpha'),av=document.getElementById('qAlphav'),rd=document.getElementById('qReadout');
+    var W,H,ctx,S,Q={},episodes=0,returns=[],lastPath=[],anim=null;
+    function key(r,c){return r+','+c;}
+    function getQ(r,c){var k=key(r,c);if(!Q[k])Q[k]=[0,0,0,0];return Q[k];}
+    function reset(){Q={};episodes=0;returns=[];lastPath=[];}
+    reset();
+    function episode(){
+      var eps=+qe.value,al=+qa.value,gm=0.95;
+      var r=GW.start[0],c=GW.start[1],G=0,disc=1,path=[[r,c]];
+      for(var t=0;t<120;t++){
+        var q=getQ(r,c),a;
+        if(Math.random()<eps)a=Math.floor(Math.random()*4);
+        else{a=0;for(var i=1;i<4;i++)if(q[i]>q[a])a=i;}
+        var s2=gwStep(r,c,a),nr=s2[0],nc=s2[1];
+        var term=gwTerminalR(nr,nc);
+        var rew= term!==null? term : -0.01;
+        var target= term!==null? rew : rew+gm*Math.max.apply(null,getQ(nr,nc));
+        q[a]+=al*(target-q[a]);
+        G+=disc*rew;disc*=gm;
+        r=nr;c=nc;path.push([r,c]);
+        if(term!==null)break;
+      }
+      episodes++;returns.push(G);if(returns.length>20)returns.shift();
+      lastPath=path;
+    }
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var g=gwDrawBase(ctx,W,H);
+      gwPaintCells(ctx,g,function(r,c){var q=getQ(r,c);return Math.max.apply(null,q);});
+      // last episode trail
+      if(lastPath.length>1){
+        ctx.strokeStyle='rgba(201,131,20,0.55)';ctx.lineWidth=2;
+        ctx.beginPath();
+        lastPath.forEach(function(p,i){
+          var x=g.ox+p[1]*g.cell+g.cell/2,y=g.oy+p[0]*g.cell+g.cell/2;
+          if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        });
+        ctx.stroke();
+      }
+      // greedy arrows where learned
+      for(var r=0;r<GW.rows;r++)for(var c=0;c<GW.cols;c++){
+        if(gwTerminalR(r,c)!==null||gwIs(GW.walls,r,c))continue;
+        var q=getQ(r,c),ba=0,seen=false;
+        for(var i2=1;i2<4;i2++)if(q[i2]>q[ba])ba=i2;
+        for(var i3=0;i3<4;i3++)if(Math.abs(q[i3])>1e-6)seen=true;
+        if(seen)gwArrow(ctx,g,r,c,ba,'rgba(20,22,42,0.55)');
+      }
+      var avg= returns.length? returns.reduce(function(a,b){return a+b;},0)/returns.length : 0;
+      rd.innerHTML='Episodes: <b>'+episodes+'</b> · mean return (last 20): <b>'+avg.toFixed(2)+'</b>. '+(episodes===0?'Untrained — press Train and watch fear of the cliff (coral) and desire for the goal (indigo) get written into the table.':avg>0.4?'Solved: a confident corridor of indigo runs to the goal, hugging just above the cliff.':avg>-0.2?'Learning: the cliff cells have turned coral (one bad step taught each), and a route is forming.':'Mostly exploring — returns still dominated by cliff falls.');
+    }
+    qe.addEventListener('input',function(){ev.textContent=(+qe.value).toFixed(2);});
+    qa.addEventListener('input',function(){av.textContent=(+qa.value).toFixed(2);});
+    ev.textContent=(+qe.value).toFixed(2);av.textContent=(+qa.value).toFixed(2);
+    document.getElementById('qReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);reset();draw();});
+    document.getElementById('qTrain').addEventListener('click',function(){
+      if(anim)cancelAnimationFrame(anim);
+      var done=0;
+      function frame(){
+        for(var k=0;k<4;k++){if(done<150){episode();done++;}}
+        draw();
+        if(done<150)anim=requestAnimationFrame(frame);
+      } frame();
+    });
+    register(draw);
+  })();
+
+  /* ================= 4. BANDITS ================= */
+  (function(){
+    var cv=document.getElementById('banditCanvas'); if(!cv) return;
+    var be=document.getElementById('banEps'),evv=document.getElementById('banEpsv'),rd=document.getElementById('banditReadout');
+    var W,H,ctx,S,mus=[],est=[],cnt=[],pulls=0,regret=0,regCurve=[],anim=null,lastArm=-1;
+    function reset(){
+      mus=[];for(var i=0;i<4;i++)mus.push(0.2+Math.random()*0.7);
+      est=[0,0,0,0];cnt=[0,0,0,0];pulls=0;regret=0;regCurve=[];lastArm=-1;
+    }
+    reset();
+    function pull(a){
+      var pay=Math.max(0,Math.min(1,mus[a]+gauss()*0.18));
+      cnt[a]++;est[a]+=(pay-est[a])/cnt[a];
+      pulls++;regret+=Math.max.apply(null,mus)-mus[a];
+      regCurve.push(regret);if(regCurve.length>420)regCurve.shift();
+      lastArm=a;
+    }
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var mw=W*0.58,bw=mw/4;
+      var best=Math.max.apply(null,mus);
+      for(var i=0;i<4;i++){
+        var x=14+i*bw,base=H-58,bh=H-120;
+        ctx.fillStyle= i===lastArm? '#FFF4F2':'#FBFBFD';
+        ctx.strokeStyle= i===lastArm? C.coral : C.line;
+        ctx.lineWidth= i===lastArm?2:1;
+        ctx.fillRect(x,30,bw-12,base-22);ctx.strokeRect(x,30,bw-12,base-22);
+        // estimate bar
+        var eh=est[i]*bh;
+        ctx.fillStyle=C.indigo;ctx.globalAlpha=0.75;
+        ctx.fillRect(x+10,base-10-eh,bw-32,eh);ctx.globalAlpha=1;
+        // confidence whisker
+        if(cnt[i]>0){
+          var u=Math.sqrt(2*Math.log(Math.max(2,pulls))/cnt[i])*0.18;
+          var cy=base-10-eh;
+          ctx.strokeStyle=C.amber;ctx.lineWidth=2;
+          ctx.beginPath();ctx.moveTo(x+(bw-12)/2,cy-u*bh);ctx.lineTo(x+(bw-12)/2,Math.min(base-10,cy+u*bh));ctx.stroke();
+        }
+        // true mean tick (revealed faintly with evidence)
+        var rev=Math.min(1,cnt[i]/15);
+        if(rev>0.05){
+          ctx.strokeStyle='rgba(14,156,146,'+rev+')';ctx.lineWidth=2.4;
+          var ty=base-10-mus[i]*bh;
+          ctx.beginPath();ctx.moveTo(x+6,ty);ctx.lineTo(x+bw-18,ty);ctx.stroke();
+        }
+        ctx.font=MONO;ctx.fillStyle=C.inkSoft;ctx.textAlign='center';
+        ctx.fillText('arm '+(i+1),x+(bw-12)/2,base+8);
+        ctx.fillText(cnt[i]+'×  '+(cnt[i]?est[i].toFixed(2):'—'),x+(bw-12)/2,base+24);
+        ctx.textAlign='left';
+      }
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.fillText('indigo=estimate · amber=confidence · teal=truth (revealed by evidence)',14,18);
+      // regret chart
+      var rx=mw+30,rw=W-rx-14,r0=H-44,rh=H-90;
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(rx,r0);ctx.lineTo(rx+rw,r0);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.ink;ctx.fillText('cumulative regret: '+regret.toFixed(1),rx,24);
+      if(regCurve.length>1){
+        var mx=Math.max(regCurve[regCurve.length-1],1);
+        ctx.strokeStyle=C.coralDeep;ctx.lineWidth=2;ctx.beginPath();
+        regCurve.forEach(function(v,i){
+          var x=rx+i/(regCurve.length-1)*rw,y=r0-(v/mx)*rh;
+          if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        });
+        ctx.stroke();
+      }
+      rd.innerHTML= pulls===0? '<b>Click a machine</b> to pull it. Hidden payouts; only evidence will reveal them.'
+        : pulls+' pulls. '+(regret/Math.max(1,pulls)<0.05?'Regret per pull is tiny — the curve has gone flat: you (or UCB) found the best arm and stopped paying tuition.':'The regret curve\u2019s shape is the diagnosis: straight line = still paying a constant exploration tax; bending flat = knowledge consolidating.');
+    }
+    cv.addEventListener('click',function(e){
+      if(anim)return;
+      var r=cv.getBoundingClientRect();
+      var x=(e.clientX-r.left)/r.width*W;
+      var bw=(W*0.58)/4,i=Math.floor((x-14)/bw);
+      if(i>=0&&i<4&&x<14+W*0.58){pull(i);draw();}
+    });
+    function auto(strategy){
+      if(anim)cancelAnimationFrame(anim);
+      var n=0;
+      function frame(){
+        for(var k=0;k<5&&n<200;k++,n++){
+          var a;
+          if(strategy==='eps'){
+            if(Math.random()<+be.value||pulls<4)a=Math.floor(Math.random()*4);
+            else{a=0;for(var i=1;i<4;i++)if(est[i]>est[a])a=i;}
+          }else{ // ucb
+            if(pulls<4)a=pulls%4;
+            else{a=0;var bestU=-1e9;
+              for(var j=0;j<4;j++){var u=est[j]+Math.sqrt(2*Math.log(pulls)/Math.max(1,cnt[j]))*0.18;
+                if(u>bestU){bestU=u;a=j;}}}
+          }
+          pull(a);
+        }
+        draw();
+        if(n<200)anim=requestAnimationFrame(frame);else anim=null;
+      } frame();
+    }
+    be.addEventListener('input',function(){evv.textContent=(+be.value).toFixed(2);});
+    evv.textContent=(+be.value).toFixed(2);
+    document.getElementById('banAuto').addEventListener('click',function(){auto('eps');});
+    document.getElementById('banUcb').addEventListener('click',function(){auto('ucb');});
+    document.getElementById('banReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);anim=null;reset();draw();});
+    register(draw);
+  })();
+
+  /* ================= 5. REINFORCE AIMING ================= */
+  (function(){
+    var cv=document.getElementById('pgCanvas'); if(!cv) return;
+    var lr=document.getElementById('pgLr'),lv=document.getElementById('pgLrv'),rd=document.getElementById('pgReadout');
+    var W,H,ctx,S,mu,lsig,target,rounds=0,base=0,anim=null,lastBatch=[],muTrail=[];
+    function reset(){mu=20+Math.random()*30;lsig=Math.log(22);target=90+Math.random()*60;rounds=0;base=0;lastBatch=[];muTrail=[];}
+    reset();
+    function reward(th){var d=th-target;return Math.exp(-d*d/(2*9*9));}
+    function trainRound(){
+      var sig=Math.exp(lsig),eta=+lr.value;
+      var thetas=[],rews=[];
+      for(var i=0;i<10;i++){var th=mu+gauss()*sig;thetas.push(th);rews.push(reward(th));}
+      var mr=rews.reduce(function(a,b){return a+b;},0)/10;
+      base=0.9*base+0.1*mr;
+      var gmu=0,gls=0;
+      for(var j=0;j<10;j++){
+        var adv=rews[j]-base,z=(thetas[j]-mu)/sig;
+        gmu+=adv*z/sig;            // d logN / d mu
+        gls+=adv*(z*z-1);          // d logN / d log sigma
+      }
+      mu+=eta*gmu*9;               // scaled steps for visible motion
+      lsig+=eta*gls*0.05;
+      lsig=Math.max(Math.log(1.2),Math.min(Math.log(40),lsig));
+      mu=Math.max(5,Math.min(175,mu));
+      rounds++;lastBatch=thetas.map(function(t,i){return [t,rews[i]];});
+      muTrail.push(mu);if(muTrail.length>200)muTrail.shift();
+    }
+    function PX(th){return 30+(th/180)*(W-60);}
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var sig=Math.exp(lsig),baseY=H-58;
+      // target zone
+      var grd=ctx.createLinearGradient(PX(target-25),0,PX(target+25),0);
+      grd.addColorStop(0,'rgba(14,156,146,0)');grd.addColorStop(0.5,'rgba(14,156,146,0.28)');grd.addColorStop(1,'rgba(14,156,146,0)');
+      ctx.fillStyle=grd;ctx.fillRect(PX(target-25),26,PX(target+25)-PX(target-25),baseY-26);
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(30,baseY);ctx.lineTo(W-30,baseY);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.textAlign='center';
+      for(var t=0;t<=180;t+=45)ctx.fillText(t+'°',PX(t),baseY+18);
+      ctx.textAlign='left';
+      // mu trail
+      if(muTrail.length>1){
+        ctx.strokeStyle='rgba(232,65,46,0.35)';ctx.lineWidth=1.4;ctx.beginPath();
+        muTrail.forEach(function(m,i){
+          var y=baseY-8-(i/(muTrail.length-1))*0; // flat trail line at baseline marks
+        });
+        // simpler: small ticks fading
+      }
+      // policy curve
+      ctx.strokeStyle=C.coralDeep;ctx.lineWidth=2.6;ctx.beginPath();
+      var peak=(baseY-46);
+      for(var th=0;th<=180;th+=1){
+        var p=Math.exp(-(th-mu)*(th-mu)/(2*sig*sig));
+        var x=PX(th),y=baseY-p*peak;
+        if(th===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      // samples
+      lastBatch.forEach(function(s){
+        ctx.fillStyle= s[1]>base? C.teal : 'rgba(135,139,166,0.8)';
+        ctx.beginPath();ctx.arc(PX(s[0]),baseY-6,5,0,7);ctx.fill();
+      });
+      ctx.font=DISP;ctx.fillStyle=C.coralDeep;ctx.fillText('policy π(θ) = N('+mu.toFixed(1)+'°, '+sig.toFixed(1)+'°)',32,24);
+      ctx.fillStyle=C.teal;ctx.fillText('target zone (reward)',PX(target)-62,40);
+      rd.innerHTML= rounds===0? 'Press <b>Train</b>: each round samples 10 shots, grades them against a running baseline, and takes one REINFORCE step.'
+        : 'Round '+rounds+': mean '+mu.toFixed(1)+'°, spread '+sig.toFixed(1)+'°, baseline '+base.toFixed(2)+'. '+(Math.abs(mu-target)<5&&sig<5?'<b>Converged</b> — and notice σ shrank on its own: once every sample lands in the zone, spread stops paying and the gradient squeezes it out.':Math.abs(mu-target)<15?'Closing in — above-baseline shots (teal) are pulling the mean their way.':'Searching: the distribution is still wide, which is exactly what lets it find the zone at all.');
+    }
+    lr.addEventListener('input',function(){lv.textContent=(+lr.value).toFixed(2);});
+    lv.textContent=(+lr.value).toFixed(2);
+    document.getElementById('pgReset').addEventListener('click',function(){if(anim)cancelAnimationFrame(anim);reset();draw();});
+    document.getElementById('pgRun').addEventListener('click',function(){
+      if(anim)cancelAnimationFrame(anim);
+      var n=0;
+      function frame(){
+        trainRound();n++;draw();
+        if(n<120&&!(Math.abs(mu-target)<2&&Math.exp(lsig)<2))anim=requestAnimationFrame(frame);
+      } frame();
+    });
+    register(draw);
+  })();
+
+  /* ================= 6. PPO CLIP ================= */
+  (function(){
+    var cv=document.getElementById('clipCanvas'); if(!cv) return;
+    var ca=document.getElementById('clipA'),avv=document.getElementById('clipAv'),
+        ce=document.getElementById('clipE'),evv=document.getElementById('clipEv'),rd=document.getElementById('clipReadout');
+    var W,H,ctx,S;
+    function draw(){
+      S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var A=+ca.value,eps=+ce.value;
+      avv.textContent=(A>=0?'+':'')+A.toFixed(1);evv.textContent=eps.toFixed(2);
+      var r0=0,r1=2,pad=46;
+      function PX(r){return pad+(r-r0)/(r1-r0)*(W-pad-20);}
+      var ymax=Math.max(2.2,Math.abs(A)*2.2);
+      function PY(v){return H/2 - (v/ymax)*(H/2-34);}
+      // axes
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(pad,PY(0));ctx.lineTo(W-20,PY(0));ctx.stroke();
+      ctx.beginPath();ctx.moveTo(PX(1),28);ctx.lineTo(PX(1),H-30);ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.textAlign='center';
+      [0,0.5,1,1.5,2].forEach(function(r){ctx.fillText(r.toFixed(1),PX(r),H-12);});
+      ctx.fillText('r = πθ/πold',W-70,PY(0)-8);
+      ctx.textAlign='left';
+      // clip band shading (where gradient = 0)
+      function Lclip(r){
+        var un=r*A, cl=Math.max(1-eps,Math.min(1+eps,r))*A;
+        return Math.min(un,cl);
+      }
+      // shade flat regions
+      ctx.fillStyle='rgba(255,92,73,0.08)';
+      if(A>0){ctx.fillRect(PX(1+eps),30,W-20-PX(1+eps),H-60);}
+      else if(A<0){ctx.fillRect(pad,30,PX(1-eps)-pad,H-60);}
+      // unclipped dashed
+      ctx.strokeStyle='rgba(135,139,166,0.9)';ctx.lineWidth=1.8;ctx.setLineDash([7,5]);
+      ctx.beginPath();ctx.moveTo(PX(0),PY(0));ctx.lineTo(PX(2),PY(2*A));ctx.stroke();ctx.setLineDash([]);
+      // clipped solid
+      ctx.strokeStyle=C.indigo;ctx.lineWidth=3;
+      ctx.beginPath();
+      for(var r=0;r<=2.001;r+=0.01){
+        var x=PX(r),y=PY(Lclip(r));
+        if(r===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      // markers
+      [1-eps,1+eps].forEach(function(r){
+        ctx.strokeStyle=C.coralDeep;ctx.lineWidth=1.4;
+        ctx.beginPath();ctx.moveTo(PX(r),PY(0)-6);ctx.lineTo(PX(r),PY(0)+6);ctx.stroke();
+      });
+      ctx.font=MONO;ctx.fillStyle=C.coralDeep;ctx.textAlign='center';
+      ctx.fillText('1−ε',PX(1-eps),PY(0)+20);ctx.fillText('1+ε',PX(1+eps),PY(0)+20);
+      ctx.textAlign='left';
+      ctx.font=DISP;ctx.fillStyle=C.faint;ctx.fillText('dashed: naive r·A',pad+4,26);
+      ctx.fillStyle=C.indigo;ctx.fillText('solid: PPO L^CLIP',pad+4,44);
+      rd.innerHTML= A>0?
+        'A = +'+A.toFixed(1)+' (good action): the objective rewards raising r — until r = 1+ε = '+(1+eps).toFixed(2)+', where it goes <b>flat</b> (shaded): gradient zero, no incentive to push this action\u2019s probability further on this batch.'
+        : A<0? 'A = '+A.toFixed(1)+' (bad action): suppress it — but below r = 1−ε = '+(1-eps).toFixed(2)+' the objective flattens: the action cannot be annihilated on one batch\u2019s evidence.'
+        : 'A = 0: nothing to learn from this action — both curves are flat everywhere.';
+    }
+    [ca,ce].forEach(function(s){s.addEventListener('input',draw);});
+    register(draw);
+  })();
+
+  /* ================= 7. BC DRIFT ================= */
+  (function(){
+    var cv=document.getElementById('driftCanvas'); if(!cv) return;
+    var de=document.getElementById('driftE'),evv=document.getElementById('driftEv'),rd=document.getElementById('driftReadout');
+    var W,H,ctx,S,mode='bc',trajs=[],anim=null;
+    function road(x){return 0.5+0.22*Math.sin(x*4.2)+0.1*Math.sin(x*9.1);} // y center as fn of x in [0,1]
+    var BAND=0.085;
+    function rollout(eps){
+      var x=0,y=road(0),pts=[[x,y]],crashed=false;
+      while(x<1){
+        var off=y-road(x);
+        var inBand=Math.abs(off)<BAND;
+        var steer;
+        if(mode==='bc'){
+          steer= inBand? -off*0.25 : -off*0.05;          // off-distribution: barely knows what to do
+          var noise= inBand? eps : eps*3;                  // and noisier
+          steer+=gauss()*noise*0.5;
+        }else{
+          steer=-off*0.25+gauss()*eps*0.5;                 // corrections seen everywhere
+        }
+        y+=steer+ (road(x+0.012)-road(x));                 // follow road curvature + steering
+        x+=0.012;
+        pts.push([x,y]);
+        if(y<0.02||y>0.98){crashed=true;break;}
+      }
+      return {pts:pts,crashed:crashed,dev:Math.abs(pts[pts.length-1][1]-road(Math.min(1,x)))};
+    }
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      // band
+      ctx.fillStyle='rgba(67,56,202,0.07)';
+      ctx.beginPath();
+      for(var x=0;x<=1.001;x+=0.01)ctx.lineTo(x*W,(road(x)-BAND)*H);
+      for(var x2=1;x2>=0;x2-=0.01)ctx.lineTo(x2*W,(road(x2)+BAND)*H);
+      ctx.closePath();ctx.fill();
+      // expert centerline
+      ctx.strokeStyle=C.indigo;ctx.lineWidth=2.4;ctx.beginPath();
+      for(var x3=0;x3<=1.001;x3+=0.01){var px=x3*W,py=road(x3)*H;if(x3===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
+      ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.indigo;ctx.fillText('expert / training distribution',12,20);
+      // rollouts
+      trajs.forEach(function(t){
+        ctx.strokeStyle= t.crashed? 'rgba(232,65,46,0.8)':'rgba(201,131,20,0.75)';
+        ctx.lineWidth=1.6;ctx.beginPath();
+        t.pts.forEach(function(p,i){if(i===0)ctx.moveTo(p[0]*W,p[1]*H);else ctx.lineTo(p[0]*W,p[1]*H);});
+        ctx.stroke();
+        if(t.crashed){
+          var last=t.pts[t.pts.length-1];
+          ctx.fillStyle=C.coralDeep;ctx.font='700 14px "Space Grotesk"';
+          ctx.fillText('✕',last[0]*W-4,last[1]*H+5);
+        }
+      });
+      var crashes=trajs.filter(function(t){return t.crashed;}).length;
+      rd.innerHTML= trajs.length===0? 'Press <b>Roll out</b>. Amber: rollouts. The shaded band is the only region the policy was trained on.'
+        : (mode==='bc'? crashes+' of '+trajs.length+' crashed. Inside the band the policy is competent; the moment noise pushes it out, it\u2019s in states it never trained on — weak correction, triple noise — and small errors become catastrophes. That\u2019s O(εT²).'
+                      : crashes+' of '+trajs.length+' crashed. Same noise, same model class — but corrections were in the training data, so excursions get steered home. Bounded error: O(εT).');
+    }
+    function run(){
+      if(anim)cancelAnimationFrame(anim);
+      trajs=[];var n=0,eps=+de.value;
+      function frame(){
+        trajs.push(rollout(eps));n++;draw();
+        if(n<6)anim=requestAnimationFrame(frame);
+      } frame();
+    }
+    de.addEventListener('input',function(){evv.textContent=(+de.value).toFixed(2);});
+    evv.textContent=(+de.value).toFixed(2);
+    document.querySelectorAll('#driftSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#driftSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      mode=btn.dataset.m;trajs=[];draw();});});
+    document.getElementById('driftRun').addEventListener('click',run);
+    register(draw);
+  })();
+
+  /* ================= 8. ACTION CHUNKING ================= */
+  (function(){
+    var cv=document.getElementById('chunkCanvas'); if(!cv) return;
+    var ck=document.getElementById('chunkK'),kvv=document.getElementById('chunkKv'),rd=document.getElementById('chunkReadout');
+    var W,H,ctx,S,trajs=[],anim=null;
+    var T=120;
+    function expert(i){ // reach-and-place arc, param i in [0,T]
+      var t=i/T;
+      return [0.08+0.84*t, 0.78-0.55*Math.sin(t*Math.PI)*1.0+0.0];
+    }
+    function rollout(k){
+      var pts=[expert(0)],err=[0,0];
+      for(var i=1;i<=T;i++){
+        if((i-1)%k===0){err=[gauss()*0.014,gauss()*0.014];} // fresh error per DECISION
+        var e0=expert(i-1),e1=expert(i);
+        var dx=e1[0]-e0[0]+err[0],dy=e1[1]-e0[1]+err[1];
+        var p=pts[pts.length-1];
+        pts.push([p[0]+dx,p[1]+dy]);
+      }
+      var fin=pts[pts.length-1],tgt=expert(T);
+      return {pts:pts,dev:Math.hypot(fin[0]-tgt[0],fin[1]-tgt[1])};
+    }
+    function draw(){
+      S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      kvv.textContent=ck.value;
+      // expert
+      ctx.strokeStyle=C.indigo;ctx.lineWidth=2.6;ctx.beginPath();
+      for(var i=0;i<=T;i++){var e=expert(i);var x=e[0]*W,y=e[1]*H;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}
+      ctx.stroke();
+      var s0=expert(0),s1=expert(T);
+      ctx.fillStyle=C.ink;ctx.font=MONO;
+      ctx.fillText('grasp',s0[0]*W-14,s0[1]*H+20);
+      ctx.fillText('place',s1[0]*W-14,s1[1]*H+20);
+      ctx.fillStyle=C.teal;ctx.beginPath();ctx.arc(s1[0]*W,s1[1]*H,7,0,7);ctx.fill();
+      // rollouts
+      trajs.forEach(function(t){
+        ctx.strokeStyle='rgba(201,131,20,0.6)';ctx.lineWidth=1.4;ctx.beginPath();
+        t.pts.forEach(function(p,i){var x=p[0]*W,y=p[1]*H;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+        ctx.stroke();
+      });
+      if(trajs.length){
+        var avg=trajs.reduce(function(a,t){return a+t.dev;},0)/trajs.length;
+        var k=+ck.value,nDec=Math.ceil(T/k);
+        rd.innerHTML='k='+k+' → '+nDec+' decisions per rollout · mean final deviation <b>'+(avg*100).toFixed(1)+'%</b> of workspace. '+(k===1?'A fresh error every step: the bundle is a random walk around the expert arc.':k<8?'Fewer decision points, visibly tighter bundle — same per-decision error budget.':'Long chunks: very smooth — but between decisions the policy is open-loop and can\u2019t react. Real systems blend overlapping chunks to get both.');
+      } else {
+        rd.innerHTML='Press <b>Roll out</b>: 8 imitators trace the demonstrated arc, injecting one small error per <i>decision</i>. The slider sets how many actions each decision commits to.';
+      }
+    }
+    function run(){
+      if(anim)cancelAnimationFrame(anim);
+      trajs=[];var n=0,k=+ck.value;
+      function frame(){
+        trajs.push(rollout(k));n++;draw();
+        if(n<8)anim=requestAnimationFrame(frame);
+      } frame();
+    }
+    ck.addEventListener('input',function(){trajs=[];draw();});
+    document.getElementById('chunkRun').addEventListener('click',run);
+    register(draw);
+  })();
+
+  /* ================= 9. DYNA-Q ================= */
+  (function(){
+    var cv=document.getElementById('dynaCanvas'); if(!cv) return;
+    var dn=document.getElementById('dynaN'),nv=document.getElementById('dynaNv'),rd=document.getElementById('dynaReadout');
+    var W,H,ctx,S,Q={},model={},seen=[],episodes=0,realSteps=0,curve=[],lastCurve=null,lastN=null,anim=null,solvedAt=null,returns=[];
+    function key(r,c){return r+','+c;}
+    function getQ(r,c){var k=key(r,c);if(!Q[k])Q[k]=[0,0,0,0];return Q[k];}
+    function reset(){Q={};model={};seen=[];episodes=0;realSteps=0;curve=[];solvedAt=null;returns=[];}
+    reset();
+    function backup(r,c,a,rew,nr,nc,term,al,gm){
+      var q=getQ(r,c);
+      var target= term? rew : rew+gm*Math.max.apply(null,getQ(nr,nc));
+      q[a]+=al*(target-q[a]);
+    }
+    function episode(){
+      var eps=0.15,al=0.4,gm=0.95,n=+dn.value;
+      var r=GW.start[0],c=GW.start[1],G=0,disc=1;
+      for(var t=0;t<120;t++){
+        var q=getQ(r,c),a;
+        if(Math.random()<eps)a=Math.floor(Math.random()*4);
+        else{a=0;for(var i=1;i<4;i++)if(q[i]>q[a])a=i;}
+        var s2=gwStep(r,c,a),nr=s2[0],nc=s2[1];
+        var term=gwTerminalR(nr,nc),isT=term!==null;
+        var rew= isT? term : -0.01;
+        backup(r,c,a,rew,nr,nc,isT,al,gm);
+        realSteps++;
+        // remember + imagine
+        var mk=key(r,c)+'|'+a;
+        if(!model[mk])seen.push(mk);
+        model[mk]=[rew,nr,nc,isT,r,c,a];
+        for(var p=0;p<n&&seen.length>0;p++){
+          var m=model[seen[Math.floor(Math.random()*seen.length)]];
+          backup(m[4],m[5],m[6],m[0],m[1],m[2],m[3],al,gm);
+        }
+        G+=disc*rew;disc*=gm;
+        r=nr;c=nc;
+        if(isT)break;
+      }
+      episodes++;returns.push(G);if(returns.length>5)returns.shift();
+      curve.push([realSteps,G]);
+      if(solvedAt===null&&returns.length===5){
+        var avg=returns.reduce(function(a2,b){return a2+b;},0)/5;
+        if(avg>0.5)solvedAt=realSteps;
+      }
+    }
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      nv.textContent=dn.value;
+      // grid on left 58%
+      var gw=W*0.58;
+      var cell=Math.min((gw-20)/GW.cols,(H-24)/GW.rows);
+      var g={cell:cell,ox:10,oy:(H-cell*GW.rows)/2};
+      gwPaintCells(ctx,g,function(r,c){return Math.max.apply(null,getQ(r,c));});
+      for(var r=0;r<GW.rows;r++)for(var c=0;c<GW.cols;c++){
+        if(gwTerminalR(r,c)!==null||gwIs(GW.walls,r,c))continue;
+        var q=getQ(r,c),ba=0,any=false;
+        for(var i=1;i<4;i++)if(q[i]>q[ba])ba=i;
+        for(var j=0;j<4;j++)if(Math.abs(q[j])>1e-6)any=true;
+        if(any)gwArrow(ctx,g,r,c,ba,'rgba(20,22,42,0.5)');
+      }
+      // curve chart right
+      var rx=gw+26,rw=W-rx-14,r0=H-44,rh=H-92,maxS=3000;
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(rx,r0);ctx.lineTo(rx+rw,r0);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(rx,r0);ctx.lineTo(rx,r0-rh);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('return vs REAL steps',rx,24);
+      ctx.fillText('0',rx-4,r0+14);ctx.fillText(maxS+'',rx+rw-28,r0+14);
+      function plot(cu,col){
+        if(!cu||cu.length<2)return;
+        ctx.strokeStyle=col;ctx.lineWidth=1.8;ctx.beginPath();var started=false;
+        cu.forEach(function(p){
+          if(p[0]>maxS)return;
+          var x=rx+p[0]/maxS*rw, y=r0-((Math.max(-1,p[1])+1)/2)*rh;
+          if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);
+        });
+        ctx.stroke();
+      }
+      plot(lastCurve,'rgba(135,139,166,0.8)');
+      plot(curve,C.indigo);
+      if(lastCurve){ctx.fillStyle='rgba(135,139,166,1)';ctx.fillText('prev run (n='+lastN+')',rx,40);}
+      if(curve.length){ctx.fillStyle=C.indigo;ctx.fillText('this run (n='+dn.value+')',rx,56);}
+      rd.innerHTML= episodes===0? 'Train with n=0 (pure Q-learning), note the real-step bill; then Reset, raise n, and race the gray ghost of your previous run.'
+        : 'Episodes: '+episodes+' · real steps: <b>'+realSteps+'</b>'+(solvedAt?' · solved (5-ep avg return above 0.5) after <b>'+solvedAt+' real steps</b>':'')+'. '+(+dn.value===0?'Every backup is paid for with a real footstep.':'Each footstep funds '+(1+ +dn.value)+' backups — the value wavefront races backward through remembered transitions while the robot stands still.');
+    }
+    dn.addEventListener('input',function(){nv.textContent=dn.value;});
+    document.getElementById('dynaReset').addEventListener('click',function(){
+      if(anim)cancelAnimationFrame(anim);
+      if(curve.length>3){lastCurve=curve.slice();lastN=+dn.value;}
+      reset();draw();
+    });
+    document.getElementById('dynaTrain').addEventListener('click',function(){
+      if(anim)cancelAnimationFrame(anim);
+      var done=0;
+      function frame(){
+        for(var k=0;k<3;k++){if(done<50){episode();done++;}}
+        draw();
+        if(done<50)anim=requestAnimationFrame(frame);
+      } frame();
+    });
+    register(draw);
+  })();
+
+  /* ================= 10. MPC PLANNING ================= */
+  (function(){
+    var cv=document.getElementById('planCanvas'); if(!cv) return;
+    var pe=document.getElementById('planE'),evv=document.getElementById('planEv'),
+        ph=document.getElementById('planH'),hv=document.getElementById('planHv'),rd=document.getElementById('planReadout');
+    var W,H,ctx,S,anim=null,run=null;
+    var START=[0.10,0.80],GOAL=[0.86,0.26];
+    function newRun(){
+      var eps=+pe.value;
+      return {p:[START[0],START[1]],path:[[START[0],START[1]]],plans:[],
+              bias:(Math.random()<0.5?-1:1)*eps*(2.2+Math.random()*0.8),
+              noise:eps*0.35,steps:0,done:false,reached:false};
+    }
+    function drawScene(r){
+      ctx.clearRect(0,0,W,H);
+      ctx.strokeStyle=C.line;ctx.strokeRect(0.5,0.5,W-1,H-1);
+      // goal
+      ctx.fillStyle='rgba(14,156,146,0.18)';
+      ctx.beginPath();ctx.arc(GOAL[0]*W,GOAL[1]*H,18,0,7);ctx.fill();
+      ctx.fillStyle=C.teal;ctx.beginPath();ctx.arc(GOAL[0]*W,GOAL[1]*H,5,0,7);ctx.fill();
+      ctx.font=MONO;ctx.fillStyle=C.teal;ctx.fillText('goal',GOAL[0]*W+14,GOAL[1]*H+4);
+      ctx.fillStyle=C.inkSoft;ctx.fillText('start',START[0]*W-14,START[1]*H+22);
+      if(!r)return;
+      // plans (dashed intentions)
+      ctx.setLineDash([5,5]);
+      r.plans.forEach(function(pl){
+        ctx.strokeStyle='rgba(67,56,202,0.45)';ctx.lineWidth=1.3;
+        ctx.beginPath();ctx.moveTo(pl[0]*W,pl[1]*H);ctx.lineTo(pl[2]*W,pl[3]*H);ctx.stroke();
+      });
+      ctx.setLineDash([]);
+      // real path
+      ctx.strokeStyle='rgba(201,131,20,0.9)';ctx.lineWidth=2.2;ctx.beginPath();
+      r.path.forEach(function(q,i){if(i===0)ctx.moveTo(q[0]*W,q[1]*H);else ctx.lineTo(q[0]*W,q[1]*H);});
+      ctx.stroke();
+      var cur=r.path[r.path.length-1];
+      ctx.fillStyle=C.coralDeep;ctx.beginPath();ctx.arc(cur[0]*W,cur[1]*H,6,0,7);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.indigo;ctx.fillText('dashed: the model\u2019s plan',14,22);
+      ctx.fillStyle=C.amber;ctx.fillText('amber: what reality did with it',14,40);
+    }
+    function draw(){S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;drawScene(run);}
+    function execute(){
+      if(anim)cancelAnimationFrame(anim);
+      run=newRun();
+      var Hh=+ph.value,STEP=0.016;
+      function frame(){
+        for(var k=0;k<2;k++){
+          if(run.done)break;
+          // replan: aim straight at goal in the model (model knows no bias)
+          var p=run.p;
+          var th=Math.atan2(GOAL[1]-p[1],GOAL[0]-p[0]);
+          var reach=Math.min(Hh*STEP,Math.hypot(GOAL[0]-p[0],GOAL[1]-p[1]));
+          run.plans.push([p[0],p[1],p[0]+Math.cos(th)*reach,p[1]+Math.sin(th)*reach]);
+          // execute H steps open-loop with this heading
+          for(var s=0;s<Hh;s++){
+            var act=th+run.bias+gauss()*run.noise;
+            run.p=[run.p[0]+Math.cos(act)*STEP, run.p[1]+Math.sin(act)*STEP];
+            run.p[0]=Math.max(0.02,Math.min(0.98,run.p[0]));
+            run.p[1]=Math.max(0.02,Math.min(0.98,run.p[1]));
+            run.path.push([run.p[0],run.p[1]]);
+            run.steps++;
+            if(Math.hypot(run.p[0]-GOAL[0],run.p[1]-GOAL[1])<0.035){run.done=true;run.reached=true;break;}
+            if(run.steps>420){run.done=true;break;}
+          }
+        }
+        draw();
+        if(!run.done){anim=requestAnimationFrame(frame);}
+        else{
+          var d=Math.hypot(run.p[0]-GOAL[0],run.p[1]-GOAL[1]);
+          rd.innerHTML= run.reached?
+            '<b>Reached the goal</b> in '+run.steps+' steps with '+run.plans.length+' replans. Between replans the model\u2019s hidden bias bends the path for at most H='+Hh+' steps — then feedback re-aims. Error per leg ≈ ε·H, never compounding across legs.'
+            : '<b>Missed</b> — final distance '+(d*100).toFixed(0)+'% of the arena after '+run.plans.length+' replan'+(run.plans.length>1?'s':'')+'. With H='+Hh+', the dream runs '+Hh+' steps unchecked and its bias compounds the whole way. Lower H: same broken model, working behavior.';
+        }
+      } frame();
+    }
+    pe.addEventListener('input',function(){evv.textContent=(+pe.value).toFixed(2);});
+    ph.addEventListener('input',function(){hv.textContent=ph.value;});
+    evv.textContent=(+pe.value).toFixed(2);hv.textContent=ph.value;
+    document.getElementById('planRun').addEventListener('click',execute);
+    register(draw);
+  })();
+
+
+});
+</script>
+</body>
+</html>

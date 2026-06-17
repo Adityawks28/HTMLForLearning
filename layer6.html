@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VLA Systems — Layer 6 Interactive Textbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js" onload="window.__katexReady=true;if(window.__doRender)window.__doRender();"></script>
+<style>
+/* ============================================================
+   DESIGN SYSTEM — "Signal & Field"
+   A computational-textbook identity: cool paper, deep indigo
+   ink, an electric coral reserved EXCLUSIVELY for things you
+   can touch (the signature), teal as the secondary data hue.
+   ============================================================ */
+:root{
+  --paper:#F4F5F8;
+  --surface:#FFFFFF;
+  --ink:#14162A;
+  --ink-soft:#474B66;
+  --ink-faint:#878BA6;
+  --indigo:#4338CA;
+  --indigo-deep:#2A2090;
+  --indigo-wash:#EEEEF8;
+  --coral:#FF5C49;
+  --coral-deep:#E8412E;
+  --teal:#0E9C92;
+  --teal-wash:#E4F3F1;
+  --amber:#C98314;
+  --amber-wash:#FBF1DC;
+  --tint:#EDEEF7;
+  --line:#DBDDE8;
+  --line-soft:#E7E8F0;
+  --code-bg:#191B30;
+  --code-ink:#E8E9F2;
+  --shadow:0 1px 2px rgba(20,22,42,.04),0 8px 30px rgba(20,22,42,.06);
+  --shadow-lg:0 4px 12px rgba(20,22,42,.08),0 20px 50px rgba(20,22,42,.10);
+  --serif:"Newsreader",Georgia,serif;
+  --display:"Space Grotesk",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+  --reading:760px;
+  --wide:1000px;
+  --sidebar:280px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--serif);
+  font-size:19px;
+  line-height:1.72;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+::selection{background:var(--coral);color:#fff}
+
+/* ---------- reading progress ---------- */
+#progress{
+  position:fixed;top:0;left:0;height:3px;width:0%;
+  background:linear-gradient(90deg,var(--indigo),var(--coral));
+  z-index:120;transition:width .12s linear;
+}
+
+/* ---------- sidebar ---------- */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);
+  background:var(--surface);border-right:1px solid var(--line);
+  padding:30px 0 40px;overflow-y:auto;z-index:100;
+}
+.sidebar-brand{padding:0 26px 22px;border-bottom:1px solid var(--line-soft);margin-bottom:18px}
+.sidebar-brand .eyebrow{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--coral);font-weight:500;
+}
+.sidebar-brand h1{
+  font-family:var(--display);font-weight:700;font-size:22px;
+  line-height:1.12;margin-top:8px;letter-spacing:-.01em;color:var(--ink);
+}
+.sidebar-brand .sub{font-size:13px;color:var(--ink-faint);margin-top:7px;font-family:var(--display);font-weight:400}
+.toc{list-style:none;font-family:var(--display);font-size:14px}
+.toc>li{margin:1px 0}
+.toc .chap{
+  display:flex;gap:11px;align-items:baseline;padding:8px 26px;
+  color:var(--ink-soft);text-decoration:none;font-weight:500;
+  border-left:3px solid transparent;transition:all .15s;
+}
+.toc .chap .num{font-family:var(--mono);font-size:11px;color:var(--ink-faint);min-width:18px}
+.toc .chap:hover{background:var(--indigo-wash);color:var(--indigo)}
+.toc .chap.active{color:var(--indigo);border-left-color:var(--coral);background:var(--indigo-wash)}
+.toc .chap.active .num{color:var(--coral)}
+.toc .subs{list-style:none;padding:2px 0 6px}
+.toc .subs a{
+  display:block;padding:4px 26px 4px 55px;font-size:12.5px;
+  color:var(--ink-faint);text-decoration:none;border-left:3px solid transparent;
+}
+.toc .subs a:hover{color:var(--indigo)}
+.toc .subs a.active{color:var(--ink);border-left-color:var(--line)}
+
+/* ---------- mobile menu ---------- */
+.menu-btn{
+  display:none;position:fixed;top:14px;left:14px;z-index:130;
+  background:var(--ink);color:#fff;border:none;border-radius:9px;
+  width:44px;height:44px;font-size:20px;cursor:pointer;box-shadow:var(--shadow);
+}
+.scrim{display:none;position:fixed;inset:0;background:rgba(20,22,42,.4);z-index:99}
+
+/* ---------- main layout ---------- */
+.content{margin-left:var(--sidebar);padding:0 0 120px}
+.wrap{max-width:var(--reading);margin:0 auto;padding:0 28px}
+.wrap-wide{max-width:var(--wide);margin:0 auto;padding:0 28px}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;height:clamp(440px,72vh,640px);
+  display:flex;align-items:center;overflow:hidden;
+  background:linear-gradient(165deg,#15172E 0%,#221C6B 55%,#3A2D9E 100%);
+  margin-bottom:70px;
+}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;opacity:.9}
+.hero-inner{position:relative;z-index:2;max-width:var(--wide);margin:0 auto;padding:0 48px;width:100%}
+.hero .eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.28em;text-transform:uppercase;
+  color:#FF8C7E;font-weight:500;margin-bottom:20px;
+}
+.hero h1{
+  font-family:var(--display);font-weight:700;color:#fff;
+  font-size:clamp(40px,7vw,76px);line-height:.98;letter-spacing:-.03em;
+}
+.hero h1 em{font-style:normal;color:#B9B2FF}
+.hero .lead{
+  font-family:var(--serif);color:#C9CCE8;font-size:clamp(17px,2.2vw,21px);
+  max-width:620px;margin-top:26px;line-height:1.6;
+}
+.hero .scroll-cue{
+  margin-top:38px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:#9A9DD0;display:flex;align-items:center;gap:10px;
+}
+.hero .scroll-cue::before{content:"";width:34px;height:1px;background:#6E72B8}
+
+/* ---------- typography in body ---------- */
+.chapter{padding-top:34px;margin-top:34px}
+.chapter-head{margin-bottom:14px}
+.chapter-head .kicker{
+  font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:12px;
+}
+.chapter-head .kicker::after{content:"";flex:1;height:1px;background:var(--line)}
+.chapter-head h2{
+  font-family:var(--display);font-weight:700;font-size:clamp(30px,4.5vw,42px);
+  line-height:1.06;letter-spacing:-.02em;margin-top:14px;color:var(--ink);
+}
+h3{
+  font-family:var(--display);font-weight:600;font-size:25px;line-height:1.2;
+  margin:46px 0 4px;letter-spacing:-.01em;color:var(--ink);
+}
+h4{
+  font-family:var(--display);font-weight:500;font-size:18px;
+  margin:30px 0 2px;color:var(--indigo-deep);letter-spacing:-.005em;
+}
+.content p{margin:16px 0;color:var(--ink)}
+.content p.intro{font-size:21px;line-height:1.66;color:var(--ink-soft)}
+.content a{color:var(--indigo);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.content a:hover{text-decoration-color:var(--coral)}
+strong{font-weight:600;color:var(--ink)}
+em{font-style:italic}
+.term{font-weight:600;color:var(--indigo-deep);font-style:normal}
+code{font-family:var(--mono);font-size:.84em;background:var(--tint);padding:.12em .4em;border-radius:5px;color:var(--indigo-deep)}
+ul,ol{margin:16px 0 16px 4px;padding-left:26px}
+li{margin:8px 0;padding-left:4px}
+li::marker{color:var(--coral)}
+hr{border:none;border-top:1px solid var(--line);margin:54px 0}
+
+/* ---------- callout boxes ---------- */
+.box{border-radius:14px;padding:22px 26px;margin:28px 0;border:1px solid var(--line);background:var(--surface);box-shadow:var(--shadow)}
+.box .box-label{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.box .box-label::before{content:"";width:7px;height:7px;border-radius:50%}
+.box p:first-of-type,.box .box-label+p{margin-top:0}
+.box p:last-child{margin-bottom:0}
+
+.def{background:var(--indigo-wash);border-color:#D6D7F0}
+.def .box-label{color:var(--indigo)}
+.def .box-label::before{background:var(--indigo)}
+
+.intuition{background:var(--teal-wash);border-color:#C4E4E0}
+.intuition .box-label{color:var(--teal)}
+.intuition .box-label::before{background:var(--teal)}
+
+.note{background:var(--amber-wash);border-color:#EAD9AE}
+.note .box-label{color:var(--amber)}
+.note .box-label::before{background:var(--amber)}
+
+.derivation{background:var(--surface);border-color:var(--line);border-left:4px solid var(--ink)}
+.derivation .box-label{color:var(--ink)}
+.derivation .box-label::before{background:var(--ink)}
+.derivation .step{display:flex;gap:14px;margin:14px 0;align-items:flex-start}
+.derivation .step .s-num{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;background:var(--ink);
+  min-width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  margin-top:4px;flex-shrink:0;
+}
+.derivation .step .s-body{flex:1}
+.derivation .step .s-body p{margin:0 0 4px}
+
+/* ---------- math display ---------- */
+.katex-display{margin:20px 0!important;overflow-x:auto;overflow-y:hidden;padding:4px 0}
+.eqn{position:relative}
+.content .katex{font-size:1.04em}
+
+/* ---------- figures & demos ---------- */
+figure{margin:34px 0;text-align:center}
+figcaption{font-family:var(--display);font-size:13.5px;color:var(--ink-faint);margin-top:14px;line-height:1.5}
+figcaption b{color:var(--ink-soft);font-weight:600}
+.svg-fig{width:100%;height:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+
+.demo{
+  background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  margin:34px 0;box-shadow:var(--shadow-lg);overflow:hidden;
+}
+.demo-head{padding:18px 24px 16px;border-bottom:1px solid var(--line-soft);background:linear-gradient(180deg,#FFF,#FCFCFE)}
+.demo-head .tag{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--coral);font-weight:500;display:flex;align-items:center;gap:8px;
+}
+.demo-head .tag::before{content:"▶";font-size:8px}
+.demo-head h4{font-family:var(--display);font-weight:600;font-size:18px;color:var(--ink);margin:7px 0 0}
+.demo-body{padding:22px 24px}
+.demo canvas{display:block;max-width:100%;border-radius:10px;background:#FBFBFD;border:1px solid var(--line-soft)}
+.demo-controls{display:flex;flex-wrap:wrap;gap:18px 28px;margin-top:18px;align-items:flex-end}
+.ctrl{display:flex;flex-direction:column;gap:6px;min-width:150px;flex:1}
+.ctrl label{font-family:var(--display);font-size:12.5px;font-weight:500;color:var(--ink-soft);display:flex;justify-content:space-between;gap:10px}
+.ctrl label .val{font-family:var(--mono);color:var(--coral);font-weight:700}
+.demo .readout{font-family:var(--mono);font-size:13px;color:var(--ink-soft);background:var(--tint);padding:10px 14px;border-radius:8px;margin-top:14px;line-height:1.6}
+.demo .readout b{color:var(--indigo-deep)}
+
+/* coral = interactive (the signature) */
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;
+  background:var(--line);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;background:var(--coral);
+  border:3px solid #fff;box-shadow:0 1px 4px rgba(232,65,46,.5);cursor:pointer;border:none;
+}
+.btn{
+  font-family:var(--display);font-weight:500;font-size:13.5px;cursor:pointer;
+  background:var(--coral);color:#fff;border:none;padding:9px 18px;border-radius:9px;
+  transition:transform .1s,background .15s;
+}
+.btn:hover{background:var(--coral-deep)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--indigo);border:1px solid var(--line)}
+.btn.ghost:hover{background:var(--indigo-wash);color:var(--indigo)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{
+  font-family:var(--display);font-size:12.5px;font-weight:500;background:var(--surface);
+  border:none;padding:8px 14px;cursor:pointer;color:var(--ink-soft);border-right:1px solid var(--line);
+}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--indigo);color:#fff}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto;margin:30px 0}
+table{border-collapse:collapse;width:100%;font-size:15.5px;font-family:var(--display)}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-soft)}
+th{font-weight:600;color:var(--indigo-deep);border-bottom:2px solid var(--line);font-size:13px;letter-spacing:.02em}
+td{color:var(--ink-soft)}
+tr:hover td{background:var(--indigo-wash)}
+td code{font-size:.9em}
+
+/* ---------- pill / chips ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.chip{font-family:var(--mono);font-size:11px;background:var(--tint);color:var(--indigo-deep);padding:5px 11px;border-radius:20px;border:1px solid var(--line)}
+
+/* ---------- footer ---------- */
+.endcard{
+  background:linear-gradient(165deg,#15172E,#2A2090);color:#fff;border-radius:18px;
+  padding:44px;margin:60px 0 0;box-shadow:var(--shadow-lg);
+}
+.endcard .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#FF8C7E}
+.endcard h3{color:#fff;margin-top:10px}
+.endcard p{color:#C9CCE8}
+.endcard a{color:#B9B2FF}
+
+footer.page{padding:40px 0 0;color:var(--ink-faint);font-family:var(--display);font-size:13px;text-align:center}
+
+/* ---------- responsive ---------- */
+@media(max-width:1080px){
+  :root{--sidebar:0px}
+  .sidebar{transform:translateX(-100%);transition:transform .25s;width:300px;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
+  .menu-btn{display:block}
+  .scrim.show{display:block}
+  .content{margin-left:0}
+  .hero-inner{padding:0 26px}
+  .wrap,.wrap-wide{padding:0 22px}
+}
+@media(max-width:640px){
+  body{font-size:17.5px}
+  .content p.intro{font-size:18.5px}
+  .demo-controls{gap:14px}
+  .ctrl{min-width:120px}
+  .endcard{padding:28px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto}
+}
+
+/* --- code blocks --- */
+pre{font-family:var(--mono);font-size:13px;line-height:1.7;background:#14162A;color:#E7E8F2;
+  border-radius:12px;padding:18px 22px;overflow-x:auto;margin:24px 0;border:1px solid #2A2D4A;
+  box-shadow:var(--shadow)}
+pre .c{color:#8C90B8;font-style:italic}
+pre .k{color:#9BA2FF;font-weight:600}
+pre .s{color:#6FD3C7}
+pre .f{color:#FF8C7E}
+.cd-cap{font-family:var(--mono);font-size:12px;color:var(--ink-faint);margin:-14px 0 26px 4px}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<button class="menu-btn" id="menuBtn" aria-label="Open contents">☰</button>
+
+<aside id="sidebar">
+  <div class="brand">
+    <div class="brand-mark">L6</div>
+    <div class="brand-text"><strong>VLA Systems</strong><span>Robotics &amp; VLA · Layer 6 of 6</span></div>
+  </div>
+  <nav>
+  <ul class="toc">
+    <li><a class="chap" href="#ch1"><span class="num">01</span><span>The VLA, Assembled</span></a>
+      <ul class="subs">
+        <li><a href="#anatomy">Anatomy of a robot brain</a></li>
+        <li><a href="#io">Observation &amp; action spaces</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch2"><span class="num">02</span><span>Action Heads</span></a>
+      <ul class="subs">
+        <li><a href="#multimodal">The multimodality theorem</a></li>
+        <li><a href="#tokens">Actions as tokens</a></li>
+        <li><a href="#flow">Diffusion &amp; flow matching</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch3"><span class="num">03</span><span>The Training Recipe</span></a>
+      <ul class="subs">
+        <li><a href="#pyramid">The data pyramid</a></li>
+        <li><a href="#cotrain">Co-training &amp; forgetting</a></li>
+        <li><a href="#posttrain">Post-training</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch4"><span class="num">04</span><span>Inference &amp; Deployment</span></a>
+      <ul class="subs">
+        <li><a href="#budget">The latency budget</a></li>
+        <li><a href="#dual">Dual-system designs</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch5"><span class="num">05</span><span>Generalization &amp; Evaluation</span></a>
+      <ul class="subs">
+        <li><a href="#whatgen">What transfers, what doesn't</a></li>
+        <li><a href="#failures">Failure modes &amp; safety</a></li>
+        <li><a href="#eval">Evaluation, with statistics</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch6"><span class="num">06</span><span>The Systems</span></a>
+      <ul class="subs">
+        <li><a href="#lineage">Case studies &amp; lineage</a></li>
+        <li><a href="#open">Open problems</a></li>
+      </ul></li>
+    <li><a class="chap" href="#ch7"><span class="num">07</span><span>Build One</span></a>
+      <ul class="subs">
+        <li><a href="#blueprint">The end-to-end blueprint</a></li>
+        <li><a href="#capstone">Closed loop, live</a></li>
+        <li><a href="#map">The whole curriculum</a></li>
+      </ul></li>
+  </ul>
+  </nav>
+  <div class="side-foot">Layer 6 · VLA Systems<br>← <em>Layer 5 · Robotics</em> · the summit</div>
+</aside>
+<div id="scrim"></div>
+
+<div class="content">
+
+  <header class="hero">
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero-inner">
+      <div class="eyebrow">Robotics &amp; VLA Curriculum · Layer 6 · Finale</div>
+      <h1>VLA Systems: <em>the assembly</em></h1>
+      <p class="lead">Vision-language-action models as complete, deployed systems: action heads derived from first principles, the training recipe, the latency war, dual-system architectures, honest evaluation, the landmark systems — and a blueprint for building your own. Everything from Layers 1–5 converges here.</p>
+      <div class="scroll-cue">Scroll to begin · 7 chapters</div>
+    </div>
+  </header>
+
+  <section class="wrap" id="preface">
+    <p class="intro">Five layers ago, a vector was a list of numbers. Now: those vectors became matrices and gradients (L1), stacked into trainable networks and transformers (L2), pretrained into eyes and an inner voice (L3), taught to act from demonstration and consequence (L4), and given a body with reflexes and a nervous system (L5). A VLA is what happens when you refuse to keep those achievements separate. This layer is systems engineering at its most honest: every design choice below is a collision between two earlier layers, resolved under a deadline measured in milliseconds.</p>
+    <div class="box note">
+      <div class="box-label">How to read this</div>
+      <p>The conventions you know: blue <span class="term">definitions</span>, green <span style="color:var(--teal);font-weight:600">intuition</span>, black-edged <strong>derivations</strong>, dark <strong>code</strong>, coral <strong style="color:var(--coral)">interactive</strong>. This layer leans on every previous one by name — if a reference feels foggy, the earlier book is one tab away. The final chapter closes the loop with a live (choreographed) tabletop robot and a map of the entire curriculum.</p>
+    </div>
+  </section>
+
+  <!-- ===================== CHAPTER 1 ===================== -->
+  <section class="wrap chapter" id="ch1">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 01</div>
+      <h2>The VLA, Assembled</h2>
+    </div>
+    <p class="intro">Layer 2's finale made a promise in one sentence: <em>a VLA is a VLM with an action head.</em> True — and like "a car is an engine with wheels," it hides all the engineering. This chapter opens the hood and names every part precisely.</p>
+
+    <h3 id="anatomy">1.1 · Anatomy of a robot brain</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the vision-language-action model</div>
+      <p>A VLA is a single network mapping <em>(images, proprioception, instruction)</em> to <em>actions</em>:</p>
+      $$\pi_\theta:\;\big(\,o_t^{\text{cam}},\;\mathbf q_t,\;\ell\,\big)\;\longmapsto\;\mathbf a_{t:t+H}$$
+      <p>built as: a pretrained <strong>vision encoder</strong> (ViT/DINOv2/SigLIP — Layer 3 Ch 1–2) turning each camera frame into patch tokens; a pretrained <strong>language backbone</strong> (Layer 3 Ch 4–6) consuming those tokens plus the instruction; a small projection of <strong>proprioception</strong> ($\mathbf q_t$, the joint state — Layer 5 Ch 1) into the same token stream; and an <strong>action head</strong> emitting a chunk of $H$ future actions (Layer 4 Ch 7's chunking). Trained, at its core, by behavior cloning on teleoperated demonstrations (Layer 4 Ch 7) — maximum likelihood (Layer 1 Ch 5) with motors as the vocabulary.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — why the LLM is in the loop at all</div>
+      <p>Couldn't a plain policy network do this? For one rehearsed task, yes — ACT does. The LLM earns its gigaflops by importing the <em>web's</em> knowledge into the control loop: it has read what a sponge is for, that mugs hold liquid, that "the leftmost one" is a resolvable phrase. Layer 3 showed a tiny projector suffices to make image tokens legible to a language model; the VLA bet is that the same trick makes <em>action</em> legible — that manipulation is one more language the pretrained giant can learn to speak. The evidence (Ch 5–6) says: substantially yes for semantics, only partially for physics.</p>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The pipeline, inspectable — click any stage, watch a tick flow</h4></div>
+      <div class="demo-body">
+        <canvas id="pipeCanvas" width="640" height="340"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:1"><label>click a stage to inspect its tensor · the pulse is one inference tick</label></div>
+        </div>
+        <div class="readout" id="pipeReadout"></div>
+      </div>
+    </div>
+    <p>Follow one tick: 224×224×3 pixels become 196 patch tokens (Layer 3's tokenizer), join ~20 instruction tokens and a few proprioception tokens in the backbone, and exit as a 50×7 action chunk. Click each stage — the readout names its shape, its parameter count, and the chapter that built it. A VLA is not mysterious; it is <em>traceable</em>.</p>
+
+    <h3 id="io">1.2 · Observation &amp; action spaces — the quiet decisions</h3>
+    <p>Two design choices shape everything downstream. <strong>Observations:</strong> how many cameras (wrist cameras see contact, scene cameras see context — most systems use both), image resolution (quadratic token cost — Layer 3 Ch 1), history length (one frame is nearly memoryless; stacking frames buys the Markov property of Layer 4 Ch 1 at token cost). <strong>Actions:</strong> the space itself — end-effector pose deltas (workspace-native, embodiment-agnostic, needs Layer 5's IK underneath) vs. joint positions (direct, embodiment-specific) — plus gripper state; the control rate (10–50 Hz); and the chunk length $H$ (Layer 4 Ch 7's compounding-error dial: long chunks are smooth but briefly blind). Cross-embodiment training (Ch 3) pushes hard toward EE-space actions, because "move the hand 2 cm left" means the same thing on every robot, while "joint 3 plus 0.1 rad" does not.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 2 ===================== -->
+  <section class="wrap chapter" id="ch2">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 02</div>
+      <h2>Action Heads — the Central Design Choice</h2>
+    </div>
+    <p class="intro">How should a network <em>emit</em> an action? The obvious answer — regress the numbers with MSE — fails on real demonstration data for a reason you can prove in three lines. That theorem is the fork in the road from which every modern action head descends.</p>
+
+    <h3 id="multimodal">2.1 · The multimodality theorem — why regression crashes</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — MSE predicts the mean, and the mean is a collision</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>What does MSE training actually produce? For a fixed observation, the optimal prediction $a^{\ast}$ minimizes $\mathbb{E}\big[(A-a)^2\big]$ over the demonstrated actions $A$. Expand with Layer 1 Ch 4's variance shortcut:</p>$$\mathbb{E}\big[(A-a)^2\big]=\operatorname{Var}(A)+\big(\mathbb{E}[A]-a\big)^2$$<p>The first term is fixed; the second is minimized at $a^{\ast}=\mathbb{E}[A]$. <strong>MSE regression is condemned to output the conditional mean.</strong></p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Now the data. Human demonstrations are <span class="term">multimodal</span>: facing an obstacle, half your teleoperators veered left and half veered right — both correct. The action distribution has two peaks, and its mean lies <em>between them</em>: straight into the obstacle. The average of two good actions is routinely a terrible action — averaging "grasp the handle from above" and "from the side" yields a pose that grasps nothing.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The cure is structural, not more data: the head must represent a <em>distribution</em> over actions and <strong>sample</strong> from it — committing to one mode — rather than predict a point. Every serious action head is one answer to "how do we put a samplable, multimodal distribution on a 7-DOF action chunk?" Three answers follow.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Mode collapse, demonstrated — three heads, one obstacle</h4></div>
+      <div class="demo-body">
+        <canvas id="modeCanvas" width="640" height="360"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>action head</label><div class="seg" id="modeSeg"><button class="on" data-m="mse">MSE regression</button><button data-m="tok">tokens</button><button data-m="flow">flow / diffusion</button></div></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="modeRun">▸ Sample 20 rollouts</button></div>
+        </div>
+        <div class="readout" id="modeReadout"></div>
+      </div>
+    </div>
+    <p>The faint trails are the training demonstrations — half pass left, half right. Sample the MSE head and watch every rollout take the average path, straight through the pillar: the theorem, colliding. The token and flow heads <em>commit</em> — each sample picks a side. This single picture is why the field abandoned plain regression for anything contact-rich.</p>
+
+    <h3 id="tokens">2.2 · Answer one — actions as tokens (RT-2, OpenVLA)</h3>
+    <div class="box def">
+      <div class="box-label">Definition — action tokenization</div>
+      <p>Quantize each action dimension into $K$ bins (typically $K=256$) over its observed range; an action becomes a short string of discrete tokens — e.g. 7 dimensions → 7 tokens, often spliced into rarely-used slots of the LLM's existing vocabulary. Train with the LLM's own next-token cross-entropy (Layer 3 Ch 4 — <em>unchanged</em>); act by autoregressive decoding (Layer 3 Ch 6).</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — the bargain</div>
+      <p>The elegance: the LLM never learns a new skill — actions are just more words, the softmax over bins is a genuine multimodal distribution (two peaks, no averaging), and every piece of LLM infrastructure (loss, decoding, KV cache) works untouched. RT-2's signature emergent feats — "move the banana to the sum of two plus one" — come from this seamlessness: web reasoning flows into motor tokens with no seam to cross. The bills: quantization error (256 bins ≈ coarse millimeters), and autoregressive decoding of 7×H tokens per chunk — slow, which Chapter 4 will weigh exactly.</p>
+    </div>
+
+    <h3 id="flow">2.3 · Answer two — diffusion, and flow matching (π0, GR00T)</h3>
+    <p>Keep actions continuous, but model their full distribution: Layer 2 Ch 7's generative trick, pointed at action chunks. <span class="term">Diffusion Policy</span> trains a network to denoise action chunks (noise in, demonstrated chunk out, conditioned on observations) and samples by iterative denoising. Its modern streamlining — used by π0 — is <span class="term">flow matching</span>, simple enough to derive completely:</p>
+    <div class="box derivation">
+      <div class="box-label">Derivation — flow matching in four steps</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><strong>Draw a straight path between noise and data.</strong> Sample noise $\mathbf x_0\sim\mathcal N(0,I)$ and a real demonstrated chunk $\mathbf x_1$, and connect them by linear interpolation:</p>$$\mathbf x_t=(1-t)\,\mathbf x_0+t\,\mathbf x_1,\qquad t\in[0,1]$$</div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>The path's velocity is trivial.</strong> Differentiate (Layer 1 Ch 3 — it's linear in $t$):</p>$$\frac{d\mathbf x_t}{dt}=\mathbf x_1-\mathbf x_0$$<p>constant along the whole path: the straight-line direction from this noise to this data point.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Regress it.</strong> Train a network $v_\theta$ to predict that velocity from the interpolated point, the time, and the observation — plain MSE (legal here! the <em>velocity field average</em> is exactly what we want; the multimodality lives in which $\mathbf x_0$ you start from):</p>$$\mathcal L=\mathbb E_{t,\,\mathbf x_0,\,\mathbf x_1}\Big\|\,v_\theta(\mathbf x_t,\,t,\,o)-(\mathbf x_1-\mathbf x_0)\,\Big\|^2$$</div></div>
+      <div class="step"><div class="s-num">4</div><div class="s-body"><p><strong>Sample by following the arrows.</strong> At inference, draw fresh noise and integrate the ODE $\;d\mathbf x/dt=v_\theta(\mathbf x,t,o)\;$ from $t{=}0$ to $1$ — Layer 5 Ch 9's integrators, ~10 Euler steps because the learned paths are nearly straight (diffusion's curved paths need 5–10× more). Different noise → different mode: left-around or right-around, each committed and clean. One network, one MSE loss, full multimodality, fast continuous actions — it is easy to see why this head won the 2024–25 generation of VLAs.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>Flow matching, watched — noise becoming decisions</h4></div>
+      <div class="demo-body">
+        <canvas id="flowCanvas" width="640" height="340"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>time $t$ along the flow <span class="val" id="flowTv">0.00</span></label><input type="range" id="flowT" min="0" max="1" step="0.01" value="0"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="flowPlay">▸ Play 0→1</button> <button class="btn ghost" id="flowNew">New noise</button></div>
+        </div>
+        <div class="readout" id="flowReadout"></div>
+      </div>
+    </div>
+    <p>Gray cloud at $t{=}0$: pure Gaussian noise (a hundred candidate action chunks, undecided). Drag $t$ forward and each point rides its straight arrow; by $t{=}1$ the cloud has condensed onto the two demonstrated modes — every sample a committed decision, none an average. Training teaches the arrows; inference just follows them. <em>New noise</em> re-rolls fate: same field, different commitments.</p>
+    <div class="box note">
+      <div class="box-label">Where this came from</div>
+      <p>Answer three, for completeness: <strong>ACT</strong>'s CVAE head (a latent variable picks the mode, a transformer decodes the chunk) — historically the proof that chunking + multimodal heads crack fine manipulation. All three answers obey the theorem; they differ in speed, smoothness, and how naturally they cohabit with an LLM. Chapter 6 scores them system by system.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 3 ===================== -->
+  <section class="wrap chapter" id="ch3">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 03</div>
+      <h2>The Training Recipe</h2>
+    </div>
+    <p class="intro">A VLA's capability is mostly a property of its <em>diet</em>. The recipe that emerged across labs has three courses, served in order, each solving the previous one's deficiency — and its central tension (keep the web knowledge while learning the robot) has a precise, familiar mathematical shape.</p>
+
+    <h3 id="pyramid">3.1 · The data pyramid</h3>
+    <div class="box def">
+      <div class="box-label">Definition — the three-course diet</div>
+      <p><strong>Base — internet scale:</strong> the vision-language pretraining of Layer 3 (billions of image-text pairs, all of text). Teaches what things <em>are</em>. Zero robots involved. <strong>Middle — cross-embodiment robot data:</strong> pooled demonstrations from many labs and robot types — Open X-Embodiment aggregates 1M+ episodes across 20+ embodiments. Teaches what manipulation <em>is like</em>: approach, contact, grasp, the grammar of moving matter. <strong>Tip — target data:</strong> hundreds-to-thousands of teleoperated demos on <em>your</em> robot, <em>your</em> tasks (collected exactly as Layer 5 Ch 8 hinted: drive the robot, <code>ros2 bag record</code>). Teaches the specifics that pay the bills.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — a surgeon's education</div>
+      <p>The pyramid is a curriculum (fittingly): the base is school — language, anatomy, the world; the middle is residency — thousands of hours of generic procedure across many patients; the tip is the fellowship — <em>this</em> operation, <em>this</em> hospital's equipment. Skip the base and your surgeon can't read a chart (the robot can't parse "the leftmost mug"); skip the middle and every motion is learned from scratch; skip the tip and competence stays generic. Scaling-law thinking (Layer 3 Ch 5) applies with a twist the field keeps re-learning: in robot data, <em>diversity</em> of scenes/objects/embodiments buys generalization faster than raw hours of one cell — the $D$ that matters is measured in distinct situations.</p>
+    </div>
+
+    <h3 id="cotrain">3.2 · Co-training, and the forgetting problem</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — why fine-tuning alone erases the base of the pyramid</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>Naive recipe: take the pretrained VLM, fine-tune purely on robot data. Gradient descent (Layer 1 Ch 3) optimizes <em>only the loss it is shown</em>; nothing anchors the weights that encoded web knowledge, so they drift wherever robot-loss reduction points. The VLM's language and visual breadth — never represented in the new loss — decays: <span class="term">catastrophic forgetting</span>. Symptom: the robot grasps beautifully but no longer understands "the one next to the apple."</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>The standard fix is a mixed objective — <span class="term">co-training</span>:</p>$$\mathcal L=\lambda\,\mathcal L_{\text{robot}}+(1-\lambda)\,\mathcal L_{\text{web}}$$<p>keep serving vision-language batches alongside action batches, so the web knowledge keeps defending itself in the gradient. Recognize the shape: it is Layer 1 Ch 7's regularization (a second term restraining the first), and Layer 3/4's KL-leash instinct — <em>stay near the distribution that made you capable</em> — implemented as data rather than as a penalty. RT-2 named this co-fine-tuning; some form of it is in every serious recipe since.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The dial $\lambda$ trades the pyramid's levels against each other, and the trade is real: heavier robot mixing → better task success, weaker instruction-following and novel-object behavior; lighter → the reverse. Feel the (stylized) frontier below.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The mixture dial — three capabilities, one budget</h4></div>
+      <div class="demo-body">
+        <canvas id="mixCanvas" width="640" height="320"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>web VL data <span class="val" id="mixWv">35%</span></label><input type="range" id="mixW" min="0" max="100" step="1" value="35"></div>
+          <div class="ctrl"><label>cross-embodiment <span class="val" id="mixXv">35%</span></label><input type="range" id="mixX" min="0" max="100" step="1" value="35"></div>
+          <div class="ctrl"><label>target-task demos <span class="val" id="mixTv">30%</span></label><input type="range" id="mixT" min="0" max="100" step="1" value="30"></div>
+        </div>
+        <div class="readout" id="mixReadout"></div>
+      </div>
+    </div>
+    <p>Sliders renormalize to 100%. The bars are <em>stylized</em> — qualitative trends distilled from published ablations, not anyone's real numbers — but the shape is the honest lesson: zero out the web slice and instruction-following collapses; zero the target slice and your task never gets crisp; the strong recipes live in the interior, not at any corner.</p>
+
+    <h3 id="posttrain">3.3 · Post-training — past the teacher</h3>
+    <p>The pyramid produces a generalist imitator, capped (Layer 4 Ch 7) at its teachers' quality. The post-training stage borrows Layer 3 Ch 6's alignment playbook and Layer 4's machinery to push past: <strong>SFT on curated excellence</strong> (filter the demos — clone only the clean, fast episodes; quality-weighted behavior cloning); <strong>advantage-weighted imitation</strong> where a success signal exists (Layer 4 Ch 5's advantage, used to re-weight the clone loss: copy the good demos harder); <strong>RL fine-tuning in simulation</strong> for skills with crisp rewards (with Layer 5 Ch 9's randomization bridging back to metal); and, increasingly, <strong>preference-based tuning</strong> — human picks the better of two rollouts, Bradley-Terry → DPO (Layer 3 Ch 6, verbatim) on robot trajectories. The strict analogy to the LLM stack — pretrain, SFT, preferences — is not a coincidence; it is the same problem wearing a gripper.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 4 ===================== -->
+  <section class="wrap chapter" id="ch4">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 04</div>
+      <h2>Inference &amp; Deployment — the Latency War</h2>
+    </div>
+    <p class="intro">A chatbot may ponder for a second; a robot mid-motion may not. Reconciling billion-parameter brains with millisecond reflexes is this chapter — and it starts, as all good engineering does, with arithmetic.</p>
+
+    <h3 id="budget">4.1 · The latency budget, derived</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — can a 3B model control at 50 Hz? Do the math.</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>From the PyTorch supplement: a forward pass costs ≈ $2N$ FLOPs <em>per token</em> for an $N$-parameter model. A VLA tick processes roughly $T\approx300$ tokens (196 image patches + instruction + proprioception). One inference:</p>$$\text{FLOPs}\approx 2NT = 2\cdot(3\times10^{9})\cdot300\approx1.8\ \text{TFLOPs}$$<p>On robot-side hardware delivering ~30 effective TFLOP/s (an embedded GPU, real-world efficiency): $t_{\text{inf}}\approx60$ ms — call it <strong>10–15 Hz, best case</strong>, for the full model.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>50 Hz single-action control is therefore out</strong> — the deadline is 20 ms and we cost 60. But Layer 4 Ch 7's chunking changes the equation: emit $H$ actions per inference, execute them at $f_{\text{ctrl}}$, and the deadline relaxes to the chunk's duration:</p>$$t_{\text{inf}}\;\lt\;\frac{H}{f_{\text{ctrl}}}\qquad\text{e.g. }H=50,\ f_{\text{ctrl}}=50\text{ Hz}\;\Rightarrow\;\text{deadline}=1\,\text{s}\;\gg\;60\,\text{ms}$$<p>Chunking converts an impossible per-step problem into a comfortable per-second one — and is why π0 runs 50 Hz control from a 3B brain. (Token heads pay extra: autoregressively decoding 7×H action tokens multiplies the decode cost — one concrete reason the flow generation pulled ahead.)</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>The residual cost is <em>reactivity</em>: within a chunk the policy is open-loop (Layer 4 Ch 7's blindness). Real systems replan before chunks expire and blend overlapping chunks (temporal ensembling); and when even that's too slow for the task's dynamics, you split the brain — next section. Supporting cast from earlier books, all on duty here: bf16/int8 quantization, KV-cache reuse of the static prompt, torch.compile, distillation (Layer 2) into a smaller student.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The budget calculator — feasibility you can slide</h4></div>
+      <div class="demo-body">
+        <canvas id="latCanvas" width="640" height="320"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>model size $N$ <span class="val" id="latNv">3.0 B</span></label><input type="range" id="latN" min="0.3" max="8" step="0.1" value="3"></div>
+          <div class="ctrl"><label>chunk $H$ <span class="val" id="latHv">50</span></label><input type="range" id="latH" min="1" max="100" step="1" value="50"></div>
+          <div class="ctrl"><label>control rate <span class="val" id="latFv">50 Hz</span></label><input type="range" id="latF" min="10" max="200" step="5" value="50"></div>
+          <div class="ctrl"><label>hardware <span class="val" id="latGv">30 TFLOP/s</span></label><input type="range" id="latG" min="5" max="200" step="5" value="30"></div>
+        </div>
+        <div class="readout" id="latReadout"></div>
+      </div>
+    </div>
+    <p>Indigo bar: inference time. Teal marker: the chunk deadline $H/f_{\text{ctrl}}$. Slide $H$ to 1 and watch almost every configuration go red — per-step inference from a big model is simply not a thing. Then find the other failure: huge $H$ at high rates is green on latency but the readout warns about the seconds of open-loop blindness you just bought. Deployment is navigating between those two reds.</p>
+
+    <h3 id="dual">4.2 · Dual-system designs — a brain with two clocks</h3>
+    <div class="box def">
+      <div class="box-label">Definition — System 2 / System 1 architectures (Helix, GR00T N1)</div>
+      <p>Split the policy by timescale. <strong>System 2:</strong> the full VLM, running slow (~1–10 Hz), consuming images + instruction, emitting a compact <span class="term">latent goal</span> $\mathbf z$ — "what we're doing right now," as a vector. <strong>System 1:</strong> a small fast policy (tens of millions of params, 50–200 Hz) consuming fresh proprioception + $\mathbf z$, emitting actions. Trained jointly end-to-end, so $\mathbf z$ <em>learns to be</em> whatever interface the fast half needs. Figure's Helix pairs a 7B S2 with an S1 at 200 Hz; GR00T N1 pairs a VLM with a diffusion-transformer action module.</p>
+    </div>
+    <div class="box intuition">
+      <div class="box-label">Intuition — and why it's principled, not a hack</div>
+      <p>This is Layer 5 Ch 10's frequency hierarchy, learned end-to-end: slow layers think, fast layers act, each ~10× the rate of the one above. The deep justification is <em>timescale separation in the signal itself</em>: task semantics ("we are pouring into the red mug") changes over seconds and deserves the expensive brain; contact dynamics change over milliseconds and need only a reflex that knows the current intent. The latent $\mathbf z$ is the contract between them — and notice it's the same shape as Layer 3's projector trick: a small learned interface welding two pretrained competences. You are also, of course, looking at the standard cognitive-science cartoon of yourself: deliberate System 2, reflexive System 1. The robots converged on it for the same reason evolution did — physics bills by the millisecond, understanding bills by the second.</p>
+    </div>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 5 ===================== -->
+  <section class="wrap chapter" id="ch5">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 05</div>
+      <h2>Generalization &amp; Evaluation</h2>
+    </div>
+    <p class="intro">What does a VLA actually generalize to — and how would you honestly know? The first question has a crisp empirical answer; the second has a statistical one that most robot demos quietly flunk.</p>
+
+    <h3 id="whatgen">5.1 · What transfers, and what doesn't</h3>
+    <div class="box intuition">
+      <div class="box-label">Intuition — semantics ride the web; physics rides the demos</div>
+      <p>The consistent finding across systems: <strong>semantic</strong> generalization is the web pretraining's gift and it is real — novel objects ("pick up the toy dinosaur" never demonstrated), novel phrasings, relational instructions ("the one left of the bowl"), even light reasoning (RT-2 moving a can to "2+1"). The VLM half recognizes and resolves; the action half executes a <em>familiar motion</em> on the new referent. <strong>Motor</strong> generalization is the demos' jurisdiction and it is narrow: a genuinely new <em>skill</em> — a wrist twist never demonstrated, an unfamiliar contact regime, much heavier dynamics — does not materialize from language. The rule of thumb the field operates by: <em>new nouns come free; new verbs cost demonstrations.</em> This is exactly the pyramid of Ch 3 talking: each capability generalizes about as far as its course of the diet was diverse.</p>
+    </div>
+
+    <h3 id="failures">5.2 · Failure modes — and the cage that catches them</h3>
+    <p>Know the taxonomy and you can read any demo video critically. <strong>Perception failures</strong>: wrong object, missed object, lighting shift (Layers 2–3's domain gap). <strong>Grounding failures</strong>: hallucinated affordances — the VLM "knows" drawers open, so the policy tugs confidently on a painted-on handle; language priors overruling pixels. <strong>Compounding drift</strong>: Layer 4 Ch 7's quadratic, live — a slightly off grasp becomes an out-of-distribution state becomes flailing. <strong>Instruction ambiguity</strong>: "put it away" resolved differently than the operator meant. <strong>Seams</strong>: chunk boundaries (a hesitation every $H$ steps), S2/S1 disagreement during sudden change. None of these is hypothetical; all appear in every lab's blooper reel. The defense is Layer 5's stack working as a <em>cage</em>: joint/velocity/force limits in ros2_control that no network output can exceed, workspace fences, collision-checking the emitted chunk against the scene (Layer 5 Ch 7) before execution, watchdogs that freeze on perception dropout. A VLA is deployed <em>inside</em> classical robotics, never instead of it.</p>
+
+    <h3 id="eval">5.3 · Evaluation — with the statistics it deserves</h3>
+    <div class="box derivation">
+      <div class="box-label">Derivation — how many trials before you may claim a success rate?</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p>An evaluation is $n$ Bernoulli trials (Layer 1 Ch 5's coin!) with true success probability $p$; you report $\hat p=k/n$. Its standard deviation comes straight from the binomial:</p>$$\sigma_{\hat p}=\sqrt{\frac{p(1-p)}{n}}$$<p>and a 95% confidence interval is $\hat p\pm1.96\,\sigma_{\hat p}$ (Layer 1 Ch 4's Gaussian, via the CLT).</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p>Invert it: to pin $p$ within $\pm\varepsilon$ at 95% confidence you need</p>$$n\;=\;\frac{1.96^{2}\,p(1-p)}{\varepsilon^{2}}\qquad\Rightarrow\qquad p=0.8,\ \varepsilon=0.05:\;\;n\approx246\ \text{trials per task}$$<p>Worst case ($p=0.5$): $n\approx385$. Real numbers for real claims.</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p>Now the uncomfortable part: at the <strong>$n=10$</strong> typical of robot papers and launch videos, $\sigma_{\hat p}\approx0.13$ at $p=0.8$ — a genuinely-80% policy will routinely measure 60% or 100%. Two methods 10 points apart on 10 trials are statistically indistinguishable. Hence the field's evaluation crisis: real-robot trials cost minutes each (so $n$ stays small), simulators are cheap but carry their own gap (Layer 5 Ch 9), and there is no ImageNet moment yet. Read every robot result with this derivation in hand — and run the demo to feel just how loudly small-$n$ evals lie.</p></div></div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The evaluation lottery — 60 labs measure the same policy</h4></div>
+      <div class="demo-body">
+        <canvas id="evalCanvas" width="640" height="340"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl"><label>true success rate $p$ <span class="val" id="evPv">0.80</span></label><input type="range" id="evP" min="0.3" max="0.95" step="0.01" value="0.8"></div>
+          <div class="ctrl"><label>trials per eval $n$ <span class="val" id="evNv">10</span></label><input type="range" id="evN" min="5" max="400" step="5" value="10"></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="evRun">▸ Run 60 evals</button></div>
+        </div>
+        <div class="readout" id="evalReadout"></div>
+      </div>
+    </div>
+    <p>Sixty independent evaluations of the <em>same</em> policy; each dot is one lab's reported number; the teal band is the theoretical ±1.96σ. At $n{=}10$ the dots scatter across thirty points of "success rate" — pure measurement noise that headlines get written about. Slide $n$ to 250 and watch the field's claims tighten to the truth. Statistics is not pedantry here; it is the difference between knowledge and vibes.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 6 ===================== -->
+  <section class="wrap chapter" id="ch6">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 06</div>
+      <h2>The Systems</h2>
+    </div>
+    <p class="intro">Theory becomes history. Eight systems define the lineage, and with five layers of vocabulary you can now read each one as a sentence of design decisions rather than a press release.</p>
+
+    <h3 id="lineage">6.1 · Case studies — the lineage, decision by decision</h3>
+    <table>
+      <tr><th>System</th><th>Backbone</th><th>Action head</th><th>The decision that defined it</th></tr>
+      <tr><td><strong>RT-1</strong> (2022)</td><td>EfficientNet + transformer, ~35M</td><td>discrete tokens</td><td>Proof that one transformer + large multi-task teleop data (130k episodes) beats per-task policies — scale comes to manipulation.</td></tr>
+      <tr><td><strong>RT-2</strong> (2023)</td><td>VLM (PaLI/PaLM-E lineage, up to 55B)</td><td>action tokens in the LLM vocab</td><td>Actions <em>as language</em>: co-fine-tune a web-scale VLM, get emergent semantic generalization for free.</td></tr>
+      <tr><td><strong>ACT / ALOHA</strong> (2023)</td><td>small transformer (~80M)</td><td>CVAE + chunk (k≈100 @ 50 Hz)</td><td>Chunking + multimodal head = fine bimanual manipulation from ~50 demos on low-cost (~USD 20k) hardware. No LLM needed for one task.</td></tr>
+      <tr><td><strong>Diffusion Policy</strong> (2023)</td><td>CNN/transformer encoder</td><td>diffusion over action chunks</td><td>The multimodality theorem answered with generative modeling; long the accuracy king of single-task imitation.</td></tr>
+      <tr><td><strong>Octo</strong> (2024)</td><td>transformer, ~93M, open</td><td>diffusion</td><td>First open generalist trained on Open X-Embodiment — the community's shared baseline.</td></tr>
+      <tr><td><strong>OpenVLA</strong> (2024)</td><td>Llama-2-7B + DINOv2/SigLIP</td><td>256-bin tokens</td><td>The open RT-2: weights, code, recipe public — the field's reproducible reference VLA.</td></tr>
+      <tr><td><strong>π0 / π0.5</strong> (2024–25)</td><td>PaliGemma ~3B + ~300M action expert</td><td><strong>flow matching</strong>, 50-step chunks @ 50 Hz</td><td>Continuous, fast, multimodal — the flow-matching head (Ch 2.3) plus a serious data pyramid; π0.5 pushed open-world homes.</td></tr>
+      <tr><td><strong>GR00T N1</strong> · <strong>Helix</strong> (2025)</td><td>VLM S2 + small S1</td><td>diffusion / learned latent → 200 Hz S1</td><td>The dual-system bet (Ch 4.2) industrialized — humanoid-oriented, whole-upper-body control at reflex rates.</td></tr>
+    </table>
+    <p class="cd-cap">Read down the columns and the chapters of this book replay as history: heads (Ch 2), diets (Ch 3), clocks (Ch 4).</p>
+
+    <h3 id="open">6.2 · Open problems — the honest frontier</h3>
+    <p>What the lineage has <em>not</em> solved, stated plainly. <strong>Dexterity</strong>: multi-finger, in-hand, deformables — demonstration data is scarce exactly where physics is hardest. <strong>Long horizon</strong>: VLAs execute skills; chaining thirty of them through a kitchen still leans on scripting, behavior trees, or an LLM planner above (and errors compound across the chain — Layer 4's theorem at the task level). <strong>Memory</strong>: most policies are nearly Markov in the last frames; "where did I put the spoon" is unsolved. <strong>Sample efficiency</strong>: hundreds of teleop demos per skill is the going rate; the bet on world models (Layer 4 Ch 8) and video pretraining is precisely to crush this constant. <strong>Evaluation</strong> (Ch 5): no shared benchmark commands belief. <strong>Safety certification</strong>: a stochastic 3B-parameter policy cannot be exhaustively verified; the practical answer remains Layer 5's cage plus statistics, and regulators have noticed. Each of these is a thesis, a startup, or both.</p>
+    <hr>
+  </section>
+
+  <!-- ===================== CHAPTER 7 ===================== -->
+  <section class="wrap chapter" id="ch7">
+    <div class="chapter-head">
+      <div class="kicker">Chapter 07</div>
+      <h2>Build One</h2>
+    </div>
+    <p class="intro">Knowledge becomes a checklist. Here is the complete end-to-end blueprint for building a VLA-driven robot — every step a chapter you have already read — followed by a live closed loop, and a map of the whole journey.</p>
+
+    <h3 id="blueprint">7.1 · The end-to-end blueprint</h3>
+    <div class="box derivation">
+      <div class="box-label">Workflow — from empty bench to data flywheel</div>
+      <div class="step"><div class="s-num">1</div><div class="s-body"><p><strong>Hardware &amp; stack (Layer 5).</strong> Arm + gripper + wrist and scene cameras; URDF written; ros2_control running joint controllers at 100–1000 Hz; TF tree publishing; the cage configured — joint/velocity/force limits, workspace fence, e-stop. Verify with classical control first: if a PID can't move it safely, a network certainly shouldn't.</p></div></div>
+      <div class="step"><div class="s-num">2</div><div class="s-body"><p><strong>Collect demonstrations (Layers 4–5).</strong> Teleoperate (leader arm, spacemouse, or VR) through the gravity-compensated robot; record everything — <code>ros2 bag record</code> on cameras, joint states, actions — at the control rate. Hundreds of episodes, <em>varied deliberately</em>: object poses, lighting, distractors, both elbow branches. Convert bags to a training dataset (LeRobot's format is the open standard).</p></div></div>
+      <div class="step"><div class="s-num">3</div><div class="s-body"><p><strong>Train (PyTorch supplement, Layers 2–4).</strong> Fine-tune a pretrained VLA (π0-class or OpenVLA-class via LeRobot) on your demos — or co-train with web data if you must preserve open-vocabulary behavior (Ch 3). bf16, torch.compile, cosine schedule, checkpoints; overfit one batch first to prove the plumbing.</p></div></div>
+      <div class="step"><div class="s-num">4</div><div class="s-body"><p><strong>Deploy as a node (Layer 5 Ch 8, Ch 4 here).</strong> The policy is one more ROS 2 node: subscribe images + joint states, infer a chunk, publish setpoints into ros2_control; chunk deadline checked against the latency budget (Ch 4.1); collision-check chunks before execution. Skeleton below.</p></div></div>
+      <div class="step"><div class="s-num">5</div><div class="s-body"><p><strong>Evaluate honestly (Ch 5).</strong> Define success crisply; randomize initial conditions; run enough trials for the claim you want to make ($n\approx250$ for ±5%); log failures by taxonomy.</p></div></div>
+      <div class="step"><div class="s-num">6</div><div class="s-body"><p><strong>Iterate — the flywheel.</strong> Deployment failures become tomorrow's training data: collect corrections on the failure modes (DAgger's insight, Layer 4 Ch 7), retrain, re-evaluate. Every serious robotics effort is this loop with better logistics.</p></div></div>
+    </div>
+
+<pre><span class="c"># vla_node.py — the policy as one more ROS 2 node (skeleton)</span>
+<span class="k">class</span> <span class="f">VLAPolicy</span>(Node):
+    <span class="k">def</span> <span class="f">__init__</span>(self):
+        super().__init__(<span class="s">'vla_policy'</span>)
+        self.policy = load_pretrained(<span class="s">'pi0_finetuned.ckpt'</span>).to(<span class="s">'cuda'</span>).eval()
+        self.create_subscription(Image, <span class="s">'/wrist_cam/image'</span>, self.on_img, qos_sensor)
+        self.create_subscription(JointState, <span class="s">'/joint_states'</span>, self.on_q, 10)
+        self.pub = self.create_publisher(JointTrajectory, <span class="s">'/arm_controller/command'</span>, 10)
+        self.create_timer(1.0, self.replan)          <span class="c"># chunk cadence: H/f_ctrl (Ch 4)</span>
+
+    <span class="k">def</span> <span class="f">replan</span>(self):
+        obs = pack(self.last_img, self.last_q, self.instruction)
+        <span class="k">with</span> torch.no_grad(), torch.autocast(<span class="s">'cuda'</span>, dtype=torch.bfloat16):
+            chunk = self.policy(obs)                 <span class="c"># (H, 7) — flow head, ~10 Euler steps</span>
+        <span class="k">if</span> collision_free(chunk):                    <span class="c"># the cage checks the network (Ch 5)</span>
+            self.pub.publish(to_trajectory(chunk))   <span class="c"># ros2_control tracks it at 1 kHz</span></pre>
+    <p class="cd-cap">Every line is a chapter: QoS (L5 §8.5), no_grad + autocast (supplement), the chunk deadline (Ch 4.1), the cage (Ch 5.2).</p>
+
+    <h3 id="capstone">7.2 · Closed loop, live</h3>
+    <div class="demo">
+      <div class="demo-head"><div class="tag">Interactive</div><h4>The capstone — instruct, watch it perceive, plan, and act</h4></div>
+      <div class="demo-body">
+        <canvas id="vlaCanvas" width="640" height="380"></canvas>
+        <div class="demo-controls">
+          <div class="ctrl" style="flex:0"><label>instruction $\ell$</label><div class="seg" id="vlaSeg"><button class="on" data-i="stack">"stack red on blue"</button><button data-i="push">"push the ball left"</button><button data-i="corner">"put blue in the corner"</button></div></div>
+          <div class="ctrl" style="flex:0;justify-content:flex-end"><button class="btn" id="vlaRun">▸ Execute</button></div>
+        </div>
+        <div class="readout" id="vlaReadout"></div>
+      </div>
+    </div>
+    <p>Watch the loop you've spent six layers earning: <strong>perceive</strong> — the attention glow finds the instruction's referent (Layer 3's grounding); <strong>plan</strong> — a dotted action chunk appears (Ch 2's head, Ch 4's budget); <strong>act</strong> — the fast system tracks it smoothly while the tick counters show two clocks running (S2 ~1 Hz, S1 ~50 Hz — Ch 4.2, Layer 5's hierarchy). Full honesty: this demo is choreographed, not learned — a few hundred lines of canvas, not 3 billion parameters. But every <em>interface</em> in it is real, and the interfaces are the lesson: instruction → attention → chunk → tracking is the actual shape of every system in Chapter 6's table.</p>
+
+    <h3 id="map">7.3 · The whole curriculum, one picture</h3>
+    <svg class="svg-fig" viewBox="0 0 760 330" role="img" aria-label="curriculum map">
+      <defs><marker id="arr6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#474B66"/></marker></defs>
+      <rect x="20" y="18" width="218" height="54" rx="10" fill="#FFF" stroke="#DBDDE8"/>
+      <text x="129" y="40" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#14162A">L1 · Foundations</text>
+      <text x="129" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">vectors · gradients · Bayes · MLE</text>
+      <rect x="20" y="86" width="218" height="54" rx="10" fill="#FFF" stroke="#DBDDE8"/>
+      <text x="129" y="108" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#14162A">L2 · Deep Learning</text>
+      <text x="129" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">backprop · transformers · generative</text>
+      <rect x="20" y="154" width="218" height="54" rx="10" fill="#FFF" stroke="#DBDDE8"/>
+      <text x="129" y="176" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#14162A">L3 · Vision &amp; Language</text>
+      <text x="129" y="194" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">ViT · LLM · VLM · alignment</text>
+      <rect x="20" y="222" width="218" height="54" rx="10" fill="#FFF" stroke="#DBDDE8"/>
+      <text x="129" y="244" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#14162A">L4 · Decision Making</text>
+      <text x="129" y="262" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">RL · imitation · world models</text>
+      <rect x="290" y="86" width="218" height="54" rx="10" fill="#FFF" stroke="#DBDDE8"/>
+      <text x="399" y="108" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#14162A">L5 · Robotics</text>
+      <text x="399" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">kinematics · control · planning · ROS 2</text>
+      <rect x="290" y="190" width="218" height="54" rx="10" fill="#EEEEF8" stroke="#4338CA"/>
+      <text x="399" y="212" text-anchor="middle" font-family="Space Grotesk" font-size="13" font-weight="600" fill="#2A2090">Supplement · PyTorch</text>
+      <text x="399" y="230" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#474B66">tensors · autograd · GPUs · compile</text>
+      <rect x="556" y="118" width="184" height="92" rx="12" fill="#14162A"/>
+      <text x="648" y="152" text-anchor="middle" font-family="Space Grotesk" font-size="16" font-weight="700" fill="#fff">L6 · VLA</text>
+      <text x="648" y="172" text-anchor="middle" font-family="Space Grotesk" font-size="12" fill="#C9CCE8">the assembly</text>
+      <text x="648" y="192" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#9A9DD0">see · understand · act</text>
+      <line x1="238" y1="45" x2="556" y2="140" stroke="#474B66" stroke-width="1.4" marker-end="url(#arr6)"/>
+      <line x1="238" y1="113" x2="288" y2="113" stroke="#474B66" stroke-width="1.4" marker-end="url(#arr6)"/>
+      <line x1="238" y1="181" x2="556" y2="165" stroke="#474B66" stroke-width="1.4" marker-end="url(#arr6)"/>
+      <line x1="238" y1="249" x2="556" y2="185" stroke="#474B66" stroke-width="1.4" marker-end="url(#arr6)"/>
+      <line x1="508" y1="113" x2="556" y2="140" stroke="#474B66" stroke-width="1.4" marker-end="url(#arr6)"/>
+      <line x1="508" y1="217" x2="556" y2="190" stroke="#474B66" stroke-width="1.4" marker-end="url(#arr6)"/>
+      <text x="380" y="312" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#878BA6">every arrow is a dependency you have personally derived</text>
+    </svg>
+
+    <div class="box intuition">
+      <div class="box-label">The whole curriculum, in one paragraph</div>
+      <p>A robot sees: pixels become patch tokens through a vision transformer (<strong>L3</strong>) whose attention (<strong>L2</strong>) is matrix multiplication and softmax (<strong>L1</strong>). It understands: an instruction meets those tokens inside a language model trained by maximum likelihood (<strong>L1</strong>) on the web (<strong>L3</strong>), aligned by preferences (<strong>L3/L4</strong>). It decides: an action head — built to defeat the multimodality theorem (<strong>L6</strong>) — emits a chunk (<strong>L4</strong>) by following a learned flow (<strong>L2/L6</strong>). It acts: the chunk passes a collision check (<strong>L5</strong>), becomes setpoints for a 1 kHz PID (<strong>L5</strong>) computed through Jacobians (<strong>L5</strong>) on hardware described in a URDF, wired by ROS 2 topics (<strong>L5</strong>), trained in PyTorch (<strong>supplement</strong>), rehearsed in simulators whose integrators you can stability-analyze (<strong>L5</strong>), improved by a data flywheel (<strong>L4/L6</strong>), and evaluated with confidence intervals (<strong>L1/L6</strong>). Nothing in that sentence is a black box to you anymore.</p>
+    </div>
+
+    <div class="endcard">
+      <div class="eyebrow">You've finished the curriculum</div>
+      <h3>See. Understand. Act.</h3>
+      <p>Six layers and a supplement ago, this began with the dot product. It ends with you able to read any VLA paper as a sequence of decisions you can name, derive, and criticize — and able to build the unglamorous 90% (the stack, the data, the evaluation) that papers skip. The field is young; its open problems (Ch 6.2) are real; and the distance from "student" to "contributor" is shorter here than almost anywhere in AI. Go build something that touches the world.</p>
+      <p style="margin-top:18px;font-family:var(--mono);font-size:13px;color:#9A9DD0">tokens → meaning · demos → policies · chunks → motion · cage → trust · flywheel → progress.</p>
+    </div>
+
+    <footer class="page">An interactive textbook for the Robotics &amp; VLA curriculum · Layer 6 of 6 · The end — and the beginning.</footer>
+  </section>
+
+</div><!-- /content -->
+
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  /* ---------- KaTeX (robust, polling) ---------- */
+  window.__doRender=function(el){
+    if(!window.renderMathInElement) return;
+    renderMathInElement(el||document.body,{
+      delimiters:[
+        {left:'$$',right:'$$',display:true},
+        {left:'\\[',right:'\\]',display:true},
+        {left:'$',right:'$',display:false},
+        {left:'\\(',right:'\\)',display:false}
+      ],
+      throwOnError:false,
+      macros:{"\\R":"\\mathbb{R}","\\E":"\\mathbb{E}"}
+    });
+  };
+  (function(){
+    if(window.renderMathInElement){ window.__doRender(); return; }
+    var tries=0, iv=setInterval(function(){
+      if(window.renderMathInElement){ clearInterval(iv); window.__doRender(); }
+      else if(++tries>200){ clearInterval(iv); }
+    },50);
+  })();
+
+  var C={ink:'#14162A',inkSoft:'#474B66',faint:'#878BA6',indigo:'#4338CA',indigoDeep:'#2A2090',
+         coral:'#FF5C49',coralDeep:'#E8412E',teal:'#0E9C92',line:'#DBDDE8',wash:'#EEEEF8',amber:'#C98314'};
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var DISP='600 13px "Space Grotesk",sans-serif', MONO='12px "JetBrains Mono",monospace';
+
+  var redraws=[];
+  function fit(cv,aspect){
+    var dpr=window.devicePixelRatio||1;
+    cv.style.width='100%';
+    var w=cv.clientWidth||cv.parentElement.clientWidth;
+    var h=Math.round(w/aspect);
+    cv.style.height=h+'px';
+    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+    var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+    return {w:w,h:h,ctx:ctx};
+  }
+  function register(fn){ redraws.push(fn); fn(); }
+  window.addEventListener('resize',function(){clearTimeout(window._rt);window._rt=setTimeout(function(){redraws.forEach(function(f){f();});},160);});
+  function gauss(){var u1=Math.random()||1e-9,u2=Math.random();return Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);}
+
+  /* ---------- NAV ---------- */
+  var prog=document.getElementById('progress');
+  var chapLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .chap'));
+  var chapSecs=chapLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  var subLinks=Array.prototype.slice.call(document.querySelectorAll('.toc .subs a'));
+  var subTargets=subLinks.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  function onScroll(){
+    var st=window.scrollY||document.documentElement.scrollTop;
+    var docH=document.documentElement.scrollHeight-window.innerHeight;
+    prog.style.width=(docH>0?(st/docH*100):0)+'%';
+    var active=-1;
+    for(var i=0;i<chapSecs.length;i++){ if(chapSecs[i]&&chapSecs[i].offsetTop-140<=st) active=i; }
+    chapLinks.forEach(function(a,i){a.classList.toggle('active',i===active);});
+    var sa=-1;
+    for(var j=0;j<subTargets.length;j++){ if(subTargets[j]&&subTargets[j].offsetTop-160<=st) sa=j; }
+    subLinks.forEach(function(a,i){a.classList.toggle('active',i===sa);});
+  }
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
+  var sidebar=document.getElementById('sidebar'),scrim=document.getElementById('scrim'),menuBtn=document.getElementById('menuBtn');
+  function closeMenu(){sidebar.classList.remove('open');scrim.classList.remove('show');}
+  menuBtn.addEventListener('click',function(){sidebar.classList.toggle('open');scrim.classList.toggle('show');});
+  scrim.addEventListener('click',closeMenu);
+  document.querySelectorAll('.toc a').forEach(function(a){a.addEventListener('click',closeMenu);});
+
+  /* ---------- HERO: six streams converging into one ---------- */
+  (function(){
+    var cv=document.getElementById('heroCanvas'); if(!cv) return;
+    var ctx,W,H,parts=[];
+    function build(){
+      var hdr=cv.parentElement,dpr=window.devicePixelRatio||1;
+      W=hdr.clientWidth;H=hdr.clientHeight;
+      cv.width=W*dpr;cv.height=H*dpr;ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+      parts=[];
+      ctx.fillStyle='#141234';ctx.fillRect(0,0,W,H);
+    }
+    function spawn(){
+      var s=Math.floor(Math.random()*6);
+      var sx=W*0.06, sy=H*(0.12+0.15*s)+(Math.random()-0.5)*H*0.06;
+      parts.push({x:sx,y:sy,phase:0,sp:0.004+Math.random()*0.004,src:s});
+    }
+    function draw(){
+      ctx.fillStyle='rgba(20,18,52,0.14)';ctx.fillRect(0,0,W,H);
+      if(parts.length<140&&Math.random()<0.7)spawn();
+      var cxp=W*0.56,cyp=H*0.5;
+      // core
+      var g=ctx.createRadialGradient(cxp,cyp,2,cxp,cyp,46);
+      g.addColorStop(0,'rgba(170,178,255,0.30)');g.addColorStop(1,'rgba(170,178,255,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(cxp,cyp,46,0,7);ctx.fill();
+      parts.forEach(function(p){
+        p.phase+=p.sp;
+        if(p.phase<1){ // converge: bezier from source toward core
+          var t=p.phase;
+          var mx=(p.x+cxp)/2+(p.src-2.5)*18;
+          var x=(1-t)*(1-t)*p.x+2*(1-t)*t*mx+t*t*cxp;
+          var y=(1-t)*(1-t)*p.y+2*(1-t)*t*((p.y+cyp)/2)+t*t*cyp;
+          p.cx=x;p.cy=y;
+          ctx.fillStyle='rgba(150,160,255,'+(0.25+0.5*t)+')';
+          ctx.beginPath();ctx.arc(x,y,1.8,0,7);ctx.fill();
+        }else if(p.phase<1.6){ // exit right as action stream
+          var t2=(p.phase-1)/0.6;
+          var x2=cxp+ t2*(W*0.40);
+          var y2=cyp+Math.sin(t2*9+p.src)*6*(1-t2);
+          ctx.fillStyle='rgba(255,120,104,'+(0.85*(1-t2)+0.15)+')';
+          ctx.beginPath();ctx.arc(x2,y2,2.2,0,7);ctx.fill();
+        }else{p.dead=true;}
+      });
+      parts=parts.filter(function(p){return !p.dead;});
+      ctx.font='500 10px "JetBrains Mono"';
+      ctx.fillStyle='rgba(150,160,255,0.55)';
+      ['L1','L2','L3','L4','L5','PT'].forEach(function(l,i){
+        ctx.fillText(l,W*0.02,H*(0.12+0.15*i)+3);
+      });
+      ctx.fillStyle='rgba(255,120,104,0.6)';
+      ctx.fillText('actions',W*0.9,cyp-10);
+    }
+    build();
+    if(REDUCE){for(var k=0;k<400;k++)draw();}
+    else{(function loop(){draw();requestAnimationFrame(loop);})();}
+    window.addEventListener('resize',function(){clearTimeout(window._hr);window._hr=setTimeout(build,160);});
+  })();
+
+  /* ================= 1. PIPELINE ================= */
+  (function(){
+    var cv=document.getElementById('pipeCanvas'); if(!cv) return;
+    var rd=document.getElementById('pipeReadout');
+    var W,H,ctx,S,sel=2,t=0,anim=null;
+    var ST=[
+      {label:'cameras',sub:'224×224×3 ×2',d:'<b>Cameras (wrist + scene).</b> Raw pixels: two 224×224×3 frames per tick. No parameters; the only part of the system that touches photons. Wrist sees contact; scene sees context.'},
+      {label:'vision encoder',sub:'→ 196 tokens ×2',d:'<b>Vision encoder (ViT/SigLIP, ~400M params).</b> Each frame → 196 patch tokens of d≈1024 (Layer 3 Ch 1). Pretrained on web images; usually kept frozen or lightly tuned.'},
+      {label:'LLM backbone',sub:'~3B params',d:'<b>Language backbone (~3B).</b> Consumes ~400 image tokens + ~20 instruction tokens + proprioception tokens; attention mixes them all (Layer 2 Ch 5, Layer 3 Ch 7). This is where "the leftmost mug" gets resolved against pixels.'},
+      {label:'action head',sub:'flow, ~300M',d:'<b>Action head (~300M, flow-matching expert).</b> Conditions on the backbone\u2019s features; integrates a learned velocity field ~10 steps (Ch 2.3) to produce one committed, multimodality-respecting sample.'},
+      {label:'action chunk',sub:'50×7 @ 50 Hz',d:'<b>Output: a 50×7 chunk</b> — 1 second of end-effector deltas + gripper at 50 Hz (Layer 4 Ch 7). Handed to ros2_control\u2019s 1 kHz loops (Layer 5); collision-checked first (Ch 5).'}
+    ];
+    function boxes(){
+      var bw=(W-40)/5-12;
+      return ST.map(function(s,i){return {x:20+i*(bw+15),y:H*0.34,w:bw,h:64,i:i};});
+    }
+    function draw(){
+      S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      t+=0.008;
+      var bs=boxes();
+      // arrows + pulse
+      for(var i=0;i<bs.length-1;i++){
+        var a=bs[i],b=bs[i+1];
+        ctx.strokeStyle='rgba(67,56,202,0.45)';ctx.lineWidth=1.6;
+        ctx.beginPath();ctx.moveTo(a.x+a.w,a.y+32);ctx.lineTo(b.x,b.y+32);ctx.stroke();
+      }
+      var p=(t%1)*4; // pulse position across 4 gaps
+      var gi=Math.min(3,Math.floor(p)),gt=p-gi;
+      var ga=bs[gi],gb=bs[gi+1];
+      var px=ga.x+ga.w+(gb.x-ga.x-ga.w)*gt;
+      ctx.fillStyle=C.coral;ctx.beginPath();ctx.arc(px,ga.y+32,4,0,7);ctx.fill();
+      bs.forEach(function(b2,i){
+        var on=i===sel;
+        ctx.fillStyle= on? '#14162A' : (i===2?'#EEEEF8':'#FFFFFF');
+        ctx.strokeStyle= on? C.ink : C.line;ctx.lineWidth=on?2:1.2;
+        ctx.fillRect(b2.x,b2.y,b2.w,b2.h);ctx.strokeRect(b2.x,b2.y,b2.w,b2.h);
+        ctx.textAlign='center';
+        ctx.font='600 12px "Space Grotesk"';
+        ctx.fillStyle= on? '#fff' : C.ink;
+        ctx.fillText(ST[i].label,b2.x+b2.w/2,b2.y+26);
+        ctx.font='10px "JetBrains Mono"';
+        ctx.fillStyle= on? '#C9CCE8' : C.faint;
+        ctx.fillText(ST[i].sub,b2.x+b2.w/2,b2.y+46);
+        ctx.textAlign='left';
+      });
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('instruction ℓ: "stack the red block on the blue one"  +  q (joint state)',20,H*0.16);
+      ctx.fillText('one tick ≈ 60 ms on embedded hardware → replan ~1 Hz, execute 50 Hz (Ch 4)',20,H*0.82);
+      if(!REDUCE)anim=requestAnimationFrame(draw);
+    }
+    cv.addEventListener('click',function(e){
+      var r=cv.getBoundingClientRect();
+      var x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+      boxes().forEach(function(b2){
+        if(x>=b2.x&&x<=b2.x+b2.w&&y>=b2.y&&y<=b2.y+b2.h){sel=b2.i;rd.innerHTML=ST[sel].d;}
+      });
+    });
+    register(function(){S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;});
+    if(REDUCE){S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;draw();}else draw();
+    rd.innerHTML=ST[sel].d;
+  })();
+
+  /* ================= 2. MODE COLLAPSE ================= */
+  (function(){
+    var cv=document.getElementById('modeCanvas'); if(!cv) return;
+    var rd=document.getElementById('modeReadout');
+    var W,H,ctx,S,mode='mse',rollouts=[],anim=null;
+    function trajPath(side,jit){ // side -1 left, +1 right, 0 straight
+      var pts=[];
+      for(var i=0;i<=40;i++){
+        var t=i/40;
+        var x=0.5+side*0.26*Math.sin(Math.PI*t)+jit*Math.sin(Math.PI*t);
+        var y=0.92-0.8*t;
+        pts.push([x,y]);
+      }
+      return pts;
+    }
+    function draw(){
+      S=fit(cv,640/360);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      // demos faint
+      for(var i=0;i<14;i++){
+        var side=i%2===0?-1:1;
+        var p=trajPath(side,(Math.sin(i*7)*0.5)*0.04);
+        ctx.strokeStyle='rgba(135,139,166,0.25)';ctx.lineWidth=1.2;
+        ctx.beginPath();p.forEach(function(q,j){if(j===0)ctx.moveTo(q[0]*W,q[1]*H);else ctx.lineTo(q[0]*W,q[1]*H);});ctx.stroke();
+      }
+      // obstacle
+      ctx.fillStyle='rgba(71,75,102,0.9)';
+      ctx.beginPath();ctx.arc(0.5*W,0.52*H,0.085*Math.min(W,H)*1.6,0,7);ctx.fill();
+      ctx.fillStyle='#fff';ctx.font='600 11px "Space Grotesk"';ctx.textAlign='center';
+      ctx.fillText('pillar',0.5*W,0.52*H+4);ctx.textAlign='left';
+      // start & goal
+      ctx.fillStyle=C.teal;ctx.beginPath();ctx.arc(0.5*W,0.92*H,7,0,7);ctx.fill();
+      ctx.fillStyle=C.indigoDeep;ctx.beginPath();ctx.arc(0.5*W,0.12*H,8,0,7);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('faint: training demonstrations (half left, half right)',14,20);
+      // rollouts
+      var collisions=0;
+      rollouts.forEach(function(r){
+        ctx.strokeStyle= r.hit? 'rgba(232,65,46,0.85)':'rgba(67,56,202,0.55)';
+        ctx.lineWidth= r.hit?2.2:1.6;
+        ctx.beginPath();r.p.forEach(function(q,j){if(j===0)ctx.moveTo(q[0]*W,q[1]*H);else ctx.lineTo(q[0]*W,q[1]*H);});ctx.stroke();
+        if(r.hit){collisions++;
+          ctx.fillStyle=C.coralDeep;ctx.font='700 16px "Space Grotesk"';
+          ctx.fillText('✕',0.5*W-6,0.52*H-26);}
+      });
+      if(rollouts.length){
+        rd.innerHTML='<b>'+rollouts.length+' samples · '+collisions+' collision'+(collisions===1?'':'s')+'.</b> '+
+          (mode==='mse'?'Every rollout is the conditional mean — the average of left and right — and the average is the pillar. The theorem, executed: 100% collision from 0% bad demonstrations.':
+           mode==='tok'?'Each sample drew from a bimodal softmax over bins — commits left or right (note the slight staircase wobble: 256-bin quantization).':
+           'Each sample integrated the flow from different noise — smooth, continuous, committed. Zero averaging, zero quantization.');
+      }
+    }
+    function sample(){
+      var hit=false,p;
+      if(mode==='mse'){p=trajPath(0,gauss()*0.008);hit=true;}
+      else if(mode==='tok'){
+        var s=Math.random()<0.5?-1:1;
+        p=trajPath(s,gauss()*0.02);
+        // quantization staircase
+        p=p.map(function(q){return [Math.round(q[0]*86)/86,q[1]];});
+      }else{
+        var s2=Math.random()<0.5?-1:1;
+        p=trajPath(s2,gauss()*0.025);
+      }
+      return {p:p,hit:hit};
+    }
+    function run(){
+      if(anim)cancelAnimationFrame(anim);
+      rollouts=[];var n=0;
+      function frame(){
+        rollouts.push(sample());n++;draw();
+        if(n<20)anim=requestAnimationFrame(frame);
+      } frame();
+    }
+    document.querySelectorAll('#modeSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#modeSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      mode=btn.dataset.m;rollouts=[];draw();
+      rd.innerHTML= mode==='mse'?'MSE head selected: it can only output the mean of the demos. Sample to see where the mean goes.':
+        mode==='tok'?'Token head: a softmax over 256 bins per dimension — a real two-peaked distribution.':
+        'Flow head: noise in, committed continuous action out (Ch 2.3). Sample it.';
+    });});
+    document.getElementById('modeRun').addEventListener('click',run);
+    register(draw);
+    rd.innerHTML='The demos split around the pillar. Sample each head and count collisions.';
+  })();
+
+  /* ================= 3. FLOW MATCHING ================= */
+  (function(){
+    var cv=document.getElementById('flowCanvas'); if(!cv) return;
+    var st2=document.getElementById('flowT'),tv=document.getElementById('flowTv'),rd=document.getElementById('flowReadout');
+    var W,H,ctx,S,pairs=[],anim=null;
+    function newNoise(){
+      pairs=[];
+      for(var i=0;i<110;i++){
+        var x0=[gauss()*0.10+0.5,gauss()*0.10+0.5];
+        var m=Math.random()<0.5;
+        var x1=[ (m?0.24:0.76)+gauss()*0.045, 0.5+gauss()*0.075 ];
+        pairs.push({x0:x0,x1:x1,m:m});
+      }
+    }
+    newNoise();
+    function draw(){
+      S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var t=+st2.value;tv.textContent=t.toFixed(2);
+      // target ghosts
+      ctx.strokeStyle='rgba(14,156,146,0.35)';ctx.setLineDash([4,4]);ctx.lineWidth=1.4;
+      [[0.24,'mode A: pass left'],[0.76,'mode B: pass right']].forEach(function(m){
+        ctx.beginPath();ctx.arc(m[0]*W,0.5*H,0.10*Math.min(W,H)*1.4,0,7);ctx.stroke();
+      });
+      ctx.setLineDash([]);
+      ctx.font=MONO;ctx.fillStyle=C.teal;
+      ctx.fillText('mode A',0.24*W-24,0.5*H-0.10*Math.min(W,H)*1.4-8);
+      ctx.fillText('mode B',0.76*W-24,0.5*H-0.10*Math.min(W,H)*1.4-8);
+      pairs.forEach(function(p){
+        var x=(1-t)*p.x0[0]+t*p.x1[0], y=(1-t)*p.x0[1]+t*p.x1[1];
+        // velocity arrow
+        if(t<0.97){
+          var vx=(p.x1[0]-p.x0[0])*0.10,vy=(p.x1[1]-p.x0[1])*0.10;
+          ctx.strokeStyle='rgba(135,139,166,0.4)';ctx.lineWidth=1;
+          ctx.beginPath();ctx.moveTo(x*W,y*H);ctx.lineTo((x+vx)*W,(y+vy)*H);ctx.stroke();
+        }
+        var c1=Math.round(120+ (p.m?-0:60)*t), a=0.4+0.5*t;
+        ctx.fillStyle= t<0.15? 'rgba(135,139,166,0.7)' : (p.m?'rgba(67,56,202,'+a+')':'rgba(232,65,46,'+a+')');
+        ctx.beginPath();ctx.arc(x*W,y*H,2.6,0,7);ctx.fill();
+      });
+      ctx.fillStyle=C.faint;ctx.font=MONO;
+      ctx.fillText('t = '+t.toFixed(2)+'   x_t = (1−t)·x₀ + t·x₁   ·   arrows: v = x₁ − x₀',14,22);
+      rd.innerHTML= t<0.05? 'Pure noise: 110 candidate actions, none decided. Training pairs each noise point with a real demo chunk and regresses the straight-line velocity.' :
+        t<0.95? 'Mid-flight: every point rides its constant arrow. The network v_θ learned these arrows as a function of (x, t, observation) — plain MSE, perfectly legal here.' :
+        'Converged: the cloud has condensed onto the two demonstrated modes — every sample committed, none averaged. Inference = fresh noise + ~10 Euler steps along the learned field.';
+    }
+    st2.addEventListener('input',draw);
+    document.getElementById('flowPlay').addEventListener('click',function(){
+      if(anim)cancelAnimationFrame(anim);
+      st2.value=0;
+      function frame(){
+        st2.value=Math.min(1,+st2.value+0.012);draw();
+        if(+st2.value<1)anim=requestAnimationFrame(frame);
+      } frame();
+    });
+    document.getElementById('flowNew').addEventListener('click',function(){newNoise();draw();});
+    register(draw);
+  })();
+
+  /* ================= 4. DATA MIXTURE ================= */
+  (function(){
+    var cv=document.getElementById('mixCanvas'); if(!cv) return;
+    var sw=document.getElementById('mixW'),sx=document.getElementById('mixX'),st3=document.getElementById('mixT');
+    var wv=document.getElementById('mixWv'),xv=document.getElementById('mixXv'),tv=document.getElementById('mixTv');
+    var rd=document.getElementById('mixReadout');
+    var W,H,ctx,S;
+    function fractions(){
+      var a=+sw.value,b=+sx.value,c=+st3.value,s=a+b+c;
+      if(s===0)return [1/3,1/3,1/3];
+      return [a/s,b/s,c/s];
+    }
+    function scores(f){
+      var web=f[0],x=f[1],task=f[2];
+      // stylized, saturating curves
+      function sat(v,k){return 1-Math.exp(-k*v);}
+      var instr=0.15+0.85*sat(web,4.5);
+      var gen=0.10+0.9*Math.min(1,0.55*sat(web,4)+0.65*sat(x,3.5));
+      var succ=0.08+0.92*(0.62*sat(task,4.5)+0.28*sat(x,3)+0.10*sat(web,2));
+      return [instr,gen,succ];
+    }
+    function draw(){
+      S=fit(cv,640/320);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var f=fractions();
+      wv.textContent=Math.round(f[0]*100)+'%';xv.textContent=Math.round(f[1]*100)+'%';tv.textContent=Math.round(f[2]*100)+'%';
+      var sc=scores(f);
+      var labels=['instruction following','new-object generalization','target-task success'];
+      var cols=[C.indigo,C.teal,C.amber];
+      var bw=(W-80)/3-30;
+      var base=H-58,maxh=H-110;
+      sc.forEach(function(s2,i){
+        var x=50+i*(bw+45);
+        ctx.fillStyle='rgba(20,22,42,0.06)';ctx.fillRect(x,base-maxh,bw,maxh);
+        ctx.fillStyle=cols[i];ctx.fillRect(x,base-maxh*s2,bw,maxh*s2);
+        ctx.font=DISP;ctx.fillStyle=C.ink;ctx.textAlign='center';
+        ctx.fillText(Math.round(s2*100)+'',x+bw/2,base-maxh*s2-8);
+        ctx.font='11px "JetBrains Mono"';ctx.fillStyle=C.inkSoft;
+        var words=labels[i].split(' ');
+        ctx.fillText(words.slice(0,Math.ceil(words.length/2)).join(' '),x+bw/2,base+18);
+        ctx.fillText(words.slice(Math.ceil(words.length/2)).join(' '),x+bw/2,base+33);
+        ctx.textAlign='left';
+      });
+      ctx.font=MONO;ctx.fillStyle=C.faint;
+      ctx.fillText('stylized capability scores (0–100) — trends, not anyone\u2019s real numbers',14,20);
+      var msg;
+      if(f[0]<0.05)msg='<b>Web slice ≈ 0:</b> instruction-following has collapsed — catastrophic forgetting in action. The robot moves well and understands nothing.';
+      else if(f[2]<0.05)msg='<b>Target slice ≈ 0:</b> a polite generalist that has never practiced your task — success stays mediocre no matter how much it "knows."';
+      else if(f[2]>0.8)msg='<b>Nearly all target data:</b> task success is high but brittle — generalization and language are starving. Classic over-specialization.';
+      else msg='An interior mixture — all three capabilities alive. The published recipes (RT-2\u2019s co-fine-tuning, π0\u2019s pyramid) all live in this region, tuned by exactly this kind of trade study.';
+      rd.innerHTML=msg;
+    }
+    [sw,sx,st3].forEach(function(s){s.addEventListener('input',draw);});
+    register(draw);
+  })();
+
+  /* ================= 5. LATENCY BUDGET ================= */
+  (function(){
+    var cv=document.getElementById('latCanvas'); if(!cv) return;
+    var sn=document.getElementById('latN'),sh=document.getElementById('latH'),sf=document.getElementById('latF'),sg=document.getElementById('latG');
+    var nv=document.getElementById('latNv'),hv=document.getElementById('latHv'),fv=document.getElementById('latFv'),gv=document.getElementById('latGv');
+    var rd=document.getElementById('latReadout');
+    var W,H,ctx,S;
+    function draw(){
+      S=fit(cv,640/320);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var N=+sn.value*1e9,Hc=+sh.value,f=+sf.value,G=+sg.value*1e12;
+      nv.textContent=(+sn.value).toFixed(1)+' B';hv.textContent=Hc;fv.textContent=f+' Hz';gv.textContent=sg.value+' TFLOP/s';
+      var T=300; // tokens
+      var tinf=2*N*T/G*1000; // ms
+      var deadline=Hc/f*1000; // ms
+      var ok=tinf<deadline;
+      var maxms=Math.max(tinf,deadline)*1.25;
+      var bx=40,bw2=W-80,y1=86,y2=170,bh=40;
+      function bar(y,ms,col,label){
+        ctx.fillStyle='rgba(20,22,42,0.05)';ctx.fillRect(bx,y,bw2,bh);
+        ctx.fillStyle=col;ctx.fillRect(bx,y,bw2*Math.min(1,ms/maxms),bh);
+        ctx.font=MONO;ctx.fillStyle=C.ink;
+        ctx.fillText(label+': '+(ms>=1000?(ms/1000).toFixed(2)+' s':ms.toFixed(0)+' ms'),bx+8,y-8);
+      }
+      bar(y1,tinf, ok?'rgba(67,56,202,0.8)':'rgba(232,65,46,0.85)','inference  t = 2NT/G');
+      bar(y2,deadline,'rgba(14,156,146,0.65)','deadline  H / f_ctrl');
+      // deadline marker on inference bar
+      var dx=bx+bw2*Math.min(1,deadline/maxms);
+      ctx.strokeStyle=C.teal;ctx.lineWidth=2;ctx.setLineDash([5,4]);
+      ctx.beginPath();ctx.moveTo(dx,y1-14);ctx.lineTo(dx,y1+bh+10);ctx.stroke();ctx.setLineDash([]);
+      ctx.font=DISP;
+      ctx.fillStyle= ok? C.teal : C.coralDeep;
+      ctx.fillText(ok?'FEASIBLE — replan every '+(deadline/1000).toFixed(2)+' s while executing':'INFEASIBLE — the chunk expires before the next one is ready',bx,H-26);
+      var blind=Hc/f;
+      rd.innerHTML= !ok? 'At H='+Hc+' and '+f+' Hz the deadline is '+deadline.toFixed(0)+' ms but inference costs '+tinf.toFixed(0)+' ms. Fixes, in order of cheapness: bigger H, smaller/quantized model, better hardware — or a dual-system split (S1 handles the '+f+' Hz; the big model only refreshes the latent at its own pace).'
+        : (blind>1.5? 'Latency-feasible, but H/f = '+blind.toFixed(1)+' s of open-loop blindness per chunk — a falling object will beat your reaction time. Real systems replan early and blend overlapping chunks.'
+        : 'Comfortable: '+tinf.toFixed(0)+' ms of compute against a '+deadline.toFixed(0)+' ms deadline, with only '+(blind*1000).toFixed(0)+' ms max blindness. This is roughly the π0 operating point at default settings.');
+    }
+    [sn,sh,sf,sg].forEach(function(s){s.addEventListener('input',draw);});
+    register(draw);
+  })();
+
+  /* ================= 6. EVALUATION LOTTERY ================= */
+  (function(){
+    var cv=document.getElementById('evalCanvas'); if(!cv) return;
+    var sp=document.getElementById('evP'),sn2=document.getElementById('evN');
+    var pv=document.getElementById('evPv'),nv2=document.getElementById('evNv');
+    var rd=document.getElementById('evalReadout');
+    var W,H,ctx,S,labs=null;
+    function runLabs(){
+      var p=+sp.value,n=+sn2.value;
+      labs=[];
+      for(var i=0;i<60;i++){
+        var k=0;
+        for(var j=0;j<n;j++)if(Math.random()<p)k++;
+        labs.push(k/n);
+      }
+    }
+    function draw(){
+      S=fit(cv,640/340);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var p=+sp.value,n=+sn2.value;
+      pv.textContent=p.toFixed(2);nv2.textContent=n;
+      var pad=50,axY=H-50;
+      function PX(v){return pad+v*(W-pad-20);}
+      ctx.strokeStyle=C.line;ctx.beginPath();ctx.moveTo(pad,axY);ctx.lineTo(W-20,axY);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.faint;ctx.textAlign='center';
+      [0,0.25,0.5,0.75,1].forEach(function(v){ctx.fillText(Math.round(v*100)+'%',PX(v),axY+18);});
+      ctx.fillText('measured success rate →',W/2,axY+36);ctx.textAlign='left';
+      // CI band
+      var sig=Math.sqrt(p*(1-p)/n);
+      var lo=Math.max(0,p-1.96*sig),hi=Math.min(1,p+1.96*sig);
+      ctx.fillStyle='rgba(14,156,146,0.14)';
+      ctx.fillRect(PX(lo),30,PX(hi)-PX(lo),axY-30);
+      ctx.strokeStyle=C.teal;ctx.setLineDash([5,4]);ctx.lineWidth=1.6;
+      ctx.beginPath();ctx.moveTo(PX(lo),30);ctx.lineTo(PX(lo),axY);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(PX(hi),30);ctx.lineTo(PX(hi),axY);ctx.stroke();ctx.setLineDash([]);
+      // truth
+      ctx.strokeStyle=C.ink;ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(PX(p),30);ctx.lineTo(PX(p),axY);ctx.stroke();
+      ctx.font=MONO;ctx.fillStyle=C.ink;ctx.fillText('truth '+Math.round(p*100)+'%',PX(p)+5,42);
+      ctx.fillStyle=C.teal;ctx.fillText('±1.96σ = ±'+(1.96*sig*100).toFixed(1)+' pts',PX(Math.min(hi,0.8))+5,60);
+      // lab dots, stacked
+      if(labs){
+        var counts={};
+        labs.forEach(function(v){
+          var b=Math.round(v*n); // exact k
+          counts[b]=(counts[b]||0)+1;
+          var x=PX(v),y=axY-12-(counts[b]-1)*11;
+          ctx.fillStyle= (v<lo||v>hi)?'rgba(232,65,46,0.85)':'rgba(67,56,202,0.75)';
+          ctx.beginPath();ctx.arc(x,Math.max(34,y),4,0,7);ctx.fill();
+        });
+        var mn=Math.min.apply(null,labs),mx=Math.max.apply(null,labs);
+        rd.innerHTML='60 labs, same policy, n='+n+' each: reported rates span <b>'+Math.round(mn*100)+'% – '+Math.round(mx*100)+'%</b> (theory: ±'+(1.96*sig*100).toFixed(1)+' points). '+(n<30?'At this n, a "10-point improvement" in a paper is indistinguishable from luck — this scatter is the robot evaluation crisis, drawn.':n<150?'Tightening — but still loose enough that close comparisons need care (or paired trials).':'Now the claims mean something: this is why the derivation said ~246 trials for ±5% at p=0.8.');
+      } else {
+        rd.innerHTML='Press Run: 60 simulated labs each evaluate the same policy with n trials.';
+      }
+    }
+    document.getElementById('evRun').addEventListener('click',function(){runLabs();draw();});
+    [sp,sn2].forEach(function(s){s.addEventListener('input',function(){labs=null;draw();});});
+    register(draw);
+  })();
+
+  /* ================= 7. CAPSTONE: CLOSED LOOP ================= */
+  (function(){
+    var cv=document.getElementById('vlaCanvas'); if(!cv) return;
+    var rd=document.getElementById('vlaReadout');
+    var W,H,ctx,S,instr='stack',anim=null;
+    var objs,grip,carried,script,idx,chunkEnd,phase,phT,s1=0,s2=0,running=false,pushing=false;
+    var ATT={stack:['red','blue'],push:['ball'],corner:['blue']};
+    var TEXT={stack:'"stack red on blue"',push:'"push the ball left"',corner:'"put blue in the corner"'};
+    function resetScene(){
+      objs={red:{x:0.30,y:0.70},blue:{x:0.62,y:0.70},ball:{x:0.46,y:0.745}};
+      grip={x:0.50,y:0.24};carried=null;pushing=false;
+      script=null;idx=0;chunkEnd=0;phase='idle';phT=0;s1=0;s2=0;running=false;
+    }
+    resetScene();
+    function leg(pts,to,n,ev){
+      var from=pts.length?pts[pts.length-1]:{x:grip.x,y:grip.y};
+      for(var i=1;i<=n;i++){
+        var t=i/n,e=t*t*(3-2*t); // smoothstep
+        pts.push({x:from.x+(to.x-from.x)*e,y:from.y+(to.y-from.y)*e,
+                  ev:(i===n?ev:null),push:ev==='pushseg'||null});
+      }
+      if(ev==='pushseg')for(var j=pts.length-n;j<pts.length;j++)pts[j].push=true;
+    }
+    function buildScript(){
+      var p=[];
+      if(instr==='stack'){
+        leg(p,{x:objs.red.x,y:0.40},28);
+        leg(p,{x:objs.red.x,y:objs.red.y-0.062},22,'grab:red');
+        leg(p,{x:objs.red.x,y:0.36},20);
+        leg(p,{x:objs.blue.x,y:0.36},30);
+        leg(p,{x:objs.blue.x,y:objs.blue.y-0.118},24,'drop');
+        leg(p,{x:objs.blue.x,y:0.28},20);
+      }else if(instr==='push'){
+        leg(p,{x:objs.ball.x+0.09,y:0.42},28);
+        leg(p,{x:objs.ball.x+0.085,y:objs.ball.y},22);
+        leg(p,{x:objs.ball.x-0.20,y:objs.ball.y},34,'pushseg');
+        leg(p,{x:objs.ball.x-0.20,y:0.30},20);
+      }else{
+        leg(p,{x:objs.blue.x,y:0.40},28);
+        leg(p,{x:objs.blue.x,y:objs.blue.y-0.062},22,'grab:blue');
+        leg(p,{x:objs.blue.x,y:0.36},18);
+        leg(p,{x:0.86,y:0.36},30);
+        leg(p,{x:0.86,y:objs.blue.y-0.062},22,'drop');
+        leg(p,{x:0.74,y:0.28},18);
+      }
+      return p;
+    }
+    function applyEv(ev){
+      if(!ev)return;
+      if(ev.indexOf('grab:')===0)carried=ev.split(':')[1];
+      else if(ev==='drop'){
+        var o=objs[carried];
+        if(carried==='red'&&Math.abs(o.x-objs.blue.x)<0.06)o.y=objs.blue.y-0.054;
+        else o.y= carried==='ball'?0.745:0.70;
+        carried=null;
+      }
+    }
+    function step(){
+      if(idx>=script.length){phase='done';return;}
+      if(idx>=chunkEnd){phase='perceive';phT=0;s2++;chunkEnd=Math.min(script.length,idx+46);return;}
+      var p=script[idx++];s1++;
+      grip.x=p.x;grip.y=p.y;
+      if(p.push)objs.ball.x=grip.x-0.085;
+      if(carried){objs[carried].x=grip.x;objs[carried].y=grip.y+0.062;}
+      applyEv(p.ev);
+    }
+    function draw(){
+      S=fit(cv,640/380);W=S.w;H=S.h;ctx=S.ctx;ctx.clearRect(0,0,W,H);
+      var u=Math.min(W,H*1.4);
+      function PX(x){return x*W;} function PY(y){return y*H;}
+      // table
+      ctx.fillStyle='#EDEAE2';ctx.fillRect(PX(0.06),PY(0.66),PX(0.88),PY(0.20));
+      ctx.strokeStyle=C.line;ctx.strokeRect(PX(0.06),PY(0.66),PX(0.88),PY(0.20));
+      // attention glow during perceive
+      if(phase==='perceive'){
+        var pulse=0.5+0.5*Math.sin(phT*0.35);
+        ATT[instr].forEach(function(k){
+          var o=objs[k];
+          var g=ctx.createRadialGradient(PX(o.x),PY(o.y),3,PX(o.x),PY(o.y),34+8*pulse);
+          g.addColorStop(0,'rgba(255,92,73,'+(0.35+0.2*pulse)+')');g.addColorStop(1,'rgba(255,92,73,0)');
+          ctx.fillStyle=g;ctx.beginPath();ctx.arc(PX(o.x),PY(o.y),44,0,7);ctx.fill();
+        });
+      }
+      // chunk preview dots
+      if(running&&phase!=='done'&&script){
+        ctx.fillStyle='rgba(67,56,202,0.55)';
+        for(var i=idx;i<chunkEnd;i+=4){
+          var p=script[i];if(!p)break;
+          ctx.beginPath();ctx.arc(PX(p.x),PY(p.y),2.2,0,7);ctx.fill();
+        }
+      }
+      // objects
+      var bs=u*0.045;
+      function block(o,col){
+        ctx.fillStyle=col;ctx.fillRect(PX(o.x)-bs,PY(o.y)-bs,bs*2,bs*2);
+        ctx.strokeStyle='rgba(20,22,42,0.5)';ctx.lineWidth=1.4;
+        ctx.strokeRect(PX(o.x)-bs,PY(o.y)-bs,bs*2,bs*2);
+      }
+      block(objs.blue,'#3B6FD4');block(objs.red,'#E8412E');
+      ctx.fillStyle='#2FA75F';ctx.beginPath();ctx.arc(PX(objs.ball.x),PY(objs.ball.y),bs*0.85,0,7);ctx.fill();
+      ctx.strokeStyle='rgba(20,22,42,0.5)';ctx.stroke();
+      // gripper
+      var gx=PX(grip.x),gy=PY(grip.y),fw=carried||pushing?bs*1.15:bs*1.6,fl=bs*1.5;
+      ctx.strokeStyle=C.ink;ctx.lineWidth=4;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(gx,gy-bs*2.2);ctx.lineTo(gx,gy-bs*0.6);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(gx-fw,gy-bs*0.6);ctx.lineTo(gx+fw,gy-bs*0.6);ctx.stroke();
+      ctx.lineWidth=3.4;
+      ctx.beginPath();ctx.moveTo(gx-fw,gy-bs*0.6);ctx.lineTo(gx-fw,gy+fl-bs*0.6);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(gx+fw,gy-bs*0.6);ctx.lineTo(gx+fw,gy+fl-bs*0.6);ctx.stroke();
+      ctx.lineCap='butt';
+      // HUD
+      ctx.font='600 13px "Space Grotesk"';ctx.fillStyle=C.ink;
+      ctx.fillText('ℓ = '+TEXT[instr],14,24);
+      ctx.font=MONO;
+      ctx.fillStyle=C.indigoDeep;ctx.fillText('S2 (VLM) replans: '+s2,W-190,22);
+      ctx.fillStyle=C.coralDeep;ctx.fillText('S1 control ticks: '+s1,W-190,40);
+      if(phase==='perceive'){
+        ctx.fillStyle=C.coralDeep;ctx.font=MONO;
+        ctx.fillText('perceiving → grounding "'+ATT[instr].join('" + "')+'" → planning chunk '+s2+'…',14,H-14);
+      }else if(phase==='done'){
+        ctx.fillStyle=C.teal;ctx.font=DISP;
+        ctx.fillText('task complete ✓',14,H-14);
+      }else if(running){
+        ctx.fillStyle=C.faint;ctx.font=MONO;
+        ctx.fillText('S1 tracking chunk '+s2+' ('+(chunkEnd-idx)+' setpoints remaining)',14,H-14);
+      }
+    }
+    function loop(){
+      if(phase==='perceive'){
+        phT++;
+        if(phT>34)phase='execute';
+      }else if(phase==='execute'){
+        for(var k=0;k<3;k++){if(phase==='execute')step();}
+      }
+      draw();
+      if(phase==='done'){
+        running=false;
+        rd.innerHTML='<b>Done.</b> '+s2+' slow replans, '+s1+' fast setpoints — two clocks, one behavior (Ch 4.2). Re-run with another instruction, and note the same loop shape regardless of task: ground → chunk → track → repeat. That loop, scaled 10⁹×, is every system in Chapter 6.';
+        return;
+      }
+      anim=requestAnimationFrame(loop);
+    }
+    function run(){
+      if(anim)cancelAnimationFrame(anim);
+      resetScene();
+      script=buildScript();
+      running=true;phase='perceive';phT=0;chunkEnd=46;s2=1;
+      rd.innerHTML='Executing. Watch the coral glow (grounding), then the dotted chunk (planning), then smooth tracking (acting).';
+      loop();
+    }
+    document.querySelectorAll('#vlaSeg button').forEach(function(btn){btn.addEventListener('click',function(){
+      document.querySelectorAll('#vlaSeg button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');
+      if(anim)cancelAnimationFrame(anim);
+      instr=btn.dataset.i;resetScene();draw();
+      rd.innerHTML='Instruction set: '+TEXT[instr]+'. Press Execute.';
+    });});
+    document.getElementById('vlaRun').addEventListener('click',run);
+    register(draw);
+    rd.innerHTML='Choose an instruction and press Execute — the full perceive → plan → act loop, with both clocks visible.';
+  })();
+
+});
+</script>
+</body>
+</html>
